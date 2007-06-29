@@ -1,0 +1,269 @@
+
+require 'net/smtp'
+class Action
+
+  class Base
+
+    def test
+      ''
+    end
+
+    def initialize
+    end
+# default alert/warning routines...
+
+    def do_periodic ( type, host, msg )
+      r = host.recs[type] = [] unless r = host.recs[type]
+      r << ( msg || rec ) 
+    end
+
+    def do_realtime ( type, host, msg )
+        host.recs[type] << ( msg || rec ) 
+      end
+
+    def async_send(host, type, data)
+    end
+
+    def produce_reports(processed_hosts)
+
+    end
+    
+    public :test
+  end
+
+  class Email < Action::Base
+
+    def initialize
+      super
+    end
+
+    def do_realtime ( type, host, msg, rec = nil )
+      if $bucket[type] then
+        data = $bucket[type]
+      else
+        data=[]
+        data << ( msg || rec ) 
+      end
+      async_mail(host, type, data)
+    end
+    
+    def async_send(host, type, data)
+       async_mail(host, type, data)
+    end
+
+    def async_mail(host, type, data)
+      $threads.push Thread.new {
+	smtp = Mail.new($options['mail_server'], "Russell Fulton <r.fulton@auckland.ac.nz>" ) 
+
+	begin
+#	smtp.send( host.email, "SELMS #{type} from #{host.name}", data )
+	  smtp.send( 'r.fulton', "#{host.email} - #{host.name}" , data )
+        rescue
+	end
+      
+      smtp.finish if smtp
+    }
+  end
+
+
+  def produce_reports( processed_hosts )
+
+    # go through the hosts and build reports for each reporting address                                        
+
+    reports = {}  # indexed by reporting address                                                              
+    processed_hosts.each { |host, count| # each host we have logs to report for                                       
+      # skip unless we have something to report 
+
+  next unless host.recs['report'].size + host.recs['alert'].size +
+              host.recs['warn'].size > 0 || host.count.size > 4; 
+      who = ( host.email || 'default' ).strip
+      who =  who.split(/\s*,\s*\**/) .map{|addr| 'email:' + addr }
+      name = host.name
+              host.recs['warn'].size
+
+      # merge warnings and alters so we can put these all at the top of the report
+      if host.count.size > 4 then  # more than the default counts
+	summ = []
+	host.count.sort.each{ |k, v |
+	  case v.label
+	  when 'Number of dropped records', 'Number of ignored records'
+	  else
+		summ  << "    #{v.label} = #{v.val}"  if v.val > v.thresh
+	  end
+	}
+	
+	if summ.size > 0 then
+	  who.each { |w|
+	    reports[w] = {} unless reports[w]
+	    reports[w]['summ'] = {} unless  reports[w]['summ'] 
+	    reports[w]['summ'][name] = summ
+	  }
+	end
+      end
+      
+     [ 'alert', 'warn', 'report' ].each { |type|
+
+	next unless host.recs[type].size > 0
+	who.each { |w|
+	  reports[w] = {} unless reports[w]
+	  reports[w][type] = {} if !  reports[w][type] # and ! host.recs[type]
+	  reports[w][type][name] = [] 
+	  
+	  host.recs[type].each { |rec|
+	    reports[w][type][name] << rec
+	    break if reports[w][type][name].size > 1000   #### make this command line option
+	  }
+	  reports[w][type][name] << "***** output truncated *****\n" if reports[w][type][name].size > 1000
+	}
+      }
+    }
+
+    # now send the reports to each address
+
+    if $options['no_mail'] && !$options['mail_to'] then
+      $options['outfile'] = '-'
+    end
+
+    if $options['outfile'] then
+      of = $options['outfile'] == '-' ? STDOUT : File.open($options['outfile'], 'w'); 
+    end
+
+    if ! $options['no_mail']  || $options['mail_to'] then
+      smtp = Mail.new($options['mail_server'], "Russell Fulton <r.fulton@auckland.ac.nz>" ) 
+    end
+
+    reports.each { |who, rep|
+      report = []
+
+      list_recs( report, rep['alert'], "Alerts" ) if  rep['alert']
+      list_recs( report, rep['warn'], "Warnings" ) if  rep['warn']
+      list_recs( report, rep['summ'], "Summary" ) if  rep['summ']
+      list_recs( report, rep['report'], "Unusual Records") if rep['report']
+
+# loop over destinations for report
+
+#	who.each{ |dest |
+dest = who
+	  no_mail = $options['no_mail']
+      subject = "#{$options['mail_subject']} for #{dest}"
+	  subject << " for #{dest}" if no_mail
+	  type, address = dest.split(/:/)
+	  if $options['outfile'] then
+	    of.puts "\n\n\n"
+	    of.puts "\t\t\t\t#{'*'*dest.length}"
+	    of.puts "\t\t\t\t#{dest}"
+	    of.puts "\t\t\t\t#{'*'*dest.length}"
+	    of.puts report.join("\n")
+	  end
+	  case type
+	  when 'email'
+            if !( no_mail && ! $options['mail_to']) then
+	      to = address
+	      if $options['mail_to'] then
+		if no_mail then
+		  to = $options['mail_to']
+		  no_mail = false
+		else
+		  to << ", #{$options['mail_to']}"
+		end
+		begin
+		  smtp.send( to, subject, report )
+		rescue
+		end
+	      end
+	    end
+	  else
+	    STDERR.puts "Unknown reporting type '#{type}'"
+	  end
+#	}
+    }
+    smtp.finish if smtp
+
+  end
+
+  def list_recs( report, list, label, summary=nil )
+    
+    report << "             #{'='* label.length}"
+    report << "             #{label}"
+    report << "             #{'='* label.length}"
+
+    list.each { | host, list |
+      report << "\n    #{'+'* host.to_s.length}"
+      report << "    #{host.to_s}"
+      report << "    #{'+'* host.to_s.length}\n"
+      report << list.join("\n") if  list
+    }
+
+  end
+
+  def send_async( server, from, to, data )
+  end 
+  
+end
+
+end  # of Action
+
+##
+# Hack in RSET
+
+class Net::SMTP # :nodoc:
+
+   unless instance_methods.include? 'reset' then
+     ##
+     # Resets the SMTP connection.
+
+     def reset
+       getok 'RSET'
+     end
+   end
+
+end
+
+class Mail < Net::SMTP
+
+  def initialize( server, from, *args )
+    @from = from
+    @time = Time.now.to_i.to_s
+    @count = 0
+    super(server, 25)
+    set_debug_output = $stderr
+    if block_given? then
+      begin
+	return yeild( self.start(server, *args))
+      ensure
+	finish
+      end
+    else
+      start(server, *args)
+    end
+  end
+
+  def send (to, subject, data)
+    retries = 0
+    @count += 1
+    to_array =  to.split(/\s*,\s*/)
+
+    hdrs = <<HDRS
+To: #{to}
+Subject: #{subject}
+Date: #{Time.now.strftime("%a, %e %b %Y %T %z")}
+Message-Id: <selms-#{@time}-#{@count}@selms>
+From: #{@from}
+
+HDRS
+
+      send_message( hdrs + data.join("\n") + ".\n", @from, *to_array)
+  rescue Net::SMTPFatalError, Net::SMTPSyntaxError
+    if $! =~ /virtual alias table/ then
+      retries += 1
+      STDERR.puts "mail failed #{retries} for #{to}:#{$!}"
+      spleep(10)
+     reset
+     retry if retries <= 2
+    end
+    STDERR.puts "mail failed for #{to}:#{$!}"
+    reset
+    false
+  end
+end
+
