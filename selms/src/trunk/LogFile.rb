@@ -28,19 +28,24 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       for i in 1 .. @file.size - 1
 	l = i if @rec[l].utime > @rec[i].utime
       end
-# puts l
+
       r = @rec[l]   # will return this
       # read next record for this file
       
-      if raw = @file[l].gets then
-	@lrec[l] = @rec[l].dup unless @rec[l].data =~ /^last message repeat/
-	@rec[l] = @rc.new( raw, @head, @split_p)
-	$c_fn = @off_name[l]
-      else # end of file 
-	close_lf( l )
-      end
-      
-      if r && r.data =~ /^last message repeated (\d+) times/ then  #
+      closed = false
+      begin
+        if raw = @file[l].gets then
+          @lrec[l] = @rec[l].dup unless @rec[l].data =~ /^last message repeat/
+          
+          @rec[l] = @rc.new( raw, @head, @split_p)
+          $c_fn = @off_name[l]
+        else # end of file 
+          close_lf( l )
+          closed = true
+        end
+      end until closed || (@rec[l] && @rec[l].data )
+
+    if r && r.data =~ /^last message repeated (\d+) times/ then  #
         times = $1
         if @lrec[l] then
           r = @lrec[l].dup
@@ -76,14 +81,21 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       f.seek( offset ) if offset
       $fstate = 'reading'
       
-      if raw = f.gets
-        @file.push f
-	@rec.push( @rc.new( raw, @head, @split_p) )
-      else
-	f.close
-      end
-      @off_name.push( off_name )
-    end
+      closed = false
+      l = @file.size
+      r = nil
+      begin
+        if raw = f.gets
+          @file[l] = f
+          r = @rc.new( raw, @head, @split_p)
+          @rec[l] = r 
+          @off_name[l] = off_name
+        else
+          f.close
+          closed = true
+        end
+      end until closed || (r && r.data )
+    end 
     
     def abort
 
@@ -127,7 +139,6 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
       def initialize(raw, pat, split_p)
         @raw = raw
-#puts @raw
         @split_p = split_p
         @time = nil
         @utime = nil
@@ -142,6 +153,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 # default log splitter
 
       def split
+        return nil unless @data
 	all, p, @data = @data.match( @split_p ).to_a
 
 	@proc = canonical_proc( p )
