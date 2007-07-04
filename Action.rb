@@ -14,11 +14,11 @@ class Action
 
     def do_periodic ( type, host, msg )
       r = host.recs[type] = [] unless r = host.recs[type]
-      r << ( msg || rec ) 
+      r << msg
     end
 
     def do_realtime ( type, host, msg )
-        host.recs[type] << ( msg || rec ) 
+        host.recs[type] << msg
       end
 
     def async_send(host, type, data)
