@@ -1,18 +1,21 @@
   class LogStore
     LOG_HEAD = /(\d+) (\d{4} \w{3}\s+\d+ [:0-9]+ (?:\+|-)\d\d:\d\d) ([^:]+):\s*(.+)/
 
+    attr_reader :log_head
+
     def initialize( root, time = Time.now )
       @root = root
       @year = time.strftime("%Y")
       @month = time.strftime("%m")
       @day = time.strftime("%d")
-      
+      @log_head = LOG_HEAD
     end
 
     def traverse
       Find.find( @root ) { |filename|
 
 	mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
+
 	next if ! mach
 
 	mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
@@ -33,6 +36,7 @@
 	    next;
 	  end
 	end
+
 	yield filename, mach
       }
     end
@@ -41,6 +45,7 @@
 
       Dir.new(dir).each { |f|
 	return 'cisco' if f =~ /^local0/;
+	return 'windows' if f =~ /^user/;
       }
       return 'unix'
     end

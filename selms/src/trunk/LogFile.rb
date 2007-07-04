@@ -22,37 +22,31 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
     def gets
 
-      l = nil  # index for @file array
+      return nil if ! @file || @file.size == 0
 
-      if @file.class == File then  # just a single file...
-	if raw = @file.gets
-	  @lrec = @rec.dup unless @rec.data =~ /^last message repeat/
-	  r = @rec = @rc.new( raw, @head, @split_p)
-	else
-	  close
-	  return nil
-	end
-      else  # must be an array -- need to merge inputs
-	# find file with lowest time
-	l = 0
-	for i in 1 .. @file.size - 1
-	  l = i if @rec[l].utime > @rec[i].utime
-	end
-
-	r = rec[l]   # will return this
-	# read next record for this file
-	if raw = @file[l].gets then
-	  @lrec[l] = @rec[l].dup unless @rec[l].data =~ /^last message repeat/
-	  @rec[l] = @rc.new( raw, @head, @split_p)
-	  $c_fn = @off_name[l]
-	else # end of file
-	  close( l )
-	end
+      l = 0
+      for i in 1 .. @file.size - 1
+	l = i if @rec[l].utime > @rec[i].utime
       end
-
+# puts l
+      r = @rec[l]   # will return this
+      # read next record for this file
+      
+      if raw = @file[l].gets then
+	@lrec[l] = @rec[l].dup unless @rec[l].data =~ /^last message repeat/
+	@rec[l] = @rc.new( raw, @head, @split_p)
+	$c_fn = @off_name[l]
+      else # end of file 
+	close_lf( l )
+      end
+      
       if r && r.data =~ /^last message repeated (\d+) times/ then  #
-	r = (l ? @lrec[l] : @lrec).dup
-	r.data << " : Repeated #{$1} times"
+        times = $1
+        if @lrec[l] then
+          r = @lrec[l].dup
+          r.data.sub!(/ : Repeated \d+ times/, '')
+          r.data << " : Repeated #{times} times"
+        end
 	return r
       else
 	return r
@@ -64,6 +58,13 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       off_name = fn + '-' + $options['offset'] 
       offset = nil
       
+      if !@file then
+	@file = []
+	@rec = []
+	@lrec = []
+	@off_name = []
+      end
+      
       $fstate = 'opening'
       if (File.file? off_name) && ! $options['no_offset'] then
 	File::open(off_name) { |o|
@@ -74,29 +75,16 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       $fstate = 'seeking'
       f.seek( offset ) if offset
       $fstate = 'reading'
-      if !@file then
-	@file = f
-	@lrec = nil
-	@off_name = off_name
-	$c_fn = fn
+      
+      if raw = f.gets
+        @file.push f
+	@rec.push( @rc.new( raw, @head, @split_p) )
       else
-	if @file.class == File then
-	  f1 = @file
-	  n1 = @off_name
-	  @rec = []
-	  @lrec = []
-	  @file = []
-	  @off_name = []
-	  @rec.push( @rc.new( f1.gets, @head, @split_p) )
-	  @file.push( f1 )
-	  @off_name.push( off_name )
-	end
-	@file.push( f )
-	@off_name.push( fn )
-	@rec.push( @rc.new( f.gets, @head, @split_p) )
+	f.close
       end
+      @off_name.push( off_name )
     end
-
+    
     def abort
 
       if @file == File then
@@ -111,29 +99,20 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
     end
 
+# have to drop the look a head!!
+    def close_lf( lf = nil )
 
-    def close( lf = nil )
-      if lf then
 	offset = @file[lf].tell
 	@file[lf].close
 	off_n = @off_name[lf]
-
-	if @file.size == 2 then  # only one file left ...
-	  x = lf == 0 ? 1 : 0
-	  @file = @file[x]
-	  @rec = @rec[x]
-	  @off_name = @off_name[x]
+        
+	if @file.size == 1 then  # last one
+          @file = nil
 	else
-	  @file.slice!( lf )
-	@rec.slice!( lf )
+          @file.slice!( lf )
+          @rec.slice!( lf )
 	  @off_name.slice!( lf )
-	end
-      else
-	offset = @file.tell
-	@file.close
-	off_n = @off_name
-        @file = nil
-      end
+        end
 
       unless ( $options['no_write_offset'] ||  $options['no_offset'] ) then
 	File::open(off_n, 'w') { |o|
@@ -156,7 +135,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
         @proc = nil
         @orec = nil
         @data = nil
-        all, @utime, @time, @h,  @data =  raw.match(pat).to_a
+        all, @utime, @time, @h,  @data =  raw.match(pat).to_a     
 	@utime = @utime.to_i
       end
 

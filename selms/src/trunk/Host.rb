@@ -142,7 +142,6 @@ class Host
 
     if @merge_files then
 
-
 # fudge to get things going -- need to properly handle different file types
       if f = (  @file['all']  || @file[logf[0]] ) then
 	c_logf = f.class != Regexp ? f : LogFile.new( @file['all'] ) 
@@ -150,10 +149,10 @@ class Host
 
       lf = c_logf.dup
       logf.each { | log |
-	return if log =~ /^cron/i && ! @file[log]
+	next if log =~ /^cron/i && ! @file[log]
 	lf.open_lf( log_dir + '/' + log )
       }
-      yield lf 
+      yield lf if lf.file
     else
       logf.each { |log|
 	# ignore cron logs unless asked to process them
@@ -191,13 +190,12 @@ end
    }
 
    @rule_set = '_default'
-
    begin
      log_files(log_dir, @logf) { |lf|
 
        while rec = lf.gets
 
-#	  pp 'preliminary split:', rec if $options['debug.split']
+	  pp 'preliminary split:', rec if $options['debug.split']
 	 rec.split
 
 	 pp '', "final split", rec if $options['debug.split']
