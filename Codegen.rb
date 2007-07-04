@@ -45,8 +45,8 @@ module Codegen
 	    code << "       $bucket[self.name+'-#{type}'] << (msg || rec)\n"
 	    code << "     else\n"
 	  end
-	  code <<"       $run.action_class('#{action[0]}').do_#{@run_type}('#{type}', self, msg || rec )\n"
-	  code <<"     end\n" if @run_type == 'realtime'
+	  code << "       $run.action_class('#{action[0]}').do_#{@run_type}('#{type}', self, msg || rec )\n"
+	  code << "     end\n" if @run_type == 'realtime'
          end
       }
 

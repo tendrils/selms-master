@@ -58,6 +58,7 @@ include Codegen
     # walk the log tree 
 
     $log_store.traverse { | dir_name, mach|
+
       unless host = hosts[mach] then
 	host_patterns.each { |name, h |
 	  if mach.match( h.pattern ) then
