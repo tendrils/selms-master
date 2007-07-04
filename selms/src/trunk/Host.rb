@@ -196,7 +196,7 @@ end
        while rec = lf.gets
 
 	  pp 'preliminary split:', rec if $options['debug.split']
-	 rec.split
+	 next unless rec.split
 
 	 pp '', "final split", rec if $options['debug.split']
 	 break unless self.send @rule_set, 'TEST', rec 
