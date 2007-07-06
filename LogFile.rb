@@ -98,17 +98,10 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
     end 
     
     def abort
-
-      if @file == File then
-	@file.seek(0, IO::SEEK_END );
-	@file.close
-      else
-	@file.each{ |file|
-	  file.seek(0, IO::SEEK_END );
-	  file.close
-	}
+      while @file
+	@file[0].seek(0, IO::SEEK_END );
+	close_lf( 0 )
       end
-
     end
 
 # have to drop the look a head!!
