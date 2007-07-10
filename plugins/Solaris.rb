@@ -33,17 +33,10 @@ class Solaris < LogFile
 
       attr_reader :time, :utime, :h, :fac, :level, :data, :record, :proc, :orec
 
-      def initialize(raw, pat, split_p)
-        @raw = raw
-        @split_p = split_p
-        @time = nil
-        @utime = nil
-        @h = nil
-        @record = nil
-        @proc = nil
-        @orec = nil
-        @rest = nil
-        all, @utime, @time, @h, @data =  raw.match(pat).to_a
+      def initialize(raw=nil, pat=nil, split_p=nil)
+        super(raw, pat, split_p)
+#        return unless raw
+#        all, @utime, @time, @h, @data =  raw.match(pat).to_a
       end
 
 
