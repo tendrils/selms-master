@@ -53,7 +53,7 @@ $options = {
 $options.default = 'empty'  # returned for unknown keys 
 
 OptionParser.new { |opts|
-  opts.on( '--debug=DEBUG', %w( match hosts code rules-drops rules-ignore rules-alert rules-warn rules-count rules-incr proc regexp split match-code ),
+  opts.on( '--debug=DEBUG', %w( match hosts files code rules-drops rules-ignore rules-alert rules-warn rules-count rules-incr proc regexp split match-code ),
 	  String) {|val|   $options['debug.'+val] = true } 
   opts.on( '-t', '--task=RUN_TYPE', %w( realtime, periodic, daily, weekly, monthly),
 	  String) {|val|   $options['run_type'] = val } 
