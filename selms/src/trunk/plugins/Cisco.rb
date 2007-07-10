@@ -18,19 +18,22 @@ class Cisco < LogFile
     end
 
 
-    class Record
+    class Record < LogFile::Record
 
-      attr_reader :time, :utime, :h, :cat, :event, :level, :record, :orec, :data
+      attr_reader  :cat, :event, :level, :fn
 
-      def initialize(raw, pat, split_p)
-        @raw = raw
-        @split_p = split_p
-        @h = nil
-        @proc = nil
-        @orec = nil
-        @rest = nil
-        all, @utime, @time, @h, @data =  raw.match(pat).to_a
+      def initialize(raw=nil, pat=nil, split_p=nil)
+        super(raw, pat, split_p)
       end
+#        @raw = raw
+#        @split_p = split_p
+#        @h = nil
+#        @proc = nil
+#        @orec = nil
+#        @rest = nil
+#        return unless raw
+#        all, @utime, @time, @h, @data =  raw.match(pat).to_a
+#      end
 
 
       def split
