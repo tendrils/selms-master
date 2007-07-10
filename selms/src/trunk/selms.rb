@@ -52,10 +52,12 @@ $options = {
 
 $options.default = 'empty'  # returned for unknown keys 
 
+debug_opts = %w( match hosts gets files code rules-drops rules-ignore rules-alert\
+                 rules-warn rules-count rules-incr proc regexp split match-code )
+
 OptionParser.new { |opts|
-  opts.on( '--debug=DEBUG', %w( match hosts files code rules-drops rules-ignore rules-alert rules-warn rules-count rules-incr proc regexp split match-code ),
-	  String) {|val|   $options['debug.'+val] = true } 
-  opts.on( '-t', '--task=RUN_TYPE', %w( realtime, periodic, daily, weekly, monthly),
+  opts.on( '--debug=DEBUG', debug_opts , String) {|val| $options['debug.'+val] = true } 
+  opts.on( '-t', '--task=RUN_TYPE', %w( realtime, periodic, daily, weekly, monthly),\
 	  String) {|val|   $options['run_type'] = val } 
   opts.on('-o', '--offset=OFFSET', String, "use ARG as offset file suffix" ) { |val|
     $options['offset'] = val }
