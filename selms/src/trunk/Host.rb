@@ -110,11 +110,10 @@ class Host
 # substitute for % vars in strings
 
   def expand( s, mdata )
-
     return nil unless s
     string = s.dup
     string.gsub!(/%H/, @name) 
-    string.gsub!(/%F/, $c_fn)
+    string.gsub!(/%F/, @rec.fn);
     string.gsub!(/%1/, mdata[1] ? mdata[1] : '')
     string.gsub!(/%2/, mdata[2] ? mdata[2] : '')
     string.gsub!(/%3/, mdata[3] ? mdata[3] : '')
@@ -193,13 +192,13 @@ end
    begin
      log_files(log_dir, @logf) { |lf|
 
-       while rec = lf.gets
+       while @rec = lf.gets
 
 	  pp 'preliminary split:', rec if $options['debug.split']
-	 next unless rec.split
+	 next unless @rec.split
 
 	 pp '', "final split", rec if $options['debug.split']
-	 break unless self.send @rule_set, 'TEST', rec 
+	 break unless self.send @rule_set, 'TEST', @rec 
 	 if $options['max_log_recs'] && 
 	     recs['report'].size + recs['alert'].size + recs['warn'].size  >= $options['max_log_recs'] then
 	   lf.abort
