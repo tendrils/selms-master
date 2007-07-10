@@ -20,54 +20,102 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       @rc = Record
     end
 
-    def gets
+    def gets( l = nil )  # set l for initial read
 
       return nil if ! @file || @file.size == 0
 
-      l = 0
-      for i in 1 .. @file.size - 1
-	l = i if @rec[l].utime > @rec[i].utime
-      end
-
-      r = @rec[l]   # will return this
-      # read next record for this file
+      initial = l
+      previous_rec = nil
+      count = 0  # number of duplicates  
+      r = nil   # define out side loop
+      time = 0
       
-      closed = false
-      begin
-        if raw = @file[l].gets then
-          @lrec[l] = @rec[l].dup unless @rec[l].data =~ /^last message repeat/
+      puts "initial #{l}" if initial && $options['debug.gets']
+      
+      catch :new_file do
+        begin  # loop while records are the same
+          save = l
+          if ! initial then # select next file with earliest log record  
+            l = 0
+            for i in 1 .. @file.size - 1
+              l = i if @rec[l].utime > @rec[i].utime
+            end
+          end
+          throw :new_file if save && save != l && count > 0
+          puts "index :#{l}" if $options['debug.gets']
           
-          @rec[l] = @rc.new( raw, @head, @split_p)
-          $c_fn = @off_name[l]
-        else # end of file 
-          close_lf( l )
-          closed = true
-        end
-      end until closed || (@rec[l] && @rec[l].data )
+          r = initial ? @rc : @rec[l].dup 
+          
+          closed = false
+          begin
+            if raw = @file[l].gets then
+              count += 1
+              puts "raw #{count} #{raw}"  if $options['debug.gets']
+              if initial
+                previous_rec = @rc.new  # null entry
+              else
+                puts "not initial #{count}" if $options['debug.gets']
+                previous_rec = @rec[l].dup if count == 1
+              end
+              @rec[l] = @rc.new( raw, @head, @split_p)
+              time = @rec[l].time if count == 1  # first time
+              @rec[l].fn = @fn[l]
+#              puts "filename #{@rec[l].fn}"
+            else # end of file 
+              #puts "end of file #{l} count  #{count} #{@lrec[l]}"
+              if initial || @closing[l] || count != 1 # don't loose last record!
+                close_lf( l ) 
+                #              puts "closing file #{l}"
+              else
+                @closing[l] = true
+              end
+              closed = true
+            end
+            if ! closed && @rec[l].data =~ /^last message repeated (\d+) times/ 
 
-    if r && r.data =~ /^last message repeated (\d+) times/ then  #
-        times = $1
-        if @lrec[l] then
-          r = @lrec[l].dup
-          r.data.sub!(/ : Repeated \d+ times/, '')
-          r.data << " : Repeated #{times} times"
-        end
-	return r
-      else
-	return r
+              if initial
+                @rec[l] = nil
+                count = 0
+              else
+                puts "repeated #{$1}" if $options['debug.gets']
+                count += $1.to_i 
+                @rec[l] = previous_rec
+              end
+            end
+          end until ( closed || (@rec[l] && @rec[l].data )) 
+          
+          if $options['debug.gets']
+            puts "comparing" 
+            puts @rec[l].data unless closed
+            puts previous_rec.data  unless closed
+          end
+        end while ( ! closed &&  @rec[l].data == previous_rec.data )
       end
+      if count > 1      
+         r.data << " -- repeated #{count} times since #{time}"
+      end
+      
+      puts "return '#{r.data}'" if !initial && $options['debug.gets']
+      
+      return r unless initial
+
     end
 
     def open_lf( fn )
 
       off_name = fn + '-' + $options['offset'] 
+      fn =~ /.+\/(.+)/
+      n = $1
       offset = nil
       
       if !@file then
 	@file = []
 	@rec = []
-	@lrec = []
+#	@lrec = []
+        @cache = []
 	@off_name = []
+        @closing = []
+        @fn = []
       end
       
       $fstate = 'opening'
@@ -80,21 +128,16 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       $fstate = 'seeking'
       f.seek( offset ) if offset
       $fstate = 'reading'
-      
+ 
       closed = false
       l = @file.size
       r = nil
-      begin
-        if raw = f.gets
-          @file[l] = f
-          r = @rc.new( raw, @head, @split_p)
-          @rec[l] = r 
-          @off_name[l] = off_name
-        else
-          f.close
-          closed = true
-        end
-      end until closed || (r && r.data )
+      puts "open #{l}: #{fn}" if $options['debug.files']
+      @file[l] = f
+      @closing[l] = false
+      @fn[l] = n
+      @off_name[l] = off_name
+      gets(l) 
     end 
     
     def abort
@@ -128,18 +171,23 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
 # default log splitter                                                                                                 
     class Record
-    attr_reader :time, :utime, :h, :record, :proc, :orec, :data, :int
+    attr_reader :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn
+    attr_writer :fn
 
-      def initialize(raw, pat, split_p)
+      def initialize(raw=nil, pat=nil, split_p=nil)
+
         @raw = raw
         @split_p = split_p
+        @pat = pat
         @time = nil
         @utime = nil
         @h = nil
         @proc = nil
         @orec = nil
-        @data = nil
-        all, @utime, @time, @h,  @data =  raw.match(pat).to_a     
+        @fn = ''
+        @data = ''
+        return unless raw
+        all, @utime, @time, @h,  @data =  raw.match(pat).to_a 
 	@utime = @utime.to_i
       end
 
