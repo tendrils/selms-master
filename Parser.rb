@@ -189,15 +189,26 @@ module Parser
       @@token = ((defined? $1) ? $1 : true) if @@line.sub!(what, '')
     when 'Proc'
       r = what.call
+    when 'Array'
+      if @@line =~ /^(\w+)/
+        what.each { |t|
+          if t == $1
+          ret = @@token = t
+          @@line.sub!(/^(\w+)/,'')
+          break
+        end
+        }
+      end
     when 'Hash'
-      if @@line.sub!(/(\w+)/, '') then
+      if @@line =~ /^(\w+)/
         if defined? what[$1] then
           @@token = $1
           ret = what[$1]
+          @@line.sub!(/^(\w+)/,'')
         end
       end
     else
-      error("Parser does not know what to do with '#{what.to_s}' in Parser::expect") 
+      error("Parser does not know what to do with '#{what.class.to_s}' in Parser::expect") 
     end
      
     STDOUT.puts "Expect: #{@@token}" if @@debug
