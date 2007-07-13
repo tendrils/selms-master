@@ -14,8 +14,6 @@ class Solaris < LogFile
 
   }
 
-    attr_reader  :Tokens
-
 
     def initialize( name, split_p=nil, head=nil)
 
