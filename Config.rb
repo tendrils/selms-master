@@ -24,14 +24,16 @@ module Config
   }
 
   OPS = {
-    '==' => true,
-    '===' => true,
-    '>' => true,
-    '<' => true,
-    '>=' => true,
-    '<=' => true,
-    '==' => true,
-    '!=' => true,
+    '==' => 'both',
+    '===' => 'both',
+    '>' => 'both',
+    '<' => 'both',
+    '>=' => 'both',
+    '<=' => 'both',
+    '==' => 'both',
+    '!=' => 'both',
+    '=~' => 'string',
+    '!~' => 'string',
   }
     Optional = true
     EmailRE = /^([-a-z0-9+_.]+(?:@[a-z0-9.]+)?)/
@@ -42,6 +44,7 @@ module Config
       $services = {};
       $hosts = {};
       $run_type = options
+      $global = nil
 
       $host_patterns = [];
       $errors = 0
@@ -58,7 +61,7 @@ module Config
         head = SectionHead.new
         case head.kind
         when 'global'
-          if defined? $global then
+          if $global then
 	    error( "only one global section") unless @@included_from.size > 0
 	    tmp = Global.new( head )
           else 
@@ -324,7 +327,7 @@ module Config
     class HostService < Section
       include Parser
 
-      attr_reader :services, :converted, :actions, :patterns, :real_time,
+      attr_reader :services, :converted, :actions, :patterns, :real_time, :merge_files,
                     :periodic, :file, :def_email, :sms, :page, :ignore, :pattern, :logtype
       attr_writer :converted, :actions, :patterns, :real_time,
                     :periodic, :file, :logtype
@@ -345,6 +348,7 @@ module Config
 	@logtype = []   # added to by plugins
 	@logtype_classes = { }   # added to by plugins
 	@ignore = nil
+        @merge_files = $options['merge'] == 'yes'
 
 	super( head, false) # tell Section that we will handle subsections
 
@@ -406,17 +410,21 @@ module Config
 	      else
 		recover(/;|\]/)
 	      end
-
-	  when 'file':
+          when 'merge'                        
+            @merge_files = ( expect(%w( yes no) ) == 'yes' )
+	  when 'file'
 	    expect( '=>',nil, SAME_LINE) 
 	    name = expect( /(\S+)/ ,'file name', SAME_LINE) 
 	    if look_ahead('(', SAME_LINE ) then # have options for file
 	      expect('(')
 	      if (re = expect( 're', '', SAME_LINE, OPTIONAL )) then	
 		@file[name] = @re
-	      else  # plugin name
+	      else  
 		tok = expect( /(\w+)/ ,'plugin name', SAME_LINE) 
-		if @logtype_classes[tok] 
+                if tok  == 'ignore'
+                  @file[name] = tok 
+                # must be a plugin name
+		elsif @logtype_classes[tok] 
 		  @file[ name ] = @logtype_classes[tok]
 		else
 		  test = nil
@@ -463,7 +471,7 @@ module Config
       end
 # this handles the non section items in the section
 
-      def merge( s )
+      def merge_services( s )
 
         if service = $services[s] || ( $global && $global.services[s]) then
           next if @services[s];  # all ready included                                                             
@@ -505,7 +513,7 @@ module Config
         case first_token
         when 'service'
           if tok = expect(/^(\w+)/, "service name") then
-	    merge( tok )
+	    merge_services( tok )
           else
             @errors = true
             rest_of_line   # ignore the rest of the line
@@ -682,6 +690,19 @@ module Config
         conditions = []
         actions = []
 
+        tokens = @file['all'].Tokens
+        
+        lf = nil
+        if @name != 'default' # if the section is named then it may be the name of a LogFile class
+          begin   # in which case we want to know about the tokens
+            eval "lf = #{@name.capitalize}.new"
+            tokens = lf.Tokens
+          rescue SyntaxError, StandardError =>e
+#            puts "tokens = #{@name.capitalize}.new => #{e}"
+          end
+
+        end
+
         begin   # while at end...
           if first_token then
             tok = first_token.dup
@@ -732,10 +753,11 @@ module Config
 	    end
 	    recover( /,|:/, SAME_LINE ) unless ok
           else
-            if t = @file['all'].Tokens[tok] then
+            if t = tokens[tok] 
 	      value = nil
-	      op = expect( /^([!=<>]+)/, 'operator', SAME_LINE, Optional ) || '=='
-	      if  OPS[op] then
+	      op = expect( /^([!=<>~]+)/, 'operator', SAME_LINE, Optional ) || '=='
+#              puts "tok#{tok} op #{op}"
+	      if op_class = OPS[op] then
 		if expect('(', '(', SAME_LINE, Optional) then # it is a range
 		  ( v1 = expect( t[0] )) && expect('..') && (v2 = expect( t[0] ))
 		  if defined? v2 then
@@ -750,6 +772,11 @@ module Config
 		  value = expect(t[0])
 		  value = "'#{value}'" if t[0].to_s == 'String'
 		end
+                if op_class == 'string' && t[0] == 'Integer'
+                  error("#{op} is valid only with Strings")
+                  value = nil
+                end
+
 		conditions.push( [tok, value, op ] ) if value 
 	      else
 		error("Unknown operator '#{op}'")
