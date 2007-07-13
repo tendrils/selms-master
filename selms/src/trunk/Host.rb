@@ -104,7 +104,7 @@ class Host
     @recs['report'] = []
     @recs['alert'] = []
     @recs['warn'] = []
-    @merge_files = true
+    @merge_files = conf.merge_files
   end
 
 # substitute for % vars in strings
@@ -112,7 +112,7 @@ class Host
   def expand( s, mdata )
     return nil unless s
     string = s.dup
-    string.gsub!(/%H/, @name) 
+    string.gsub!(/%H/, @h) 
     string.gsub!(/%F/, @rec.fn);
     string.gsub!(/%1/, mdata[1] ? mdata[1] : '')
     string.gsub!(/%2/, mdata[2] ? mdata[2] : '')
@@ -138,30 +138,35 @@ class Host
   end 
 
   def log_files( log_dir, logf )
-
+    
+    if f = (  @file['all']  ) then
+      c_logf = f.class != Regexp ? f : LogFile.new( @file['all'] ) 
+    end
+    
     if @merge_files then
 
-# fudge to get things going -- need to properly handle different file types
-      if f = (  @file['all']  || @file[logf[0]] ) then
-	c_logf = f.class != Regexp ? f : LogFile.new( @file['all'] ) 
-      end
-
       lf = c_logf.dup
+
       logf.each { | log |
-	next if log =~ /^cron/i && ! @file[log]
+        log =~ /^(.+)\.\d+/
+        base_name = $1
+        next if $options['file'] && $options['file'] != base_name
+	next if base_name == 'cron' && ! @file['cron']
+        next if @file[base_name] == 'ignore'               
 	lf.open_lf( log_dir + '/' + log )
       }
       yield lf if lf.file
-    else
+    else  # process files indivdually 
       logf.each { |log|
-	# ignore cron logs unless asked to process them
-	next if log =~ /^cron/i && ! @file[log]
-	
+        log =~ /^(.+)\.\d+/
+        base_name = $1
+        next if $options['file'] && $options['file'] != base_name
+	next if log =~ /^cron/i && ! @file[base_name] == 'process'
+        next if @file[base_name] == 'ignore'	
 	count = 0
-	if f = (  @file['all']  || @file[@logf] ) then
-	  c_logf = f.class != Regexp ? f : LogFile.new( @file['all'] ) 
-	else 
-	  c_logf = def_logf
+	if f = (  @file[base_name] || @file['all'] ) then
+          puts f
+	  c_logf = f.class != Regexp ? f : LogFile.new( f ) 
 	end
 
 
@@ -194,10 +199,10 @@ end
 
        while @rec = lf.gets
 
-	  pp 'preliminary split:', rec if $options['debug.split']
+	  pp 'preliminary split:', @rec if $options['debug.split']
 	 next unless @rec.split
 
-	 pp '', "final split", rec if $options['debug.split']
+	 pp '', "final split", @rec if $options['debug.split']
 	 break unless self.send @rule_set, 'TEST', @rec 
 	 if $options['max_log_recs'] && 
 	     recs['report'].size + recs['alert'].size + recs['warn'].size  >= $options['max_log_recs'] then
