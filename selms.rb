@@ -30,7 +30,7 @@ LOG_STORE = 'LogStore'
 
 # process command line options
 
-$options = {
+$options = {   # defaults
 	   'mail_to' => nil,
 	   'mail_server' => nil,
  	   'mail_subject' => 'SELMS Periodic Report',
@@ -47,7 +47,9 @@ $options = {
 	   'hostdomain'=> nil,
 	   'max_log_recs'=> nil,
 	   'date'=> nil,
+           'file' => nil,
 	   'log_store' => LOG_STORE,
+           'merge_files' => 'yes'
 }
 
 $options.default = 'empty'  # returned for unknown keys 
@@ -78,6 +80,8 @@ OptionParser.new { |opts|
     $options['ignore_unk_hosts'] = true }
   opts.on('-h', '--host=HOSTNAME', "run just for this host"){|val|
     $options['one_host'] = val}
+  opts.on('-f', '--file=FILENAME', "run just for this file"){|val|
+    $options['file'] = val}
   opts.on('-l', '--log_dir=LOGDIR', String, "Base directory where logs are located"){
     |val| $options['log_dir'] = val}
   opts.on( '--syntax', String, "just check the syntax of the configuration file") {
