@@ -31,6 +31,8 @@ LOG_STORE = 'LogStore'
 # process command line options
 
 $options = {   # defaults
+           'pre' => nil,
+           'post' => nil,
 	   'mail_to' => nil,
 	   'mail_server' => nil,
  	   'mail_subject' => 'SELMS Periodic Report',
@@ -84,10 +86,16 @@ OptionParser.new { |opts|
     $options['file'] = val}
   opts.on('-l', '--log_dir=LOGDIR', String, "Base directory where logs are located"){
     |val| $options['log_dir'] = val}
-  opts.on( '--syntax', String, "just check the syntax of the configuration file") {
+  opts.on( '-p', '--pre', String, "run this script before taking action") {
+    |val| $options['pre'] = true
+  }
+  opts.on( '-P','--post', String, "run this script after taking action") {
+    |val| $options['post'] = true
+  }
+   opts.on( '--syntax', String, "just check the syntax of the configuration file") {
     |val| $options['syntax'] = true
   }
-  opts.on( '--date=DAY', String, "Run for this day") { |val| 
+ opts.on( '--date=DAY', String, "Run for this day") { |val| 
     $options['date'] = val
     $options['no_offset'] = true
     $options['no_write_offset'] = true
@@ -167,6 +175,10 @@ $options['offset'] ||= OFFSET
 $options['rt_socket'] ||= RT_SOCKET
 $options['rt_buffer_size'] ||= RT_BUFFER_SIZE
 
+
+if $options['pre']
+  system( $options['pre'] )
+end
 
 case $options['run_type']
 when 'periodic' 
