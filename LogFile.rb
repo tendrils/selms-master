@@ -71,6 +71,12 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
               end
               closed = true
             end
+
+            if initial && ! defined? @rec[l].data then  # corrupt offset value?
+              count = 0
+              next
+            end
+
             if ! closed && @rec[l].data =~ /^last message repeated (\d+) times/ 
 
               if initial
@@ -196,6 +202,10 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       def split
         return nil unless @data
 	all, p, @data = @data.match( @split_p ).to_a
+        
+        if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )
+          p=$1
+        end
 
 	@proc = canonical_proc( p )
       
