@@ -9,7 +9,8 @@ class Host
 
 
   attr_reader :src, :alerts, :warns, :name, :unusual, :conf, :count, :email,
-              :ignore, :recs, :pattern, :file
+              :ignore, :recs, :pattern, :file, :priority
+             
   attr_writer :name
 
   class Accumulator
@@ -92,10 +93,12 @@ class Host
   end
 
   def initialize( conf, src )
+  
     @file = conf.file
     @pattern = conf.pattern
     @name = conf.name.dup
     @ignore = conf.ignore
+    @priority = conf.priority
     @count = {}
     @email = conf.def_email
 #    @action_classes = {}
@@ -111,8 +114,9 @@ class Host
 
   def expand( s, mdata )
     return nil unless s
+    begin
     string = s.dup
-    string.gsub!(/%H/, @h) 
+    string.gsub!(/%H/, @rec.h)
     string.gsub!(/%F/, @rec.fn);
     string.gsub!(/%1/, mdata[1] ? mdata[1] : '')
     string.gsub!(/%2/, mdata[2] ? mdata[2] : '')
@@ -120,6 +124,9 @@ class Host
     string.gsub!(/%4/, mdata[4] ? mdata[4] : '')
     string.gsub!(/%5/, mdata[5] ? mdata[5] : '')
     return string
+    rescue
+      STDERR.puts "error substituting data into #{s}"
+    end
   end
 
   def initialize_copy( from ) 
@@ -165,15 +172,23 @@ class Host
         next if @file[base_name] == 'ignore'	
 	count = 0
 	if f = (  @file[base_name] || @file['all'] ) then
-          puts f
+          f.to_s =~ /#<(\w+):/
+          rs = $1.downcase
+          @rule_set = @file[base_name].to_s.downcase if @file[base_name]  ###########  temp fudge -- fix this
 	  c_logf = f.class != Regexp ? f : LogFile.new( f ) 
-	end
+          @rule_set = '_'+rs
+          begin
+            self.send @rule_set, nil, nil 
+          rescue StandardError => ex
+            @rule_set = '_default'
+          end
+        end
 
 
 	lf = c_logf.dup
         lf.open_lf( log_dir + '/' + log )
 
-	pp "using logformat:", c_logf if $options['debug.split']
+	pp "using logformat:", c_logf.to_s if $options['debug.split']
 	yield lf
       }
   end
@@ -193,15 +208,13 @@ end
       @logf.push( filename )
    }
 
-   @rule_set = '_default'
    begin
      log_files(log_dir, @logf) { |lf|
-
+       
        while @rec = lf.gets
 
 	  pp 'preliminary split:', @rec if $options['debug.split']
 	 next unless @rec.split
-
 	 pp '', "final split", @rec if $options['debug.split']
 	 break unless self.send @rule_set, 'TEST', @rec 
 	 if $options['max_log_recs'] && 
