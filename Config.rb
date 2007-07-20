@@ -32,8 +32,8 @@ module Config
     '<=' => 'both',
     '==' => 'both',
     '!=' => 'both',
-    '=~' => 'string',
-    '!~' => 'string',
+    '=~' => 're',
+    '!~' => 're',
   }
     Optional = true
     EmailRE = /^([-a-z0-9+_.]+(?:@[a-z0-9.]+)?)/
@@ -328,7 +328,8 @@ module Config
       include Parser
 
       attr_reader :services, :converted, :actions, :patterns, :real_time, :merge_files,
-                    :periodic, :file, :def_email, :sms, :page, :ignore, :pattern, :logtype
+                    :periodic, :file, :def_email, :sms, :page, :ignore, :pattern, :logtype,
+                    :priority
       attr_writer :converted, :actions, :patterns, :real_time,
                     :periodic, :file, :logtype
 
@@ -349,6 +350,7 @@ module Config
 	@logtype_classes = { }   # added to by plugins
 	@ignore = nil
         @merge_files = $options['merge'] == 'yes'
+        @priority = 0
 
 	super( head, false) # tell Section that we will handle subsections
 
@@ -387,10 +389,10 @@ module Config
 
         # options should contain a ssemicolon separated list of option=>value
         begin
-	  if look_ahead( '/', SAME_LINE )  or look_ahead( '%r', SAME_LINE ) then
+	  if look_ahead( '/')  or look_ahead( '%r') then
 	    tok = 're'
 	  else
-	    tok = expect( /^(\w+)/, 'option name', SAME_LINE );
+	    tok = expect( /^(\w+)/, 'option name');
 	  end
 	  bad_tok = false
 
@@ -398,7 +400,15 @@ module Config
 	  when 'email'
 	    if @kind == 'host' then
 	      expect( '=>',nil, SAME_LINE) 
-	      @def_email = expect(/^([^;\]]+)/, "email addresses", SAME_LINE )
+	      @def_email = expect(/^([^;\]]+)/, "email addresses" )
+	      @def_email.strip!
+	    else
+	      bad_tok = true
+	    end
+	  when 'priority'
+	    if @kind == 'host' then
+	      expect( '=>',nil, SAME_LINE) 
+	      @priority = expect(Integer, "search priority 0-9")
 	      @def_email.strip!
 	    else
 	      bad_tok = true
@@ -413,14 +423,14 @@ module Config
           when 'merge'                        
             @merge_files = ( expect(%w( yes no) ) == 'yes' )
 	  when 'file'
-	    expect( '=>',nil, SAME_LINE) 
-	    name = expect( /(\S+)/ ,'file name', SAME_LINE) 
-	    if look_ahead('(', SAME_LINE ) then # have options for file
+	    expect( '=>' ) 
+	    name = expect( /(\S+)/ ,'file name') 
+	    if look_ahead('(' ) then # have options for file
 	      expect('(')
-	      if (re = expect( 're', '', SAME_LINE, OPTIONAL )) then	
+	      if (re = expect( 're', '', ANYWHERE, OPTIONAL )) then	
 		@file[name] = @re
 	      else  
-		tok = expect( /(\w+)/ ,'plugin name', SAME_LINE) 
+		tok = expect( /(\w+)/ ,'plugin name' ) 
                 if tok  == 'ignore'
                   @file[name] = tok 
                 # must be a plugin name
@@ -449,7 +459,7 @@ module Config
 
 	  else
 	    if  @kind == 'service' && (t = @file['all'].Tokens[tok])[1] == 'options' then
-	      if expect( '=>',nil, SAME_LINE, OPTIONAL) then
+	      if expect( '=>',nil, ANYWHERE, OPTIONAL) then
 		v = nil
 		@opts << [ tok, "'#{v}'" ] if v = expect( t[0] ) 
 	      else
@@ -462,9 +472,9 @@ module Config
 	  if bad_tok then
 	    error("'#{tok}' is not a valid option for #{@kind}")
 	  end
-        end while expect(';', nil,  SAME_LINE, OPTIONAL )
+        end while expect(';', nil,  ANYWHERE, OPTIONAL )
 
-	if ! expect(']', "';' or ']' at end of section head", SAME_LINE ) then
+	if ! expect(']', "';' or ']' at end of section head") then
 	  error("Skipping to start of next section")
 	  recover(']' )
 	end
@@ -755,8 +765,8 @@ module Config
           else
             if t = tokens[tok] 
 	      value = nil
-	      op = expect( /^([!=<>~]+)/, 'operator', SAME_LINE, Optional ) || '=='
-#              puts "tok#{tok} op #{op}"
+	      op = expect( /^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional ) || '=='
+#              puts "tok #{tok} op #{op}" unless op == '=='
 	      if op_class = OPS[op] then
 		if expect('(', '(', SAME_LINE, Optional) then # it is a range
 		  ( v1 = expect( t[0] )) && expect('..') && (v2 = expect( t[0] ))
@@ -769,8 +779,8 @@ module Config
 		    rest_of_line
 		  end
 		else
-		  value = expect(t[0])
-		  value = "'#{value}'" if t[0].to_s == 'String'
+		  value = expect(op_class == 're'? 're' : t[0])
+		  value = "'#{value}'" if ( t[0].to_s == 'String' )  && (op != '=~') && (op != '!~')
 		end
                 if op_class == 'string' && t[0] == 'Integer'
                   error("#{op} is valid only with Strings")
