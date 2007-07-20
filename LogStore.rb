@@ -20,9 +20,10 @@
 
 	mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
-	if $options['one_host'] && $options['one_host'] != mach then 
+	if $options['one_host'] && 
+            ( ( $options['one_host'].class == String && $options['one_host'] != mach) ||
+             ( ! $options['one_host'].match( mach ) ) ) then 
 	  Find::prune
-	  return;
 	end
 
 	rest = $1 if filename =~ %r|^#{@root}/[^/]+/(.*)|o;
