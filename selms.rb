@@ -110,6 +110,13 @@ OptionParser.new { |opts|
   end
   }
 
+  if $options['one_host'] && $options['one_host'] =~ %r!^/(.+)/$!
+    begin
+      $options['one_host'] = Regexp.new( $1)
+    rescue RegexpError
+      STDERR.puts "invalid RE supplied for host selection -- will be ignored"
+    end
+  end  
 # load plugins
 
 %w( plugins lib/plugins ../lib/plugins ).each {|root|
