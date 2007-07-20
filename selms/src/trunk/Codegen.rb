@@ -104,6 +104,7 @@ pp e
 
     count = 0
     all.each{ |match|
+      x = nil
       count += 1
       print "\nMatch #{count}: " if $options['debug.match']
       pp match if $options['debug.match']
@@ -121,10 +122,17 @@ pp e
         when 't_va1'
           c += %Q'expand("#{cond[1]}",m_data) #{cond[2]}  #{cond[3]} '
         else
-          c += "rec.#{cond[0]} #{cond[2]} #{cond[1]}" 
+          if cond[2] == '=~' || cond[2] == '!~'
+            c << "! " if cond[2] == '!~'
+            c += "m_data = rec.#{cond[0]}.match(#{cond[1]})"
+          else
+            c += "rec.#{cond[0]} #{cond[2]} #{cond[1]}" 
+          end
+            
         end
       }
 
+      ret = ''
       a = ''
       match[1].each { |event|
         a += '      '
@@ -138,10 +146,11 @@ pp e
 	  key = "#{event[0]}-#{count}"
 	  a << "    @count['#{key}'] = Host::SimpleCounter.new( 0, '#{key}') unless @count['#{key}']\n" +
                "    @count['#{key}'].incr;\n"  if @run_type == 'periodic'
-	end	       
-
+	end
+	       
         case event[0]
         when 'drop', 'ignore'
+          ret = "return true\n"
         when 'alert'
           a += "alert( #{y}, rec.orec )\n"
         when 'switch' 
@@ -161,7 +170,7 @@ pp e
         end
       }
       code << "    ##{count}:\n" 
-      code << "    if #{c} then\n#{a}      return true\n    end\n"
+      code << "    if #{c} then\n#{a}      #{ret}   end\n"
     }
     return [ code, post ]
   end
@@ -205,6 +214,7 @@ pp e
 
    sb.each { |name, scanner| 
      code <<  "  def _#{name}( file, rec )\n" 
+     code <<  "    return unless file\n"
      code <<  "    errors = 0\n"
      code <<  "    begin\n"
      code <<  "    #{scanner}\n"
@@ -232,7 +242,8 @@ pp e
 #       puts  code
 
    if $options['debug.code'] || $options['debug.match-code'] then
-     if ! $options['one_host'] ||  $options['one_host'] == host.name ||
+     if ! $options['one_host'] ||  $options['one_host'].class == Regexp || 
+          $options['one_host'] == host.name ||
 	 ( host.pattern && $options['one_host'].match(  host.pattern ) ) then
        puts host.name
        puts code
