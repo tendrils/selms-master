@@ -158,7 +158,7 @@ class Host
         log =~ /^(.+)\.\d+/
         base_name = $1
         next if $options['file'] && $options['file'] != base_name
-	next if base_name == 'cron' && ! @file['cron']
+	next if base_name == 'cron' &&  @file['cron'] != 'process'
         next if @file[base_name] == 'ignore'               
 	lf.open_lf( log_dir + '/' + log )
       }
@@ -168,7 +168,7 @@ class Host
         log =~ /^(.+)\.\d+/
         base_name = $1
         next if $options['file'] && $options['file'] != base_name
-	next if log =~ /^cron/i && ! @file[base_name] == 'process'
+	next if base_name == 'cron' &&  @file['cron'] != 'process'
         next if @file[base_name] == 'ignore'	
 	count = 0
 	if f = (  @file[base_name] || @file['all'] ) then
