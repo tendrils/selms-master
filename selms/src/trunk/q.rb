@@ -40,16 +40,13 @@ include Codegen
     start_code( 'periodic' )
 
     $hosts.each { |name, h| 
-      if name =~ /^default/ || ! $options['one_host'] ||
-           ($options['one_host'].class == Regexp ||$options['one_host'].match(name)) || 
-           $options['one_host'] == name then
+      if name =~ /^default/ || ! $options['one_host'] || $options['one_host'] == name then
 	make_host_class( h, hosts, 'periodic') 
       end
    }
 
     $host_patterns.each { |h|
-      if  ! $options['one_host'] || $options['one_host'].class == Regexp ||
-        $options['one_host'].match(h.pattern)  then
+      if  ! $options['one_host'] || $options['one_host'].match(h.pattern)  then
 	make_host_class( h, host_patterns, 'periodic' )
       end
     }
@@ -62,13 +59,12 @@ include Codegen
 
     $log_store.traverse { | dir_name, mach|
 
-      priority = -1
       unless host = hosts[mach] then
 	host_patterns.each { |name, h |
-	  if mach.match( h.pattern ) && h.priority > priority then
+	  if mach.match( h.pattern ) then
 	    host = hosts[mach] = h.dup
 	    host.name = mach 
-	    priority = host.priority
+	    break
 	  end
 	} 
       end

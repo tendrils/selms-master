@@ -240,7 +240,7 @@ pp e
    code <<  "hosts[host.name] = #{class_name}.new( host, code )\n"
    
 #       puts  code
-
+#puts $options['one_host'], host.name
    if $options['debug.code'] || $options['debug.match-code'] then
      if ! $options['one_host'] ||  $options['one_host'].class == Regexp || 
           $options['one_host'] == host.name ||
@@ -249,7 +249,7 @@ pp e
        puts code
      end
    end
-
+#puts code
    eval code
 #pp hosts[host.name].class,  hosts[host.name].class.instance_methods
  end

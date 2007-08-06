@@ -10,6 +10,7 @@
     proc > 'xxxx'			: drop 
     proc >= 'xxxx'			: drop 
     proc ( 'xxxx' .. 'zzz' )		: drop 
+    proc =~ /^w+/			: drop
 
     int < 10			: drop 
     int <= 10			: drop 
