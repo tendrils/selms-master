@@ -15,7 +15,7 @@ module Alarm
   extern "unsigned int alarm(unsigned int)"
 end                                                                                
 
-class Nagios 
+class Nagiosx 
   include Zlib
   
   def initialize( host, pass, debug = false, port=5667, time_out=20 )
@@ -77,7 +77,7 @@ class Nagios
     crc = 0
     @d += 1
     
-    debugit("Read input: " + [hostname,service,return_code,status].join("\t"))
+    debugit("Read input: '" + [hostname,service,return_code,status].join("\t'"))
     
     # Build our packet.
 #puts @packet_version, crc, @timestamp, return_code, hostname, service, status
@@ -119,17 +119,19 @@ class Action
   
   class Nagios < Action::Base
     
-    def initialize( host, pass, debug = false, port=5667, time_out=20 )
+    def initialize( host, pass, debug = true, port=5667, time_out=20 )
       @host = host
       @pass = pass
       @debug = debug
       @port = port
       @time_out = time_out
+      @bucket = {}
+      @n = nil
       
-      types = {
-        'ALERT'   => 2,
-        'WARN'    => 1,
-        'UNUSUAL' => 0
+      @types = {
+        'alert'   => 2,
+        'warn'    => 1,
+        'unusual' => 0
       }
     end
     
@@ -142,17 +144,20 @@ class Action
   
 
     def do_realtime ( type, host, msg, rec=nil )
-      if defined? @bucket[type] then
+puts "#{type}, #{host.name}, #{msg}"
+      data = []
+      if @bucket[type] then
         data = @bucket[type]
       else
-        data=[]
         data << ( msg || rec ) 
       end
-      @n = Nagios.new( @host, @pass, @debug, @port, @time_out) unless @n
+      @n = Nagiosx.new( @host, @pass, @debug, @port, @time_out) unless @n
+
       data.each{ |line|
-        @n.send( $rt.hostname, types[type], line )
+        @n.send( host.name, 'SELMS', @types[type], line )
       }
-      n.close
+      @n.close
+      @n = nil
     end
   end
   
