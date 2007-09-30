@@ -20,7 +20,7 @@ include Codegen
   attr_writer :action_classes
   attr_reader :thread, :re_read_conf
 
-  def initialize( conf, syntax )
+  def initialize()
   
 #######
     $run = self
@@ -41,25 +41,7 @@ include Codegen
     # define a new class for each host.  The class inheirits from Host and 
     # defines host specific scanning and alerting methods
 
-    start_code( 'realtime' )
-
-
-    conf.hosts.each { |name, h|
-      if  h.real_time.size > 0 && (name =~ /^default/ || ! $options['one_host'] || 
-				   $options['one_host'] == name) then
-	make_host_class( h, @hosts,  'realtime') 
-      end
-
-    }
-
-    conf.host_patterns.each { |h|
-      if  h.real_time.size > 0 && ( ! $options['one_host'] || 
-				    $options['one_host'].match(h.pattern))  then
-	make_host_class( h, @host_patterns, 'realtime')
-      end
-    }
-puts "Act", @action_classes
-
+    start_code( 'realtime', @hosts, @host_patterns )
   end
 
 
@@ -67,21 +49,23 @@ puts "Act", @action_classes
   # to the approriate host scanner
 
   def run_it 
-
-    @thread = Thread.new { 
+#    @thread = Thread.new { 
       files = {}
       def_logf = LogFile.new( 'default',  nil )
+ puts "open fifo"     
       File.open( $options['rt_socket'], 'r' ) { |logs|
+ puts "open ok"
 	begin
 	while logs.gets
+#	  all, utime, time, hn, record = $_.match(Host::LOG_HEAD).to_a
+          hn = $log_store.extract_rt_host( $_ )
+          hn.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
+#	  pp rec if $options['debug.split']
 
-	  all, utime, time, hn, record = $_.match(Host::LOG_HEAD).to_a
-	  puts '+++',utime, time, hn, record if $options['debug.split']
-
-	  hn.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
+#	  hn = h.sub(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
 	  next if $options['one_host'] && $options['one_host'] != hn	  
-	  
+
 	  unless host = @hosts[hn] then
 	    @host_patterns.each { |name, h |
 		if hn.match( h.pattern ) then
@@ -91,28 +75,27 @@ puts "Act", @action_classes
 		  break
 		end
 	      } 
-	  end
+            end
+ #puts host         
+	  next unless host
+	  
+          unless files[hn]
+            if f = (  host.file['all']  ) then
+              files[hn] = f.class != Regexp ? f : LogFile.new( @file['all'] ) 
+# puts files[hn]
+            end
+          end
+          
+ #puts "filetype @files[hn]" if $options['debug.split']
+ #pp host
+	  
+	  rec = files[hn].gets( nil, $_)
+          rec.split
 
-	  if( ! host ) then
-	    next
-	  end
-	  
-	  if f = host.file['all']  then
-	    files[hn] = f.class != Regexp ? f : LogFile.new( host.name, f ) 
-	  else 
-	    files[hn] = def_logf
-	  end
- # pp "filetype @files[hn]" if $options['debug.split']
-	  
-	  
-          proc, facility, level, record, orec = files[hn].splitter( time, hn, record )
-
-	  puts '===', proc, facility, level, record, orec if $options['debug.split']
-#	  next if proc == 'cron'   && ! host.file['cron']
-	  orec = proc + ' - ' + orec if $options['debug.proc']
-	  
-          host.scanner( '', time, proc, facility, level, record, orec )
-
+	  pp rec if $options['debug.split']
+puts "#{hn} #{rec.data}"          
+#          host.scanner( '', time, proc, facility, level, record, orec )
+           host.send host.rule_set, 'TEST', rec 
 	  
 	end
 	rescue StandardError => e
@@ -121,7 +104,7 @@ puts "Act", @action_classes
 	end
       }
 puts "gets failed:$!"
-    }
+#    }
 
   end
 
