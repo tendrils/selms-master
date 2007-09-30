@@ -20,8 +20,12 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       @rc = Record
     end
 
-    def gets( l = nil )  # set l for initial read
+    def gets( l = nil, raw = nil )  # set l for initial read
 
+      if $run_type == 'realtime'
+#        raw = $rt_fh.gets
+        return @rc.new( raw, @head, @split_p)
+      end
       return nil if ! @file || @file.size == 0
 
       initial = l
@@ -77,7 +81,8 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
               next
             end
 
-            if ! closed && @rec[l].data =~ /^last message repeated (\d+) times/ 
+            if ! closed && ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
+			    @rec[l].data =~ /^Previous message occurred (\d+) times./ )
 
               if initial
                 @rec[l] = nil
@@ -109,15 +114,15 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
     def open_lf( fn )
 
-      off_name = fn + '-' + $options['offset'] 
-      fn =~ /.+\/(.+)/
-      n = $1
-      offset = nil
-      
+      if $run_type != 'realtime'
+        off_name = fn + '-' + $options['offset'] 
+        fn =~ /.+\/(.+)/
+        n = $1
+        offset = nil
+      end
       if !@file then
 	@file = []
 	@rec = []
-#	@lrec = []
         @cache = []
 	@off_name = []
         @closing = []
@@ -125,12 +130,19 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       end
       
       $fstate = 'opening'
-      if (File.file? off_name) && ! $options['no_offset'] then
+      if $run_type != 'realtime' && (File.file? off_name) && ! $options['no_offset'] then
 	File::open(off_name) { |o|
 	  offset = o.gets.to_i
 	}
       end
+
       f = File.open( fn )
+      if f then
+	puts "file #{fn} offset #{offset}" if $options['debug.split'] || $options['debug.gets']
+      else
+	puts( STDERR, "failed to open #{fn} #{$!}")
+	return nil
+      end
       $fstate = 'seeking'
       f.seek( offset ) if offset
       $fstate = 'reading'
