@@ -52,9 +52,7 @@ include Codegen
 #    @thread = Thread.new { 
       files = {}
       def_logf = LogFile.new( 'default',  nil )
- puts "open fifo"     
       File.open( $options['rt_socket'], 'r' ) { |logs|
- puts "open ok"
 	begin
 	while logs.gets
 #	  all, utime, time, hn, record = $_.match(Host::LOG_HEAD).to_a
@@ -86,8 +84,6 @@ include Codegen
             end
           end
           
- #puts "filetype @files[hn]" if $options['debug.split']
- #pp host
 	  
 	  rec = files[hn].gets( nil, $_)
           rec.split
