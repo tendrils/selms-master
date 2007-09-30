@@ -9,9 +9,9 @@ class Host
 
 
   attr_reader :src, :alerts, :warns, :name, :unusual, :conf, :count, :email,
-              :ignore, :recs, :pattern, :file, :priority
+              :ignore, :recs, :pattern, :file, :priority, :rule_set
              
-  attr_writer :name
+  attr_writer :name, :rule_set
 
   class Accumulator
     def initialize( host, type, action, interval )
@@ -108,6 +108,7 @@ class Host
     @recs['alert'] = []
     @recs['warn'] = []
     @merge_files = conf.merge_files
+    @rule_set = '_default'
   end
 
 # substitute for % vars in strings
@@ -143,7 +144,7 @@ class Host
     @recs['alert'] = []
     @recs['warn'] = []
   end 
-
+ 
   def log_files( log_dir, logf )
     
     if f = (  @file['all']  ) then
@@ -198,9 +199,9 @@ end
 
   def pscan( log_dir, hostname )
 
-    puts "in Host::pscan #{hostname}" if $options['debug.hosts'] 
+  puts "in Host::pscan #{hostname}" if $options['debug.hosts'] 
 
-   @logf = []
+  @logf = []
 
     logs = Dir.new( log_dir );
     logs.each { |filename|
@@ -213,7 +214,7 @@ end
        
        while @rec = lf.gets
 
-	  pp 'preliminary split:', @rec if $options['debug.split']
+	 pp 'preliminary split:', @rec if $options['debug.split']
 	 next unless @rec.split
 	 pp '', "final split", @rec if $options['debug.split']
 	 break unless self.send @rule_set, 'TEST', @rec 
