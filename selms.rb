@@ -199,7 +199,6 @@ when 'realtime'
   exit conf.errors ? 1 : 0 if $options['syntax'] 
 
   rt.run_it                    # start it running
-  exit
   while rt.watch_it do
 
     exit unless rt.re_read_conf
