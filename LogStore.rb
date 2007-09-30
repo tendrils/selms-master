@@ -11,6 +11,11 @@
       @log_head = LOG_HEAD
     end
 
+    def extract_rt_host( log ) 
+      r = log.split(/\s+/)
+      return r[6].chop
+    end
+    
     def traverse
       Find.find( @root ) { |filename|
 
