@@ -194,11 +194,12 @@ when 'periodic'
   exit( $errors ) if $options['syntax'] 
 
 when 'realtime'  
-  rt =  Realtime.new( $options['syntax'] )  # generate object to do realtime scanning
+  rt =  Realtime.new( )  # generate object to do realtime scanning
 
   exit conf.errors ? 1 : 0 if $options['syntax'] 
 
   rt.run_it                    # start it running
+  exit
   while rt.watch_it do
 
     exit unless rt.re_read_conf
@@ -231,11 +232,11 @@ put "watch_it exited"
   end
 
 when 'daily'
-  Daily.new( conf )
+  Daily.new
 when 'weekly'
-  Weekly.new( conf )
+  Weekly.new
 when 'monthly'
-  Monthly.new( conf )
+  Monthly.new
 end
 
 exit 0;
