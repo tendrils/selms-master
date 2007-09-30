@@ -2,10 +2,33 @@ require 'Procs.rb'
 
 module Codegen
 
-  def start_code( run_type )
+  def start_code( run_type, hosts, host_patterns )
 
+    # initialise class vars
+    
     @debug = false
     @run_type = run_type
+    
+ 
+    # define a new class for each host.  The class inheirits from Host and 
+    # defines host specific scanning and alerting methods
+
+    $hosts.each { |name, h| 
+      if name =~ /^default/ || ! $options['one_host'] ||
+           ($options['one_host'].class == Regexp ||$options['one_host'].match(name)) || 
+           $options['one_host'] == name then
+	make_host_class( h, hosts, @run_type ) 
+      end
+   }
+
+    $host_patterns.each { |h|
+      if  ! $options['one_host'] || $options['one_host'].class == Regexp ||
+        $options['one_host'].match(h.pattern)  then
+	make_host_class( h, host_patterns, @run_type )
+      end
+    }
+
+
   end
 
 # action_body generates code for the actions - alert, warn and report
@@ -187,14 +210,14 @@ pp e
 
     sb = {}
     post_code = {}
-
+#pp host
     case type
     when 'periodic'
       host.periodic.each{ |name, matches|
 	sb[name], post_code[name] = scanner_body( matches, 1  )
       }
     when 'realtime'
-      host.realtime.each{ |name, matches|
+      host.real_time.each{ |name, matches|
 	sb[name], post_code[name] = scanner_body( matches, 1  )
       }
     end    
@@ -218,15 +241,17 @@ pp e
      code <<  "    errors = 0\n"
      code <<  "    begin\n"
      code <<  "    #{scanner}\n"
-     code <<  "    rescue NoMethodError=>e\n"
-     code <<  "      report( e )\n"
-     code <<  "      if ( errors += 1 ) > 10 then\n"
-     code <<  "        report( \"Too many errors -- giving up!\"  )\n"
-     code <<  "        return nil\n"
-     code <<  "      end\n"
-     code <<  "    end\n"
      if $run_type == 'periodic' then
+       code <<  "    rescue NoMethodError=>e\n"
+       code <<  "      report( e )\n"
+       code <<  "      if ( errors += 1 ) > 10 then\n"
+       code <<  "        report( \"Too many errors -- giving up!\"  )\n"
+       code <<  "        return nil\n"
+       code <<  "      end\n"
+       code <<  "    end\n"
        code <<  "     report( rec.orec )\n"
+     else
+       code <<  "    end\n"
      end
      code <<  "  return true\n"
      code <<  "  end\n"
