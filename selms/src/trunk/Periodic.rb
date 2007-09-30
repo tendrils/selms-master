@@ -33,26 +33,7 @@ include Codegen
     hosts = {}
     host_patterns = {}
   
- 
-    # define a new class for each host.  The class inheirits from Host and 
-    # defines host specific scanning and alerting methods
-
-    start_code( 'periodic' )
-
-    $hosts.each { |name, h| 
-      if name =~ /^default/ || ! $options['one_host'] ||
-           ($options['one_host'].class == Regexp ||$options['one_host'].match(name)) || 
-           $options['one_host'] == name then
-	make_host_class( h, hosts, 'periodic') 
-      end
-   }
-
-    $host_patterns.each { |h|
-      if  ! $options['one_host'] || $options['one_host'].class == Regexp ||
-        $options['one_host'].match(h.pattern)  then
-	make_host_class( h, host_patterns, 'periodic' )
-      end
-    }
+    start_code( 'periodic', hosts, host_patterns )
 
     return if syntax  # dont run stuff if it is just a syntax check...
 
