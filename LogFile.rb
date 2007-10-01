@@ -1,7 +1,7 @@
 # change this if you fiddle with the syslog-ng templates!!!   Should be a global config option??                       
 
 LOG_BITS = /^([^:]+):\s+(.+)?/
-
+# token change
   class LogFile 
     attr_reader  :Tokens, :name, :rec, :file 
 
