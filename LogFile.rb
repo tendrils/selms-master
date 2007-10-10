@@ -6,6 +6,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
     attr_reader  :Tokens, :name, :rec, :file 
 
     def initialize( name=nil, split_p=nil, head=nil)
+
       @Tokens = {
 	'proc' => [ String, 'options' ],
 	'int' => [ Integer, 'options' ]  # so we can test ints in default setup

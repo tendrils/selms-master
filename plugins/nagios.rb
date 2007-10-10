@@ -15,7 +15,7 @@ module Alarm
   extern "unsigned int alarm(unsigned int)"
 end                                                                                
 
-class Nagiosx 
+class Nagiosx
   include Zlib
   
   def initialize( host, pass, debug = false, port=5667, time_out=20 )
@@ -144,7 +144,6 @@ class Action
   
 
     def do_realtime ( type, host, msg, rec=nil )
-puts "#{type}, #{host.name}, #{msg}"
       data = []
       if @bucket[type] then
         data = @bucket[type]
@@ -187,7 +186,7 @@ end
 if __FILE__ == $0     # someone is running me!
   host = ARGV.shift
 
-  n = Nagios.new(host, '2bmshtr', true)
+  n = Nagiosx.new(host, '2bmshtr', true)
   while gets
     chomp
     (h, r, m) = $_.split(/\s*,\s*/)
