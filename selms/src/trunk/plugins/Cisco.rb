@@ -4,7 +4,9 @@ class Cisco < LogFile
 
     def initialize(name, split_p=nil, head=nil)
 
-      super(name, split_p || /^(\d+)?[^%]+(%(\w+)-(\d)-(\S+):.+)?/  )
+      split_p = /^(\d+)?[^%]*(%(\w+)-(\d)-(\S+):.+)?/ unless split_p
+
+      super(name, split_p  )
 
       @Tokens = {
 	'cat'    => [String, 'options'],
@@ -27,6 +29,12 @@ class Cisco < LogFile
 
       def split
 	all, @proc, @rec, @cat, @level, @event = @data.match(@split_p ).to_a
+# hack because there are two formats of log record :(
+	if @proc == ':'
+	  @level = '3'
+          @event = ''
+	  all, @cat, @proc, @event = @data.match(/^: \[(\w+)\] ([^:]+):/ ).to_a
+	end
 	@level = @level.to_i
 	@orec = "#{@time} #{@h}: '#{@data}'"
       end
@@ -38,4 +46,7 @@ class Ciscowlan < Cisco
    def initialize(name, split_p=nil, head=nil)
      super( name, /^(\S+) ((\w+)-(\d)-(\S+):.+)?/ )
    end
+
+    class Record < Cisco::Record
+    end
 end
