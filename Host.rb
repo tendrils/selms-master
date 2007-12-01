@@ -203,7 +203,7 @@ end
 
   @logf = []
 
-    return  unless -d log_dir
+    return  unless -d log_dir;
     logs = Dir.new( log_dir );
     logs.each { |filename|
       next unless filename =~ /(.+)\.\d{8}$/
