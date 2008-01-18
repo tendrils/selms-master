@@ -84,7 +84,6 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
             if ! closed && ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
 			    @rec[l].data =~ /^Previous message occurred (\d+) times./ )
-
               if initial
                 @rec[l] = nil
                 count = 0
@@ -103,6 +102,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
           end
         end while ( ! closed &&  @rec[l].data == previous_rec.data )
       end
+
       if count > 1      
          r.data << " -- repeated #{count} times since #{time}"
       end
