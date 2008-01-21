@@ -48,7 +48,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
           end
           throw :new_file if save && save != l && count > 0
           puts "index :#{l}" if $options['debug.gets']
-          
+
           r = initial ? @rc : @rec[l].dup 
           
           closed = false
@@ -67,7 +67,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
               @rec[l].fn = @fn[l]
 #              puts "filename #{@rec[l].fn}"
             else # end of file 
-              #puts "end of file #{l} count  #{count} #{@lrec[l]}"
+	      puts "end of file #{l} count  #{count}"  if $options['debug.gets']
               if initial || @closing[l] || count != 1 # don't loose last record!
                 close_lf( l ) 
                 #              puts "closing file #{l}"
@@ -101,6 +101,12 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
             puts previous_rec.data  unless closed
           end
         end while ( ! closed &&  @rec[l].data == previous_rec.data )
+      end
+
+      begin
+        r.method(:data)    # corrupt offset or eof ??
+	rescue NameError
+          return false
       end
 
       if count > 1      
@@ -139,7 +145,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
       f = File.open( fn )
       if f then
-	puts "file #{fn} offset #{offset}" if $options['debug.split'] || $options['debug.gets']
+	puts "file #{fn} offset #{offset}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files'] 
       else
 	puts( STDERR, "failed to open #{fn} #{$!}")
 	return nil
@@ -151,7 +157,6 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       closed = false
       l = @file.size
       r = nil
-      puts "open #{l}: #{fn}" if $options['debug.files']
       @file[l] = f
       @closing[l] = false
       @fn[l] = n
