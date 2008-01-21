@@ -142,7 +142,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 	  offset = o.gets.to_i
 	}
       end
-
+#test
       f = File.open( fn )
       if f then
 	puts "file #{fn} offset #{offset}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files'] 
