@@ -147,20 +147,23 @@ class Host
  
   def log_files( log_dir, logf )
     
-    if f = (  @file['all']  ) then
-      c_logf = f.class != Regexp ? f : LogFile.new( @file['all'] ) 
-    end
     
     if @merge_files then
 
-      lf = c_logf.dup
+#      lf = c_logf.dup
 
       logf.each { | log |
         log =~ /^(.+)\.\d+/
         base_name = $1
-        next if $options['file'] && $options['file'] != base_name
+
+	next if $options['file'] && $options['file'] != base_name
 	next if base_name == 'cron' &&  @file['cron'] != 'process'
-        next if @file[base_name] == 'ignore'               
+        next if @file[base_name]['ignore']               
+#   if f = (  @file['all']  ) then 
+
+	l = @file[base_name] ? base_name : 'all'
+       
+
 	lf.open_lf( log_dir + '/' + log )
       }
       yield lf if lf.file
@@ -168,9 +171,14 @@ class Host
       logf.each { |log|
         log =~ /^(.+)\.\d+/
         base_name = $1
+#puts log_dir, base_name
+	l = @file[base_name] ? base_name : 'all'
         next if $options['file'] && $options['file'] != base_name
 	next if base_name == 'cron' &&  @file['cron'] != 'process'
-        next if @file[base_name] == 'ignore'	
+        next if @file[base_name] && @file[base_name]['ignore']	
+
+	lf =  @file[l]['re'] ? LogFile.new( @file[l]['re'] ) : @file[l]['logtype']
+
 	count = 0
 	if f = (  @file[base_name] || @file['all'] ) then
           f.to_s =~ /#<(\w+):/
@@ -186,7 +194,7 @@ class Host
         end
 
 
-	lf = c_logf.dup
+#puts "#{log_dir} #{log} ", lf
         lf.open_lf( log_dir + '/' + log )
 
 	pp "using logformat:", c_logf.to_s if $options['debug.split']

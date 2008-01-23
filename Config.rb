@@ -342,7 +342,7 @@ module Config
         @real_time = {}
         @periodic = {}
         @file = {}
-	@file['all'] = LogFile.new
+	@file['all'] = {'logtype' => LogFile.new }
         @converted = false
         @def_email = ''
         @opts = []
@@ -383,6 +383,7 @@ module Config
 	  end
 	end
 	@actions = $global.actions unless @actions
+
       end
 
       def get_options
@@ -407,7 +408,7 @@ module Config
 	    end
 	  when 'priority'
 	    if @kind == 'host' then
-	      expect( '=>',nil, SAME_LINE) 
+ 	      expect( '=>',nil, SAME_LINE) 
 	      @priority = expect(Integer, "search priority 0-9")
 	      @def_email.strip!
 	    else
@@ -425,17 +426,21 @@ module Config
 	  when 'file'
 	    expect( '=>' ) 
 	    name = expect( /(\S+)/ ,'file name') 
+	    @file[name] = {} unless  @file[name]
 	    if look_ahead('(' ) then # have options for file
 	      expect('(')
 	      if (re = expect( 're', '', ANYWHERE, OPTIONAL )) then	
-		@file[name] = @re
-	      else  
-		tok = expect( /(\w+)/ ,'plugin name' ) 
+		@file[name]['logtype'] = @re
+	      else 
+		tok = expect( /(\w+)/ ,'file option' ) 
                 if tok  == 'ignore'
-                  @file[name] = tok 
+                  @file[name]['ignore'] = true 
+                elsif tok  == 'email'
+		  e = expect(/^([^;) ]+)/, "email addresses", ANYWHERE )
+                  @file[name]['email'] = e
                 # must be a plugin name
 		elsif @logtype_classes[tok] 
-		  @file[ name ] = @logtype_classes[tok]
+		  @file[ name ]['logtype'] = @logtype_classes[tok]
 		else
 		  test = nil
 		  tok = tok.capitalize
@@ -447,7 +452,8 @@ module Config
 		    @errors = true
 		  end
 		  if test then 
-		    @file[name ] = test
+		    @file[name] = {} unless @file[name]
+		    @file[name ]['logtype'] = test
 		    @logtype_classes[tok] = test
 		  end
 		end
@@ -456,9 +462,9 @@ module Config
 	    else
 	      @file[name] = true
 	    end
-
 	  else
-	    if  @kind == 'service' && (t = @file['all'].Tokens[tok])[1] == 'options' then
+	    if @kind == 'service' &&
+		(t = @file['all']['logtype'].Tokens[tok])[1] == 'options' then
 	      if expect( '=>',nil, ANYWHERE, OPTIONAL) then
 		v = nil
 		@opts << [ tok, "'#{v}'" ] if v = expect( t[0] ) 
@@ -482,7 +488,7 @@ module Config
 # this handles the non section items in the section
 
       def merge_services( s )
-
+#puts "merg service #{s}"   if @name == 'itsssolaris'
         if service = $services[s] || ( $global && $global.services[s]) then
           next if @services[s];  # all ready included                                                             
           @services[s] = true
@@ -493,10 +499,21 @@ module Config
         # merge in the file items
 
 	service.file.each {|name, val|
-	  if val.class == Regexp || (@file[name].name == 'default' && val.name != 'default')
+#pp "xxx  '#{name}'",  @file.keys, @file[name]  if @name == 'itsssolaris'
+#puts name, val, @name
+	  if val.class == Regexp 
+	     @file[name]['re'] = val 
+          elsif ! @file[name] 
 	    @file[name] = val 
+	  elsif ( ! @file[name]['logtype'] &&  val['logtype']&&
+	         val['logtype'].name != 'default')
+            @file[name]['logtype'] = val['logtype']
+	  elsif ( @file[name]['logtype'].name == 'default' &&
+	         val['logtype'].name != 'default')
+            @file[name]['logtype'] = val['logtype']
 	  end
 	}
+
 	service.real_time.each { | key, value|
 	  if @real_time[key] then
 	    @real_time[key] << value 
@@ -523,7 +540,9 @@ module Config
         case first_token
         when 'service'
           if tok = expect(/^(\w+)/, "service name") then
+#pp tok, @file if @name == 'itsssolaris'
 	    merge_services( tok )
+#pp "2", @file if @name == 'itsssolaris'
           else
             @errors = true
             rest_of_line   # ignore the rest of the line
@@ -555,14 +574,8 @@ module Config
       attr_reader :items
 
       def initialize( head )
-
-        @kind = head.kind
-        @name = head.name
-        @sectionstart = head.sectionstart
-        @errors = false
-
-
-        if ! expect( '{' ) then
+ 
+       if ! expect( '{' ) then
           error("Skipping to start of next section")
           recover('[')
           @errors = true
@@ -699,16 +712,19 @@ module Config
 
         conditions = []
         actions = []
+#pp " ",  @file
 
-        tokens = @file['all'].Tokens
+        tokens = @file['all']['logtype'].Tokens
         
         lf = nil
+
+
         if @name != 'default' # if the section is named then it may be the name of a LogFile class
           begin   # in which case we want to know about the tokens
             eval "lf = #{@name.capitalize}.new"
-            tokens = lf.Tokens
+            tokens = lf['logtype'].Tokens
           rescue SyntaxError, StandardError =>e
-#            puts "tokens = #{@name.capitalize}.new => #{e}"
+#            STDERR.puts "tokens = #{@name.capitalize}.new => #{e}"
           end
 
         end
@@ -736,6 +752,9 @@ module Config
 	  }
           tok.downcase!
           case tok
+          when 'file'
+	    tokens = @file[tok]['logtype'].Tokens if @file[tok]['logtype']
+	    conditions.push( [ 'file', tok ] )
           when 're', 'rec'
 
 	    re = expect( 're' )  # a  
