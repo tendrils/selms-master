@@ -41,12 +41,16 @@ module Codegen
     pp 'in action_body: ', actions if $options['debug.action']
     code = ''
     init = ''
+
+# generate the action routines ( alert warn report )
+
     %W( alert warn report ).each { |type|
       next unless a = actions.assoc( "#{pre}#{type}" )
-      code += "  def #{type}(rec, msg = nil)\n"
+      code += "  def #{type}(rec, file = nil)\n"
       this_action = 'ACTION'
       acc_code = ''
- # jigrery pokery here to cope with acc before the action -- the acc.new needs to know the action   
+ # jigrery pokery here to cope with acc (accumulate)  before the action 
+ # -- the acc.new needs to know the action   
       a[1].each { |action|
         if action[0] == 'acc' then
           if @run_type == 'realtime' then
@@ -68,7 +72,7 @@ module Codegen
 	    code << "       $bucket[self.name+'-#{type}'] << (msg || rec)\n"
 	    code << "     else\n"
 	  end
-	  code << "       $run.action_class('#{action[0]}').do_#{@run_type}('#{type}', self, msg || rec )\n"
+	  code << "       $run.action_class('#{action[0]}').do_#{@run_type}('#{type}', self, file, rec )\n"
 	  code << "     end\n" if @run_type == 'realtime'
          end
       }
@@ -108,7 +112,6 @@ module Codegen
 	when 'count', 'incr', 'proc': others.push( match )
 	else
 	  print "codegen error unknown action '#{e[0]}'\n"
-pp e
 	end
       }
     }
@@ -175,12 +178,12 @@ pp e
         when 'drop', 'ignore'
           ret = "return true\n"
         when 'alert'
-          a += "alert( #{y}, rec.orec )\n"
+          a += "alert( #{y}, rec.fn, rec.orec )\n"
         when 'switch' 
 	  a += "@rule_set = \"_#{event[1]}\"\n"
 	  a += "report(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
         when 'warn'
-          a += "warn( #{y}, rec.orec )\n"
+          a += "warn( #{y}, rec.fn, rec.orec )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
                 "      @count[x].incr\n"
@@ -229,7 +232,7 @@ pp e
    code = "class #{class_name} < Host\n"
    code <<  "  def initialize( conf, src )\n"
    code <<  "    super(conf, src)\n"
-   code <<  "    @scanner = '_default'"
+   code <<  "    @scanner = '_default'\n"
    code <<  "  end\n"
 
 
@@ -249,7 +252,7 @@ pp e
        code <<  "        return nil\n"
        code <<  "      end\n"
        code <<  "    end\n"
-       code <<  "     report( rec.orec )\n"
+       code <<  "     report( rec.orec, rec.fn )\n"
      else
        code <<  "    end\n"
      end
@@ -275,7 +278,21 @@ pp e
      end
    end
 #puts code
-   eval code
+   begin
+     eval code
+   rescue SyntaxError
+     errs = {}
+     $!.to_s.split(/\n/).each { |line|
+       all, n, msg = line.match(/\(eval\):(\d+):(.*)/).to_a
+       errs[n.to_i] = msg
+     }
+     l = 1
+     code.split( /\n/ ).each { |line|
+       puts "#{l}: #{line}"
+       puts ">>>>> #{errs[l]}" if errs[l]
+       l +=1;
+     }
+   end
 #pp hosts[host.name].class,  hosts[host.name].class.instance_methods
  end
 end

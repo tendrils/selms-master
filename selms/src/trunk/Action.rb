@@ -12,16 +12,16 @@ class Action
     end
 # default alert/warning routines...
 
-    def do_periodic ( type, host, msg )
+    def do_periodic ( type, host, file, msg )
       r = host.recs[type] = [] unless r = host.recs[type]
       r << msg
     end
 
-    def do_realtime ( type, host, msg )
+    def do_realtime ( type, host, file, msg )
         host.recs[type] << msg
       end
 
-    def async_send(host, type, data)
+    def async_send(host, type, file, data)
     end
 
     def produce_reports(processed_hosts)
@@ -37,7 +37,16 @@ class Action
       super
     end
 
-    def do_realtime ( type, host, msg, rec = nil )
+    def do_periodic ( type, host, file, msg ) 
+      em = ''
+      if host.file[file] && host.file[file]['email']
+	em = "-#{host.file[file]['email']}"
+      end
+      r = host.recs[type+em] = [] unless r = host.recs[type+em]
+      r << msg
+    end
+
+    def do_realtime ( type, host, msg, file, rec = nil )
       if $bucket[type] then
         data = $bucket[type]
       else
@@ -72,14 +81,18 @@ class Action
 
     reports = {}  # indexed by reporting address                                                              
     processed_hosts.each { |host, count| # each host we have logs to report for                                       
-      # skip unless we have something to report 
+    # skip unless we have something to report 
+      c = 0
+      host.recs.keys.each { |key|
+	c  += host.recs[key].size
+      }
 
-  next unless host.recs['report'].size + host.recs['alert'].size +
-              host.recs['warn'].size > 0 || host.count.size > 4; 
-      who = ( host.email || 'default' ).strip
-      who =  who.split(/\s*,\s*\**/) .map{|addr| 'email:' + addr }
+      next unless c > 0 || host.count.size > 4; 
+
+      def_who = ( host.email || 'default' ).strip
+      def_who =  def_who.split(/\s*,\s*\**/) .map{|addr| 'email:' + addr }
       name = host.name
-              host.recs['warn'].size
+      host.recs['warn'].size
 
       # merge warnings and alters so we can put these all at the top of the report
       if host.count.size > 4 then  # more than the default counts
@@ -101,19 +114,29 @@ class Action
 	end
       end
       
-     [ 'alert', 'warn', 'report' ].each { |type|
+#     [ 'alert', 'warn', 'report' ].each { |type|
+      host.recs.keys.each { |t|
+	next unless host.recs[t].size > 0
+	all, type, email = t.match(/(\w+)-?(.+)?/).to_a
 
-	next unless host.recs[type].size > 0
+        if  email
+	  who =  email.split(/\s*,\s*\**/) .
+	              map{|addr| 'email:' + addr }
+	else
+	  who = def_who
+	end
 	who.each { |w|
 	  reports[w] = {} unless reports[w]
 	  reports[w][type] = {} if !  reports[w][type] # and ! host.recs[type]
 	  reports[w][type][name] = [] 
 	  
-	  host.recs[type].each { |rec|
+	  host.recs[t].each { |rec|
 	    reports[w][type][name] << rec
-	    break if reports[w][type][name].size > 1000   #### make this command line option
+	    if reports[w][type][name].size > 1000   #### make this command line option
+	      reports[w][type][name] << "***** output truncated *****\n" 
+	      break
+	    end
 	  }
-	  reports[w][type][name] << "***** output truncated *****\n" if reports[w][type][name].size > 1000
 	}
       }
     }
