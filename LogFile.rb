@@ -123,8 +123,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
       if $run_type != 'realtime'
         off_name = fn + '-' + $options['offset'] 
-        fn =~ /.+\/(.+)/
-        n = $1
+        all, n = fn.match(/.+\/(\w+)\.\d+/).to_a
         offset = nil
       end
       if !@file then
