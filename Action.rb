@@ -106,7 +106,7 @@ class Action
 	}
 	
 	if summ.size > 0 then
-	  who.each { |w|
+	  def_who.each { |w|
 	    reports[w] = {} unless reports[w]
 	    reports[w]['summ'] = {} unless  reports[w]['summ'] 
 	    reports[w]['summ'][name] = summ
