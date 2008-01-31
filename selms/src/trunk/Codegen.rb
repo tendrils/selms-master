@@ -178,12 +178,14 @@ module Codegen
         when 'drop', 'ignore'
           ret = "return true\n"
         when 'alert'
-          a += "alert( #{y}, rec.fn, rec.orec )\n"
+#        a += "alert( #{y}, rec.fn, rec.orec )\n"
+        a += "alert(  rec.orec,  rec.fn )\n"
         when 'switch' 
 	  a += "@rule_set = \"_#{event[1]}\"\n"
 	  a += "report(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
         when 'warn'
-          a += "warn( #{y}, rec.fn, rec.orec )\n"
+#          a += "warn( #{y}, rec.fn, rec.orec )\n"
+          a += "warn(  rec.orec,  rec.fn )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
                 "      @count[x].incr\n"
