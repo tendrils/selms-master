@@ -32,9 +32,12 @@ class Snare < LogFile
       lt, @criticality, @source, @snareec, dt, @eventid, @source2, @user, @sid,
 	@logtype, @name, @category, xx, s, es  = @data.split("\t")
 
-      s = '' unless s
-      es = '' unless es
-      @data = (s + ' ' + es).sub(/^\s+/, '')
+      if s
+	@data =  s
+	@extra_data = es
+      else
+	@data =  es
+      end
 
       @criticality = @criticality.to_i
       @eventid = @eventid.to_i
