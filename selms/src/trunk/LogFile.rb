@@ -21,7 +21,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       @rc = Record
     end
 
-    def gets( l = nil, raw = nil )  # set l for initial read
+    def gets( l = nil, raw = nil, no_look_ahead = nil )  # set l for initial read
 
       if $run_type == 'realtime'
 #        raw = $rt_fh.gets
@@ -49,10 +49,10 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
           throw :new_file if save && save != l && count > 0
           puts "index :#{l}" if $options['debug.gets']
 
-          r = initial ? @rc : @rec[l].dup 
+          r = initial ? @rc.new : @rec[l].dup unless no_look_ahead 
           
           closed = false
-          begin
+          begin   # loop to collasp repeated records
             if raw = @file[l].gets then
               count += 1
               puts "raw #{count} #{raw}"  if $options['debug.gets']
@@ -60,11 +60,12 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
                 previous_rec = @rc.new  # null entry
               else
                 puts "not initial #{count}" if $options['debug.gets']
-                previous_rec = @rec[l].dup if count == 1
+                previous_rec = @rec[l].dup if count == 1 && ! no_look_ahead
               end
               @rec[l] = @rc.new( raw, @head, @split_p)
-              time = @rec[l].time if count == 1  # first time
               @rec[l].fn = @fn[l]
+	      return @rec[l] if no_look_ahead   # we have the record just return
+              time = @rec[l].time if count == 1  # first time
 #              puts "filename #{@rec[l].fn}"
             else # end of file 
 	      puts "end of file #{l} count  #{count}"  if $options['debug.gets']
@@ -100,7 +101,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
             puts @rec[l].data unless closed
             puts previous_rec.data  unless closed
           end
-        end while ( ! closed &&  @rec[l].data == previous_rec.data )
+        end while ( ! closed && @rec[l].data == previous_rec.data  )
       end
 
       begin
@@ -160,7 +161,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       @closing[l] = false
       @fn[l] = n
       @off_name[l] = off_name
-      gets(l) 
+      gets(l)    # to prime the look ahead buffer for finding duplicate records
     end 
     
     def abort
@@ -194,7 +195,7 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
 # default log splitter                                                                                                 
     class Record
-    attr_reader :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn
+    attr_reader :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data
     attr_writer :fn
 
       def initialize(raw=nil, pat=nil, split_p=nil)
@@ -209,9 +210,11 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
         @orec = nil
         @fn = ''
         @data = ''
+        @extra_data = ''
         return unless raw
         all, @utime, @time, @h,  @data =  raw.match(pat).to_a 
 	@utime = @utime.to_i
+	split
       end
 
 # default log splitter

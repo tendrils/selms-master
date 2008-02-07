@@ -223,9 +223,9 @@ end
        
        while @rec = lf.gets
 
-	 pp 'preliminary split:', @rec if $options['debug.split']
-	 next unless @rec.split
-	 pp '', "final split", @rec if $options['debug.split']
+#	 pp 'preliminary split:', @rec if $options['debug.split']
+#	 next unless @rec.split
+#	 pp '', "final split", @rec if $options['debug.split']
 	 break unless self.send @rule_set, 'TEST' , @rec 
 	 if $options['max_log_recs'] && 
 	     recs['report'].size + recs['alert'].size + recs['warn'].size  >= $options['max_log_recs'] then
