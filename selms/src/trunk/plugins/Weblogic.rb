@@ -51,7 +51,10 @@ class Weblogic< LogFile
 	end
 	return FALSE if l  # initial call
        end
-      r = @rec[0].dup
+
+      return nil unless @rec[0]  # must be at end of file
+
+     r = @rec[0].dup
       while ( open = super( 0, raw, TRUE) )  && ! @rec[0].level   # until start of next record
 	if @rec[0].data =~ /^at/  # then trace back
 	  r.extra_data += "#{@rec[0].data}\n"

@@ -1,8 +1,24 @@
+
 # change this if you fiddle with the syslog-ng templates!!!   Should be a global config option??                       
 
 LOG_BITS = /^([^:]+):\s+(.+)?/
 # token change
   class LogFile 
+
+=begin rdoc
+The LogFile class implements a straight forward interface for SELMS to read and parse 
+log files. It is assumed that logfiles with differing formats will be handled by classes 
+which inherit this one.
+
+The class interacts with the configuration parser by defining what objects one can test 
+in the matching section of the config - by default these are data and proc
+
+The process of parsing the log record has two phases:
+  1/ the record si split up according to the RE set in Class LogStore  -- this is normally the same for all files on a host as the format is set by the local syslog daemon.
+  2/ the message portion is then split up into components that can then be tested by the matching process --
+     by default we use LOG_BITS 
+
+=end
     attr_reader  :Tokens, :name, :rec, :file 
 
     def initialize( name=nil, split_p=nil, head=nil)
@@ -21,7 +37,25 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       @rc = Record
     end
 
+
+=begin rdoc 
+gets reads a single logical record 
+
+gets collapses multiple identical records and appends a -- repeated n times to the record
+  much of the complexity of gets is due to the necessary read ahead to handle this functionality
+gets also will merge records from a number of log files for the same host into time order so that
+  records come out interleaved in periodic reports the read ahead is also necessary to support merging
+=end
     def gets( l = nil, raw = nil, no_look_ahead = nil )  # set l for initial read
+=begin rdoc
+  _l_ is the index of the file to read (0 unless merging is taking place)  It indicates that this is 
+  the initial call for a file to do a read ahead for subsquent comparsions.  (But see no_look_ahead)
+
+  _raw_ is used to pass a physical record into gets -- normally only used for realtime processing --- why ??
+
+ _no_look_ahead_  tells gets not to read ahead and collaspe mutiple identical records
+    used by classes that read multiple physical records for each logical record
+=end
 
       if $run_type == 'realtime'
 #        raw = $rt_fh.gets
@@ -32,14 +66,15 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
       initial = l
       previous_rec = nil
       count = 0  # number of duplicates  
-      r = nil   # define out side loop
-      time = 0
+      r = nil   # what we return -- define out side loop
+      time = 0  # time of first dupicate
       
       puts "initial #{l}" if initial && $options['debug.gets']
       
       catch :new_file do
         begin  # loop while records are the same
           save = l
+# merge multiple input files - If _l_ is given the read that file
           if ! initial then # select next file with earliest log record  
             l = 0
             for i in 1 .. @file.size - 1
@@ -48,11 +83,11 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
           end
           throw :new_file if save && save != l && count > 0
           puts "index :#{l}" if $options['debug.gets']
-
+# _l_ now contains the index of the next file to read from
           r = initial ? @rc.new : @rec[l].dup unless no_look_ahead 
           
           closed = false
-          begin   # loop to collasp repeated records
+          begin   # loop to collaspe repeated records
             if raw = @file[l].gets then
               count += 1
               puts "raw #{count} #{raw}"  if $options['debug.gets']
@@ -64,7 +99,6 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
               end
               @rec[l] = @rc.new( raw, @head, @split_p)
               @rec[l].fn = @fn[l]
-	      return @rec[l] if no_look_ahead   # we have the record just return
               time = @rec[l].time if count == 1  # first time
 #              puts "filename #{@rec[l].fn}"
             else # end of file 
@@ -82,6 +116,11 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
               count = 0
               next
             end
+
+	    if no_look_ahead   # we have the record just return
+	      puts "return '#{@rec[1].data}'" if $options['debug.gets']
+	      return @rec[l] 
+	    end
 
             if ! closed && ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
 			    @rec[l].data =~ /^Previous message occurred (\d+) times./ )
