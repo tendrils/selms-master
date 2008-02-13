@@ -21,7 +21,7 @@ module Codegen
       end
    }
 
-    $host_patterns.each { |h|
+    $host_patterns.each { |name, h|
       if  ! $options['one_host'] || $options['one_host'].class == Regexp ||
         $options['one_host'].match(h.pattern)  then
 	make_host_class( h, host_patterns, @run_type )
@@ -208,7 +208,7 @@ module Codegen
 
   def make_host_class( host, hosts, type )
 
-#pp host.name unless host.actions.length > 0
+#STDERR.puts host.name # unless host.actions.length > 0
 
 #pp "Host: #{host.name}", host # if @debug
     action_defs = action_code = action_body( host.name, host.actions )

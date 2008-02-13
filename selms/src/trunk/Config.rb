@@ -46,7 +46,7 @@ module Config
       $run_type = options
       $global = nil
 
-      $host_patterns = [];
+      $host_patterns = {};
       $errors = 0
       
       return nil unless conf_file;
@@ -78,7 +78,10 @@ module Config
 	  end
 	  $hosts[head.name] = HostService.new( head )
 	  if $hosts[head.name].pattern then
-            $host_patterns <<  $hosts[head.name]
+	    if $host_patterns[head.name] then
+	      warn( "multiple defintions of host '#{head.name}' last will be used")
+	    end
+            $host_patterns[head.name] =  $hosts[head.name]
 	    $hosts.delete(head.name);
           end
         else
