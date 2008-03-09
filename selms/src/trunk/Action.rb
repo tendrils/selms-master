@@ -95,7 +95,8 @@ class Action
       host.recs['warn'].size
 
       # merge warnings and alters so we can put these all at the top of the report
-      if host.count.size > 4 then  # more than the default counts
+
+      if host.count.size > 0 then  # more than the default counts
 	summ = []
 	host.count.sort.each{ |k, v |
 	  case v.label
