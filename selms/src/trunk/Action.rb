@@ -115,9 +115,9 @@ class Action
 	end
       end
       
-#     [ 'alert', 'warn', 'report' ].each { |type|
+
       host.recs.keys.each { |t|
-	next unless host.recs[t].size > 0
+	next unless host.recs[t].size > 0 
 	all, type, email = t.match(/(\w+)-?(.+)?/).to_a
 
         if  email
@@ -211,11 +211,13 @@ dest = who
     report << "             #{label}"
     report << "             #{'='* label.length}"
 
+
     list.each { | host, list |
+      sep = list[0].size > 200 ? "\n\n" : "\n" if list #  sep long records with a blank line
       report << "\n    #{'+'* host.to_s.length}"
       report << "    #{host.to_s}"
       report << "    #{'+'* host.to_s.length}\n"
-      report << list.join("\n") if  list
+      report << list.join( sep ) if  list
     }
 
   end
