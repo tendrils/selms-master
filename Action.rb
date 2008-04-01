@@ -211,8 +211,9 @@ dest = who
     report << "             #{label}"
     report << "             #{'='* label.length}"
 
-
     list.each { | host, list |
+      next unless list.size > 0
+
       sep = list[0].size > 200 ? "\n\n" : "\n" if list #  sep long records with a blank line
       report << "\n    #{'+'* host.to_s.length}"
       report << "    #{host.to_s}"

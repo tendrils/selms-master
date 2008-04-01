@@ -771,17 +771,24 @@ module Config
                 conditions.push( [ 're', re ] )
             end
           when 'test'
-            tt = expect('$', nil, SAME_LINE, Optional ) ? 't_var' : 't_val'
-	    if  var = quoted_string then
-	      if op = expect(/^(==|=|<=|>=|!=|<|>)/, "<comp op>" ) then
-		if val = expect(/^(\d+)/, "<integer value>" ) then
-		  conditions.push([tt, var, op, val])
-		  ok = true
-		end              
+            if expect(/^\$(\w+)/, nil, SAME_LINE, Optional ) 
+	      tt = 't_var' 
+	      var = tok
+	    else
+	      tt= 't_val'
+	      var = expect(/^%(\d)/, "$var or %pat_no", SAME_LINE ) 
+	    end
+
+	    if op = expect(/^(==|=|<=|>=|!=|<|>)/, "<comp op>" ) then
+	      val = quoted_string( SAME_LINE, Optional ) ? tok :
+		                    expect(/^(\d+)/, "<integer value>").to_i 
+	      if val
+		conditions.push([tt, var, op, val])
+		ok = true
 	      end
-	      if ! defined? val then # syntax error
-		rest_of_line
-	      end
+	    end           
+	    if ! defined? val then # syntax error
+	      rest_of_line
 	    end
 	    recover( /,|:/, SAME_LINE ) unless ok
           else

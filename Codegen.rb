@@ -138,15 +138,18 @@ module Codegen
       match[0].each{|cond|
         c += ' && ' unless  c == ''
         case cond[0] 
-
         when 're'
-          c += "m_data = #{cond[1]}.match(rec.data)"
+          c += "( m_data = #{cond[1]}.match(rec.data))"
         when 't_var'
           c += cond[1] =~ /%/ ?
              %Q'count[expand("#{cond[1]}",m_data)].var #{cond[2]}  #{cond[3]} ' :
              %Q'count["#{cond[1]}"].var #{cond[2]}  #{cond[3]} '
-        when 't_va1'
-          c += %Q'expand("#{cond[1]}",m_data) #{cond[2]}  #{cond[3]} '
+        when 't_val'
+          if cond[3].class == Integer 
+            c += "m_data[#{cond[1]}].to_i #{cond[2]}  #{cond[3]} "
+          else
+	    c += "m_data[#{cond[1]}] #{cond[2]}  '#{cond[3]}' "
+          end
         else
           if cond[2] == '=~' || cond[2] == '!~'
             c << "! " if cond[2] == '!~'
@@ -173,10 +176,10 @@ module Codegen
 	  a << "    @count['#{key}'] = Host::SimpleCounter.new( 0, '#{key}') unless @count['#{key}']\n" +
                "    @count['#{key}'].incr;\n"  if @run_type == 'periodic'
 	end
-	       
+	ret = ''
         case event[0]
         when 'drop', 'ignore'
-          ret = "return true\n"
+          ret += "return true\n"
         when 'alert'
 #        a += "alert( #{y}, rec.fn, rec.orec )\n"
         a += "alert(  rec.orec,  rec.fn )\n"
@@ -198,7 +201,7 @@ module Codegen
         end
       }
       code << "    ##{count}:\n" 
-      code << "    if #{c} then\n#{a}      #{ret}   end\n"
+      code << "    if #{c} then\n#{a} #{ret}   end\n"
     }
     return [ code, post ]
   end

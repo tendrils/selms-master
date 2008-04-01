@@ -116,6 +116,7 @@ class Host
   def expand( s, mdata )
     return nil unless s
     begin
+#pp mdata
     string = s.dup
     string.gsub!(/%H/, @rec.h)
     string.gsub!(/%F/, @rec.fn);
