@@ -34,6 +34,7 @@ The process of parsing the log record has two phases:
       @l_rec = nil
       @file = nil
       @off_name = nil
+      @no_look_ahead = nil
       @rc = Record
     end
 
@@ -46,7 +47,7 @@ gets collapses multiple identical records and appends a -- repeated n times to t
 gets also will merge records from a number of log files for the same host into time order so that
   records come out interleaved in periodic reports the read ahead is also necessary to support merging
 =end
-    def gets( l = nil, raw = nil, no_look_ahead = nil )  # set l for initial read
+    def gets( l = nil, raw = nil )  # set l for initial read
 =begin rdoc
   _l_ is the index of the file to read (0 unless merging is taking place)  It indicates that this is 
   the initial call for a file to do a read ahead for subsquent comparsions.  (But see no_look_ahead)
@@ -58,7 +59,6 @@ gets also will merge records from a number of log files for the same host into t
 =end
 
       if $run_type == 'realtime'
-#        raw = $rt_fh.gets
         return @rc.new( raw, @head, @split_p)
       end
       return nil if ! @file || @file.size == 0
@@ -69,7 +69,7 @@ gets also will merge records from a number of log files for the same host into t
       r = nil   # what we return -- define out side loop
       time = 0  # time of first dupicate
       
-      puts "initial #{l}" if initial && $options['debug.gets']
+      puts "Gets: initial #{l}" if initial && $options['debug.gets']
       
       catch :new_file do
         begin  # loop while records are the same
@@ -82,28 +82,28 @@ gets also will merge records from a number of log files for the same host into t
             end
           end
           throw :new_file if save && save != l && count > 0
-          puts "index :#{l}" if $options['debug.gets']
+          puts "gets: index :#{l} count = #{count}" if $options['debug.gets']
 # _l_ now contains the index of the next file to read from
-          r = initial ? @rc.new : @rec[l].dup unless no_look_ahead 
+          r = initial ? @rc.new : @rec[l].dup unless @no_look_ahead 
           
           closed = false
           begin   # loop to collaspe repeated records
             if raw = @file[l].gets then
               count += 1
-              puts "raw #{count} #{raw}"  if $options['debug.gets']
+              puts "gets: raw #{count} #{raw}"  if $options['debug.gets']
               if initial
                 previous_rec = @rc.new  # null entry
               else
-                puts "not initial #{count}" if $options['debug.gets']
-                previous_rec = @rec[l].dup if count == 1 && ! no_look_ahead
+                puts "gets: not initial #{count}" if $options['debug.gets']
+                previous_rec = @rec[l].dup if count == 1 && ! @no_look_ahead
               end
               @rec[l] = @rc.new( raw, @head, @split_p)
+
               @rec[l].fn = @fn[l]
               time = @rec[l].time if count == 1  # first time
-#              puts "filename #{@rec[l].fn}"
             else # end of file 
-	      puts "end of file #{l} count  #{count}"  if $options['debug.gets']
-              if initial || @closing[l] || count != 1 # don't loose last record!
+	      puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets']
+              if !initial || @closing[l] || count != 1 # don't loose last record!
                 close_lf( l ) 
                 #              puts "closing file #{l}"
               else
@@ -114,11 +114,12 @@ gets also will merge records from a number of log files for the same host into t
 
             if initial && ! defined? @rec[l].data then  # corrupt offset value?
               count = 0
+	      puts "gets: corrupt record" if $options['debug.gets']
               next
             end
 
-	    if no_look_ahead   # we have the record just return
-	      puts "return '#{@rec[1].data}'" if $options['debug.gets']
+	    if @no_look_ahead   # we have the record just return
+	      puts "gets: no_look_ahead return '#{@rec[l].data}'" if $options['debug.gets']
 	      return @rec[l] 
 	    end
 
@@ -161,7 +162,7 @@ gets also will merge records from a number of log files for the same host into t
 
     def open_lf( fn )
 
-      if $run_type != 'realtime'
+      if $run_type != 'realtime'  
         off_name = fn + '-' + $options['offset'] 
         all, n = fn.match(/.+\/(\w+)\.\d+/).to_a
         offset = nil
@@ -176,15 +177,15 @@ gets also will merge records from a number of log files for the same host into t
       end
       
       $fstate = 'opening'
-      if $run_type != 'realtime' && (File.file? off_name) && ! $options['no_offset'] then
+      if $run_type != 'realtime' && (File.file? off_name) && ! $options['no_offset'] && ! $options['one_file'] 
 	File::open(off_name) { |o|
 	  offset = o.gets.to_i
 	}
       end
-#test
+
       f = File.open( fn )
       if f then
-	puts "file #{fn} offset #{offset}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files'] 
+	puts "opened file #{fn} log type #{self}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files'] 
       else
 	puts( STDERR, "failed to open #{fn} #{$!}")
 	return nil
@@ -200,7 +201,8 @@ gets also will merge records from a number of log files for the same host into t
       @closing[l] = false
       @fn[l] = n
       @off_name[l] = off_name
-      gets(l)    # to prime the look ahead buffer for finding duplicate records
+
+      gets(l) unless @no_look_ahead    # to prime the look ahead buffer for finding duplicate records
     end 
     
     def abort

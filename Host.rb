@@ -146,24 +146,25 @@ class Host
     @recs['warn'] = []
   end 
  
-  def log_files( log_dir, logf )
-    
-    
-    if @merge_files then
+  def log_files( log_dir, logf=nil )
 
-#      lf = c_logf.dup
+
+    if ! logf
+      lf = @file[$options['log_type']]['logtype'] 
+      lf.open_lf( log_dir )
+
+      yield lf if lf.file
+    elsif @merge_files then
 
       logf.each { | log |
         log =~ /^(.+)\.\d+/
         base_name = $1
 
-	next if $options['file'] && $options['file'] != base_name
+	next if $options['file'] != base_name
 	next if base_name == 'cron' &&  @file['cron'] != 'process'
         next if @file[base_name]['ignore']               
-#   if f = (  @file['all']  ) then 
 
 	l = @file[base_name] ? base_name : 'all'
-       
 
 	lf.open_lf( log_dir + '/' + log )
       }
@@ -172,9 +173,9 @@ class Host
       logf.each { |log|
         log =~ /^(.+)\.\d+/
         base_name = $1
-#puts log_dir, base_name
+
 	l = @file[base_name] ? base_name : 'all'
-        next if $options['file'] && $options['file'] != base_name
+        next if  $options['file'] && $options['file'] != base_name
 	next if base_name == 'cron' &&  @file['cron'] != 'process'
         next if @file[base_name] && @file[base_name]['ignore']	
 
@@ -212,18 +213,22 @@ end
 
   @logf = []
 
-    return  unless File.directory?( log_dir)
-    logs = Dir.new( log_dir );
-    logs.each { |filename|
-      next unless filename =~ /(.+)\.\d{8}$/
-      @logf.push( filename )
-   }
+    if File.directory?( log_dir)
+      logs = Dir.new( log_dir );
+      logs.each { |filename|
+	next unless filename =~ /(.+)\.\d{8}$/
+	@logf.push( filename )
+      }
+    elsif File.exists?( log_dir)
+      @logf = nil #   Mark as a single file
+    else
+      return nil
+    end
 
    begin
      log_files(log_dir, @logf) { |lf|
-       
-       while @rec = lf.gets
 
+       while @rec = lf.gets
 #	 pp 'preliminary split:', @rec if $options['debug.split']
 #	 next unless @rec.split
 #	 pp '', "final split", @rec if $options['debug.split']

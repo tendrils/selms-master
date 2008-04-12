@@ -17,6 +17,14 @@
     end
     
     def traverse
+
+      if $options['one_file']  # just a single file this run
+	@done = true
+	yield $options['one_file'], $options['one_host'] 
+      end
+
+      return nil if defined? @done
+
       Find.find( @root ) { |filename|
 
 	mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
