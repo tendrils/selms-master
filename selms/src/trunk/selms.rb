@@ -50,6 +50,8 @@ $options = {   # defaults
 	   'max_log_recs'=> nil,
 	   'date'=> nil,
            'file' => nil,
+           'one_file' => nil,
+           'log_type' => nil,
 	   'log_store' => LOG_STORE,
            'merge_files' => 'yes'
 }
@@ -82,8 +84,12 @@ OptionParser.new { |opts|
     $options['ignore_unk_hosts'] = true }
   opts.on('-h', '--host=HOSTNAME', "run just for this host"){|val|
     $options['one_host'] = val}
-  opts.on('-f', '--file=FILENAME', "run just for this file"){|val|
+  opts.on('-f', '--file=FILENAME', "run just for this file (daemon, auth, etc)"){|val|
     $options['file'] = val}
+  opts.on('--one_file=FILENAME', "run just for this file"){|val|
+    $options['one_file'] = val}
+  opts.on('-l', '--log_type=PLUGIN', "explicitly sepecify plugin -- use with -f"){|val|
+    $options['log_type'] = val}
   opts.on('-l', '--log_dir=LOGDIR', String, "Base directory where logs are located"){
     |val| $options['log_dir'] = val}
   opts.on( '-p', '--pre', String, "run this script before taking action") {

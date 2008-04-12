@@ -54,6 +54,11 @@ include Codegen
 	} 
       end
 
+      if $options['one_host']  && ! host
+	STDERR.puts "no host definition for #{$options['one_host'] }" 
+	exit
+      end
+
       # if we get here there was no host entry or pattern for this machine
 
       if ! host then
@@ -89,7 +94,7 @@ include Codegen
       end
 
       host.pscan( dir_name, mach )
-      Find.prune  
+      Find.prune  unless $options['one_file']
 
     }
 

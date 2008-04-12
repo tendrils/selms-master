@@ -38,36 +38,33 @@ class Weblogic< LogFile
         'level' => [ Levels ]
       }
       @rc = Record
-      @read_ahead = nil
+      @no_look_ahead = true
     end
 
 # weblogic logs are (or can be) multiline -- first line consisting of the actual log message
 # followed by subsquent lines that have a traceback
 
     def gets( l = nil, raw = nil )  # set l for initial read
-#      puts "in gets #{l}, #{raw} #{@rec[0]}"
-      if !  @rec[0] then   # don't already have first record
-	while ( super( 0, raw, TRUE ) )  && ! @rec[0].level   # until start of next record  
-	end
-	return FALSE if l  # initial call
-       end
 
-      return nil unless @rec[0]  # must be at end of file
+      puts "in Weblogic gets l = #{l}\n, raw=#{raw} @rec[0] = #{@rec[0]}"  if $options['debug.gets']
+      @rec[0].data = nil if @rec[0]
 
-     r = @rec[0].dup
-      while ( open = super( 0, raw, TRUE) )  && ! @rec[0].level   # until start of next record
-	if @rec[0].data =~ /^at/  # then trace back
-	  r.extra_data += "#{@rec[0].data}\n"
-	else
-	  r.data += ": #{@rec[0].data}"
-	end
+      while super( l )  && ! @rec[0].level   # until start of next record  
+	l = nil
       end
 
-      return FALSE unless open
+      return nil unless @rec[0].data  # must be end of file
+      r = @rec[0]
+
+	if m = r.data.match( /(.+) +(StackTrace: .+)/).to_a 
+	  r.data += ": #{m[1]}"
+	  r.extra_data += "#{m[2]}\n"
+	end
 
       r.orec = "#{r.time} #{r.h}:  '#{r.data}'"
       pp r if $options['debug.split']
       return r
+
     end
 
 
@@ -84,14 +81,13 @@ class Weblogic< LogFile
 #      end
 
 
-
       def split
 
         all,  @level, d = @data.match(@split_p ).to_a
-        if @level = Levels[@level]
+	if @level = Levels[@level]
 	  @data = d
-	  @orec = "#{@time} #{@h}: '#{@data}'"
 	end
+	@orec = "#{@time} #{@h}: '#{@data}'"
       end
     end
 end
