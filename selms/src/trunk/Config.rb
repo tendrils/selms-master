@@ -354,7 +354,8 @@ module Config
 	@ignore = nil
         @merge_files = $options['merge'] == 'yes'
         @priority = 0
-
+	@feeds = []  # tell syslog-ng to add filter for this host to these output feeds
+ 
 	super( head, false) # tell Section that we will handle subsections
 
         while ( tok = nextT ) && tok != '}'  
@@ -409,11 +410,19 @@ module Config
 	    else
 	      bad_tok = true
 	    end
+	  when 'feeds'
+	    if @kind == 'host' then
+	      expect( '=>',nil, SAME_LINE)
+	      begin
+		  @feeds.push( expect( /^(\w+)/, "name of output feed" ) )
+	      end until ! look_ahead(',', ANYWHERE)
+	    else
+	      bad_tok = true
+	    end
 	  when 'priority'
 	    if @kind == 'host' then
  	      expect( '=>',nil, SAME_LINE) 
 	      @priority = expect(Integer, "search priority 0-9")
-	      @def_email.strip!
 	    else
 	      bad_tok = true
 	    end
@@ -439,8 +448,9 @@ module Config
                 if tok  == 'ignore'
                   @file[name]['ignore'] = true 
                 elsif tok  == 'email'
-		  e = expect(/^([^;) ]+)/, "email addresses", ANYWHERE )
-                  @file[name]['email'] = e
+		  e = expect(/^([^);]+)/, "email addresses", ANYWHERE )
+		  @file[name]['mail'] = e
+		  @file[name]['mail'].strip
                 # must be a plugin name
 		elsif @logtype_classes[tok] 
 		  @file[ name ]['logtype'] = @logtype_classes[tok]
