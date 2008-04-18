@@ -53,9 +53,8 @@ class Weblogic< LogFile
 	l = nil
       end
 
-      return nil unless defined? @rec &&  @rec[0].data  # must be end of file
-      r = @rec[0]
-
+        return nil unless (defined? @rec) &&  @rec[0].data  # must be end of file
+        r = @rec[0]
 	if m = r.data.match( /(.+) +(StackTrace: .+)/).to_a 
 	  r.data += ": #{m[1]}"
 	  r.extra_data += "#{m[2]}\n"
