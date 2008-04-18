@@ -46,14 +46,14 @@ class Weblogic< LogFile
 
     def gets( l = nil, raw = nil )  # set l for initial read
 
-      puts "in Weblogic gets l = #{l}\n, raw=#{raw} @rec[0] = #{@rec[0]}"  if $options['debug.gets']
+      puts "in Weblogic gets l = #{l}\n, raw=#{raw} @rec[0] = #{defined? @rec[0]?  @rec[0] : ''}"  if $options['debug.gets']
       @rec[0].data = nil if @rec[0]
 
       while super( l )  && ! @rec[0].level   # until start of next record  
 	l = nil
       end
 
-        return nil unless (defined? @rec) &&  @rec[0].data  # must be end of file
+        return nil unless (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data  # must be end of file
         r = @rec[0]
 	if m = r.data.match( /(.+) +(StackTrace: .+)/).to_a 
 	  r.data += ": #{m[1]}"

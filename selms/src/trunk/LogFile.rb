@@ -119,7 +119,7 @@ gets also will merge records from a number of log files for the same host into t
             end
 
 	    if @no_look_ahead   # we have the record just return
-	      puts "gets: no_look_ahead return '#{@rec[l].data}'" if $options['debug.gets']
+	      puts "gets: no_look_ahead return '#{@rec[l].data}'" if (defined? @rec[l].data) &&  $options['debug.gets']
 	      return @rec[l] 
 	    end
 
