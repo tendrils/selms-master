@@ -45,8 +45,11 @@ include Codegen
 
       priority = -1
       unless host = hosts[mach] then
+puts mach if $options['debug.host-match']
 	host_patterns.each { |name, h |
+puts "    #{priority} #{h.priority}   #{h.pattern}" if $options['debug.host-match']
 	  if mach.match( h.pattern ) && h.priority > priority then
+puts "        match" if $options['debug.host-match']
 	    host = hosts[mach] = h.dup
 	    host.name = mach 
 	    priority = host.priority

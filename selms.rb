@@ -58,7 +58,7 @@ $options = {   # defaults
 
 $options.default = 'empty'  # returned for unknown keys 
 
-debug_opts = %w( match hosts gets files code rules-drops rules-ignore rules-alert\
+debug_opts = %w( match hosts host-match gets files code rules-drops rules-ignore rules-alert\
                  rules-warn rules-count rules-incr proc regexp split match-code )
 
 OptionParser.new { |opts|
