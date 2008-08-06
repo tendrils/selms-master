@@ -116,18 +116,19 @@ class Host
   def expand( s, mdata )
     return nil unless s
     begin
-
+    m = ''
     string = s.dup
     1.upto(mdata.size-1) { |i| # substitute %n for nth matched string, handle embedded '\'s
-      m = mdata[i].dup
-	string.gsub!("%#{i}", mdata[i].gsub('\\', '\\\\\\\\') )
+      if  mdata[i] then
+        m = mdata[i].dup ? mdata[i].dup : ''
+	string.gsub!("%#{i}", m.gsub('\\', '\\\\\\\\') ) 
+      end
     }
     string.gsub!(/%H/, @rec.h)
     string.gsub!(/%F/, @rec.fn);
-
     return string
     rescue
-      STDERR.puts "error substituting data into #{s}"
+      STDERR.puts "error substituting data '#{m}' into '#{s}':#{$!}"
     end
   end
 
