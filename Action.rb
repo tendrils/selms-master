@@ -44,7 +44,6 @@ class Action
       end
       r = host.recs[type+em] = [] unless r = host.recs[type+em]
       r << msg
-puts msg
     end
 
     def do_realtime ( type, host, msg, file, rec = nil )
