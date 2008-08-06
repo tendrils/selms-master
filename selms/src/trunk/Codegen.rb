@@ -191,7 +191,7 @@ module Codegen
           a += "warn(  rec.orec,  rec.fn )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "      @count[x].incr\n"
+                "  @count[x].incr\n"
         when 'incr'
           a += "@count[x] = Host::TimeCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
                 "      @count[x].incr(time)\n"

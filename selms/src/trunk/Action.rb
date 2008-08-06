@@ -44,6 +44,7 @@ class Action
       end
       r = host.recs[type+em] = [] unless r = host.recs[type+em]
       r << msg
+puts msg
     end
 
     def do_realtime ( type, host, msg, file, rec = nil )
@@ -87,7 +88,7 @@ class Action
 	c  += host.recs[key].size
       }
 
-      next unless c > 0 || host.count.size > 4; 
+      next unless c > 0 || host.count.size > 3; 
 
       def_who = ( host.email || 'default' ).strip
       def_who =  def_who.split(/\s*,\s*\**/) .map{|addr| 'email:' + addr }
@@ -95,7 +96,6 @@ class Action
       host.recs['warn'].size
 
       # merge warnings and alters so we can put these all at the top of the report
-
       if host.count.size > 0 then  # more than the default counts
 	summ = []
 	host.count.sort.each{ |k, v |
