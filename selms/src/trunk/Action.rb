@@ -180,7 +180,7 @@ dest = who
 	  end
 	  case type
 	  when 'email'
-            if !( no_mail && ! $options['mail_to']) then
+            if ! no_mail && ! $options['mail_to'] then
 	      to = address
 	      if $options['mail_to'] then
 		if no_mail then
@@ -194,6 +194,8 @@ dest = who
 		rescue
 		end
 	      end
+	    else
+	      STDERR.puts "No mail addresses for output"
 	    end
 	  else
 	    STDERR.puts "Unknown reporting type '#{type}'"
