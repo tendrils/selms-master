@@ -142,7 +142,7 @@ class Action
     }
 
     # now send the reports to each address
-puts  $options['no_mail'], $options['mail_to'], $options['outfile']
+
     if $options['no_mail'] && !$options['mail_to'] then
       $options['outfile'] = '-'
     end
@@ -153,12 +153,10 @@ puts  $options['no_mail'], $options['mail_to'], $options['outfile']
 
     if ! $options['no_mail']  || $options['mail_to'] then
       smtp = Mail.new($options['mail_server'], "Russell Fulton <r.fulton@auckland.ac.nz>" ) 
-puts smtp
     end
 
     reports.each { |who, rep|
       report = []
-puts who
       list_recs( report, rep['alert'], "Alerts" ) if  rep['alert']
       list_recs( report, rep['warn'], "Warnings" ) if  rep['warn']
       list_recs( report, rep['summ'], "Summary" ) if  rep['summ']
@@ -167,8 +165,8 @@ puts who
 # loop over destinations for report
 
 #	who.each{ |dest |
-dest = who
-	  no_mail = $options['no_mail']
+      dest = who
+      no_mail = $options['no_mail']
       subject = "#{$options['mail_subject']} for #{dest}"
 	  subject << " for #{dest}" if no_mail
 	  type, address = dest.split(/:/)
@@ -194,7 +192,6 @@ dest = who
 	      end
 	      begin
 		smtp.send( to, subject, report )
-puts ">> sending"
 	      rescue
 	      end
 	    else
