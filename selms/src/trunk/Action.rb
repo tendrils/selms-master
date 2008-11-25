@@ -142,8 +142,7 @@ class Action
     }
 
     # now send the reports to each address
-puts  $options['no_mail'], $options['mail_to'], $options['outfile'] = '-'
- 
+puts  $options['no_mail'], $options['mail_to'], $options['outfile']
     if $options['no_mail'] && !$options['mail_to'] then
       $options['outfile'] = '-'
     end
@@ -154,6 +153,7 @@ puts  $options['no_mail'], $options['mail_to'], $options['outfile'] = '-'
 
     if ! $options['no_mail']  || $options['mail_to'] then
       smtp = Mail.new($options['mail_server'], "Russell Fulton <r.fulton@auckland.ac.nz>" ) 
+puts smtp
     end
 
     reports.each { |who, rep|
@@ -191,10 +191,11 @@ dest = who
 		else
 		  to << ", #{$options['mail_to']}"
 		end
-		begin
-		  smtp.send( to, subject, report )
-		rescue
-		end
+	      end
+	      begin
+		smtp.send( to, subject, report )
+puts ">> sending"
+	      rescue
 	      end
 	    else
 	      STDERR.puts "No mail addresses for output"
