@@ -142,7 +142,8 @@ class Action
     }
 
     # now send the reports to each address
-
+puts  $options['no_mail'], $options['mail_to'], $options['outfile'] = '-'
+ 
     if $options['no_mail'] && !$options['mail_to'] then
       $options['outfile'] = '-'
     end
@@ -157,7 +158,7 @@ class Action
 
     reports.each { |who, rep|
       report = []
-
+puts who
       list_recs( report, rep['alert'], "Alerts" ) if  rep['alert']
       list_recs( report, rep['warn'], "Warnings" ) if  rep['warn']
       list_recs( report, rep['summ'], "Summary" ) if  rep['summ']
