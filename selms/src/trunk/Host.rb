@@ -60,8 +60,8 @@ class Host
       super( label )
     end
 
-    def incr
-      @val += 1
+    def incr ( inc=1 )
+      @val += inc
     end
 
   end
@@ -74,7 +74,7 @@ class Host
       super( label )
     end
     
-    def incr( time )
+    def incr( time, inc=1 )
       if @interval then
         disc_t = time - @interval  # discard items with time less that this
         while @items.size > 0 && @items[0] < disc_t do
@@ -82,7 +82,7 @@ class Host
         end
         @items.push(time)
       else
-        @items += 1
+        @items += inc
       end
     end
 
@@ -232,7 +232,7 @@ end
        while @rec = lf.gets
 #	 pp 'preliminary split:', @rec if $options['debug.split']
 #	 next unless @rec.split
-#	 pp '', "final split", @rec if $options['debug.split']
+	 pp '', "final split", @rec if $options['debug.split']
 	 break unless self.send @rule_set, 'TEST' , @rec 
 	 if $options['max_log_recs'] && 
 	     recs['report'].size + recs['alert'].size + recs['warn'].size  >= $options['max_log_recs'] then
