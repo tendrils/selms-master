@@ -150,8 +150,10 @@ gets also will merge records from a number of log files for the same host into t
           return false
       end
 
+      puts "final count #{count}" if $options['debug.gets']
       if count > 1      
-         r.data << " -- repeated #{count} times since #{time}"
+	r.count = count;
+         r.orec << " -- repeated #{count} times since #{time}"
       end
       
       puts "return '#{r.data}'" if !initial && $options['debug.gets']
@@ -236,8 +238,8 @@ gets also will merge records from a number of log files for the same host into t
 
 # default log splitter                                                                                                 
     class Record
-    attr_reader :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data
-    attr_writer :fn
+    attr_reader :count, :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data
+    attr_writer :fn, :count
 
       def initialize(raw=nil, pat=nil, split_p=nil)
 
@@ -252,6 +254,7 @@ gets also will merge records from a number of log files for the same host into t
         @fn = ''
         @data = ''
         @extra_data = ''
+	@count = 0
         return unless raw
         all, @utime, @time, @h,  @data =  raw.match(pat).to_a 
 	@utime = @utime.to_i

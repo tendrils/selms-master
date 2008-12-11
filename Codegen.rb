@@ -174,7 +174,7 @@ module Codegen
 	if $options["debug.rules-#{event[0]}"] then
 	  key = "#{event[0]}-#{count}"
 	  a << "    @count['#{key}'] = Host::SimpleCounter.new( 0, '#{key}') unless @count['#{key}']\n" +
-               "    @count['#{key}'].incr;\n"  if @run_type == 'periodic'
+               "    @count['#{key}'].incr(rec.count);\n"  if @run_type == 'periodic'
 	end
 	ret = ''
         case event[0]
@@ -191,10 +191,10 @@ module Codegen
           a += "warn(  rec.orec,  rec.fn )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "  @count[x].incr\n"
+                "  @count[x].incr(rec.count)\n"
         when 'incr'
           a += "@count[x] = Host::TimeCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "      @count[x].incr(time)\n"
+                "      @count[x].incr(time, rec.count)\n"
         when 'proc'
 	  a << "      Procs.#{event[1]}(rec.data)\n"
 	  post << "    Procs.#{event[1]}()\n"
