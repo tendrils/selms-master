@@ -105,12 +105,13 @@ gets also will merge records from a number of log files for the same host into t
 	      puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets']
               if !initial || @closing[l] || count != 1 # don't loose last record!
                 close_lf( l ) 
-                #              puts "closing file #{l}"
+             
+   #              puts "closing file #{l}"
               else
                 @closing[l] = true
               end
               closed = true
-            end
+            end  # gets
 
             if initial && ! defined? @rec[l].data then  # corrupt offset value?
               count = 0
@@ -122,13 +123,20 @@ gets also will merge records from a number of log files for the same host into t
 	      puts "gets: no_look_ahead return '#{@rec[l].data}'" if (defined? @rec[l].data) &&  $options['debug.gets']
 	      return @rec[l] 
 	    end
-
-            if ! closed && ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
-			    @rec[l].data =~ /^Previous message occurred (\d+) times./ )
-              if initial
+#pp @rec[l]#
+#puts "data #{@rec[l].data}"
+#puts  @rec[l].data =~ /^last message repeated (\d+) times/
+	    repeat = ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
+		      @rec[l].data =~ /^Previous message occurred (\d+) times./ )
+            if ! closed && repeat
+    
+#puts "have repeat #{$1} initial #{initial}"
+	      if initial
                 @rec[l] = nil
                 count = 0
+#puts "resetung count"
               else
+#puts "incr count"
                 puts "repeated #{$1}" if $options['debug.gets']
                 count += $1.to_i 
                 @rec[l] = previous_rec
@@ -136,12 +144,12 @@ gets also will merge records from a number of log files for the same host into t
             end
           end until ( closed || (@rec[l] && @rec[l].data )) 
           
-          if $options['debug.gets']
+          if $options['debug.gets'] && ! repeat
             puts "comparing" 
             puts @rec[l].data unless closed
             puts previous_rec.data  unless closed
           end
-        end while ( ! closed && @rec[l].data == previous_rec.data  )
+        end while ( ! closed && !repeat && @rec[l].data == previous_rec.data  )
       end
 
       begin
@@ -238,7 +246,7 @@ gets also will merge records from a number of log files for the same host into t
 
 # default log splitter                                                                                                 
     class Record
-    attr_reader :count, :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data
+    attr_reader :count, :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data, :raw
     attr_writer :fn, :count
 
       def initialize(raw=nil, pat=nil, split_p=nil)
@@ -257,6 +265,7 @@ gets also will merge records from a number of log files for the same host into t
 	@count = 0
         return unless raw
         all, @utime, @time, @h,  @data =  raw.match(pat).to_a 
+
 	@utime = @utime.to_i
 	split
       end
@@ -265,8 +274,9 @@ gets also will merge records from a number of log files for the same host into t
 
       def split
         return nil unless @data
-	all, p, @data = @data.match( @split_p ).to_a
-        
+
+	all, p, data = @data.match( @split_p ).to_a
+        @data = data if data
         if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )
           p=$1
         end
