@@ -160,7 +160,12 @@ gets also will merge records from a number of log files for the same host into t
 
       puts "final count #{count}" if $options['debug.gets']
       if count > 1      
-	r.count = count;
+	if ! r.orec  # something broken in the parsine
+	  STDERR.puts "Paring problems in file #{@fn} for host #{@rec[0].h} parser #{@rc}- aborting this file"
+	  return nil
+	end
+
+	r.count = count
          r.orec << " -- repeated #{count} times since #{time}"
       end
       
