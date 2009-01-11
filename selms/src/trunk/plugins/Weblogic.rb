@@ -83,7 +83,9 @@ class Weblogic< LogFile
       def split
 
         all,  @level, d = @data.match(@split_p ).to_a
-	if @level = Levels[@level]
+	if ! @level then
+	  @level = 7
+	elsif @level = Levels[@level]
 	  @data = d
 	end
 	@orec = "#{@time} #{@h}: '#{@data}'"
