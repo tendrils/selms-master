@@ -446,7 +446,6 @@ module Config
 	      else 
 		tok = expect( /(\w+)/ ,'file option' ) 
                 if tok  == 'ignore'
-puts "ignore!!"
                   @file[name]['ignore'] = true 
                 elsif tok  == 'email'
 		  e = expect(/^([^);]+)/, "email addresses", ANYWHERE )
@@ -473,7 +472,6 @@ puts "ignore!!"
 		end
 	      end
 	      expect(')')
-puts ">>> #{token}"
 	    else
 	      @file[name] = true
 	    end
