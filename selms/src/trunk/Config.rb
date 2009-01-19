@@ -437,7 +437,7 @@ module Config
             @merge_files = ( expect(%w( yes no) ) == 'yes' )
 	  when 'file'
 	    expect( '=>' ) 
-	    name = expect( /(\S+)/ ,'file name') 
+	    name = expect( /(\w+)/ ,'file name') 
 	    @file[name] = {} unless  @file[name]
 	    if look_ahead('(' ) then # have options for file
 	      expect('(')
@@ -446,6 +446,7 @@ module Config
 	      else 
 		tok = expect( /(\w+)/ ,'file option' ) 
                 if tok  == 'ignore'
+puts "ignore!!"
                   @file[name]['ignore'] = true 
                 elsif tok  == 'email'
 		  e = expect(/^([^);]+)/, "email addresses", ANYWHERE )
@@ -472,6 +473,7 @@ module Config
 		end
 	      end
 	      expect(')')
+puts ">>> #{token}"
 	    else
 	      @file[name] = true
 	    end
