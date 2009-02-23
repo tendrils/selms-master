@@ -56,12 +56,18 @@
     end
 
     def type_of_host( dir ) 
-
+      type = nil
       Dir.new(dir).each { |f|
-	return 'cisco' if f =~ /^local0/;
-	return 'windows' if f =~ /^user/;
+	next if f =~ /^\./;
+	if f =~ /^local0/ and ! type 
+	  type = 'cisco' 
+	elsif f =~ /^user/ and ! type;
+	  type =  'windows'
+	else
+	  type='unix'
+	end
       }
-      return 'unix'
+      return type
     end
   end
 
