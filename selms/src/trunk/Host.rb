@@ -67,16 +67,18 @@ class Host
   end
 
   class TimeCounter < Counter
-    def initialize( time, label )
+    def initialize( count, time, label )
       
       @items = time ? [] : 0
       @interval = time
+      @threshold = count
       super( label )
     end
     
     def incr( time, inc=1 )
       if @interval then
         disc_t = time - @interval  # discard items with time less that this
+
         while @items.size > 0 && @items[0] < disc_t do
           @items.shift 
         end
@@ -84,12 +86,27 @@ class Host
       else
         @items += inc
       end
+      if @items.size >= @threshold then
+	@items=[]
+	return TRUE
+      end
+    end
+
+    def check
+      @items.size >= @threshold
     end
 
     def val
       @items.size  # number of items
     end
 
+  end
+
+  def incr_check( mdata, threshold, interval, label, time, count)
+    label = expand(label, m_data) if label =~/%/ && defined? mdata 
+    @count[label] = TimeCounter.new(threshold, interval , label ) unless @count[label]
+#    puts "incr counrt #{label} #{@count[label].val}"
+    return @count[label].incr(time, count) ? "#{label}: #{threshold} events in #{interval} seconds" : nil
   end
 
   def initialize( conf, src )

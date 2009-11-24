@@ -59,6 +59,7 @@ module Config
 
       while  expect( '[', "Start of section i.e. '['" ) 
         head = SectionHead.new
+
         case head.kind
         when 'global'
           if $global then
@@ -291,16 +292,15 @@ module Config
 
       def initialize( head ) 
         @vars = {}
-	@services = {};
-
+#	@services = {};
         @actions = MyList.new
-        super( head )
+        return super( head )
       end
 
 
       def sub_sections( kind )
         { 'actions'     => ['name', ActionList, @actions], 
-	  'service'     => ['name', HostService, @services] 
+#	  'service'     => ['name', HostService, @services] 
         }[kind] 
       end
 
@@ -338,7 +338,9 @@ module Config
 
       def initialize( head) 
 	@kind = head.kind
-        @services = {}
+#uts "defining service #{head.name}" if @kind == 'service'
+
+#        @services = {}
         @actions = MyList.new
         real_time = MyList.new
         periodic = MyList.new
@@ -387,7 +389,7 @@ module Config
 	  end
 	end
 	@actions = $global.actions unless @actions
-
+#pp self
       end
 
       def get_options
@@ -501,10 +503,14 @@ module Config
 # this handles the non section items in the section
 
       def merge_services( s )
-#puts "merg service #{s}"   if @name == 'itsssolaris'
-        if service = $services[s] || ( $global && $global.services[s]) then
-          next if @services[s];  # all ready included                                                             
-          @services[s] = true
+# if @name == 'linux'
+#puts "merg service #{s}"
+#pp "global --", $global.services.keys if $global
+#pp '$services', $services
+#end  
+        if service = $services[s] then
+#          return if @services[s];  # all ready included                                                             
+#          @services[s] = service
         else
           error("unknown service '#{s}' referenced in host/service #{@name} ")
          return
@@ -512,7 +518,7 @@ module Config
         # merge in the file items
 
 	service.file.each {|name, val|
-#pp "xxx  '#{name}'",  @file.keys, @file[name]  if @name == 'itsssolaris'
+#pp "xxx  '#{name}'",  @file.keys, @file[name]  if @name == 'linux'
 #puts name, val, @name
 	  if val.class == Regexp 
 	     @file[name]['re'] = val 
@@ -780,6 +786,14 @@ module Config
 	    else
                 conditions.push( [ 're', re ] )
             end
+          when 'incr'
+            # incr  <report threshold> <time int> <string>
+	    if  (count = expect( /^(\d+)/, "interger Threshold", SAME_LINE )) && (
+	        (int = timeInterval) && label = quoted_string( SAME_LINE )) then
+              conditions.push( [tok, count, int, label ] )
+            else
+              err = true
+            end
           when 'test'
             if expect(/^\$(\w+)/, nil, SAME_LINE, Optional ) 
 	      tt = 't_var' 
@@ -802,7 +816,8 @@ module Config
 	    end
 	    recover( /,|:/, SAME_LINE ) unless ok
           else
-            if t = tokens[tok] 
+
+           if t = tokens[tok] 
 	      value = nil
 	      op = expect( /^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional ) || '=='
 #              puts "tok #{tok} op #{op}" unless op == '=='
@@ -825,7 +840,6 @@ module Config
                   error("#{op} is valid only with Strings")
                   value = nil
                 end
-
 		conditions.push( [tok, value, op ] ) if value 
 	      else
 		error("Unknown operator '#{op}'")
@@ -871,14 +885,6 @@ module Config
               actions.push( [ 'proc', p ] ) if defined? test
             else
               errs = true
-            end
-          when 'incr'
-            # incr  <report threshold> <time int> <string>
-	    if  (count = expect( /^(\d+)/, "interger Threshold", SAME_LINE )) && (
-	        int = timeInterval && label = quoted_string( SAME_LINE )) then
-              actions.push( [tok, count, int, label ] )
-            else
-              err = true
             end
           when 'count'
             # count <report threshold> <string>

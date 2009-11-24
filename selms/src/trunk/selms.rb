@@ -176,9 +176,11 @@ parse_config(conf_file, $options['run_type'] )
 
 # up date the options from the config file -- command line overrides
 
-$global.vars.each { |opt, val|
-  $options[opt] ||= val
-}
+if  $global 
+  $global.vars.each { |opt, val|
+    $options[opt] ||= val
+  }
+end
 
 $options.default = nil  # return to default behaviour
 

@@ -54,9 +54,11 @@ include Codegen
       def_logf = LogFile.new( 'default',  nil )
       File.open( $options['rt_socket'], 'r' ) { |logs|
 	begin
+#puts "getting data\n";
 	while logs.gets
 #	  all, utime, time, hn, record = $_.match(Host::LOG_HEAD).to_a
           hn = $log_store.extract_rt_host( $_ )
+#puts hn
           hn.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 #	  pp rec if $options['debug.split']
 
@@ -74,24 +76,22 @@ include Codegen
 		end
 	      } 
             end
- #puts host         
 	  next unless host
 	  
           unless files[hn]
             if f = (  host.file['all']  ) then
               files[hn] = f.class != Regexp ? f : LogFile.new( @file['all'] ) 
-# puts files[hn]
             end
           end
           
-	  
-	  rec = files[hn].gets( nil, $_)
-          rec.split
+	  rec = files[hn]['logtype'].gets( nil, $_)
+#          rec.split
 
 	  pp rec if $options['debug.split']
-puts "#{hn} #{rec.data}"          
 #          host.scanner( '', time, proc, facility, level, record, orec )
+puts rec.orec
            host.send host.rule_set, 'TEST', rec 
+# pp ">>>>",  host.rule_set         
 	  
 	end
 	rescue StandardError => e
@@ -99,8 +99,6 @@ puts "#{hn} #{rec.data}"
 	  puts e.backtrace.join("\n")
 	end
       }
-puts "gets failed:$!"
-#    }
 
   end
 
