@@ -58,7 +58,7 @@ puts "        match" if $options['debug.host-match']
       end
 
       if $options['one_host']  && ! host
-	STDERR.puts "no host definition for #{$options['one_host'] }" 
+	STDERR.puts "no host definition for #{mach}" 
 	exit
       end
 

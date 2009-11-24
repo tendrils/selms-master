@@ -58,9 +58,13 @@ gets also will merge records from a number of log files for the same host into t
     used by classes that read multiple physical records for each logical record
 =end
 
+      puts "Gets:" if  $options['debug.gets'] 
+
       if $run_type == 'realtime'
-        return @rc.new( raw, @head, @split_p)
+        r =  @rc.new( raw, @head, @split_p)
+        return r
       end
+
       return nil if ! @file || @file.size == 0
 
       initial = l
@@ -97,7 +101,13 @@ gets also will merge records from a number of log files for the same host into t
                 puts "gets: not initial #{count}" if $options['debug.gets']
                 previous_rec = @rec[l].dup if count == 1 && ! @no_look_ahead
               end
-              @rec[l] = @rc.new( raw, @head, @split_p)
+	      begin  # corrupt offset or eof ?? 
+		@rec[l] = @rc.new( raw, @head, @split_p)
+	      rescue NoMethodError
+		warn "NoMethodError file #{@name} #{$!} "
+		return false
+	      end
+
 
               @rec[l].fn = @fn[l]
               time = @rec[l].time if count == 1  # first time
@@ -105,7 +115,6 @@ gets also will merge records from a number of log files for the same host into t
 	      puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets']
               if !initial || @closing[l] || count != 1 # don't loose last record!
                 close_lf( l ) 
-             
    #              puts "closing file #{l}"
               else
                 @closing[l] = true
@@ -270,7 +279,7 @@ gets also will merge records from a number of log files for the same host into t
 	@count = 0
         return unless raw
         all, @utime, @time, @h,  @data =  raw.match(pat).to_a 
-
+#puts "#{@h}-#{@data}"
 	@utime = @utime.to_i
 	split
       end
@@ -279,7 +288,6 @@ gets also will merge records from a number of log files for the same host into t
 
       def split
         return nil unless @data
-
 	all, p, data = @data.match( @split_p ).to_a
         @data = data if data
         if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )

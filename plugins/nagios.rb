@@ -27,6 +27,7 @@ class Nagiosx
     @packet_version = 3
 
     @status = open_socket
+
   end
 
   def test( host, pass, debug = false, port=5667, time_out=20 )
@@ -66,6 +67,9 @@ class Nagiosx
   end
 
   def send( hostname, service, return_code, status )
+
+#    puts " send  #{hostname}, #{service}, #{return_code}, #{status} "
+
     return if hostname == '' || service == '' || return_code == '' || status == ''
 
     if @status != 'open' 
@@ -77,7 +81,9 @@ class Nagiosx
     crc = 0
     @d += 1
     
-    debugit("Read input: '" + [hostname,service,return_code,status].join("\t'"))
+   hostname.sub!(/\.itss$/,'');
+
+   debugit("Read input: '" + [hostname,service,return_code,status].join("\t'"))
     
     # Build our packet.
 #puts @packet_version, crc, @timestamp, return_code, hostname, service, status
@@ -135,28 +141,32 @@ class Action
       }
     end
     
-    def do_periodic ( type, host, msg, rec=nil )
+    def do_periodic ( type, host, file, rec )
       if ! host.recs[type + '-Nagios'] then 
 	 host.recs[type + '-Nagios'] = []
       end
-      host.recs[type + '-Nagios'] <<  ( msg || rec )
+      host.recs[type + '-Nagios'] <<  rec 
     end
   
 
-    def do_realtime ( type, host, msg, rec=nil )
+    def do_realtime ( type, host, file, rec )
       data = []
       if @bucket[type] then
         data = @bucket[type]
       else
-        data << ( msg || rec ) 
+        data << rec 
       end
+#pp data
+
       @n = Nagiosx.new( @host, @pass, @debug, @port, @time_out) unless @n
 
       data.each{ |line|
+#puts line
         @n.send( host.name, 'SELMS', @types[type], line )
       }
       @n.close
       @n = nil
+#exit
     end
   end
   

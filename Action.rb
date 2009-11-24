@@ -81,7 +81,8 @@ class Action
 
     reports = {}  # indexed by reporting address                                                              
     processed_hosts.each { |host, count| # each host we have logs to report for                                       
-    # skip unless we have something to report 
+    # skip unless we have something to report
+
       c = 0
       host.recs.keys.each { |key|
 	c  += host.recs[key].size
@@ -116,9 +117,10 @@ class Action
       
 
       host.recs.keys.each { |t|
+#pp host.recs
 	next unless host.recs[t].size > 0 
-	all, type, email = t.match(/(\w+)-?(.+)?/).to_a
 
+	all, type, email = t.match(/(\w+)-?(.+)?/).to_a
         if  email
 	  who =  email.split(/\s*,\s*\**/) .
 	              map{|addr| 'email:' + addr }

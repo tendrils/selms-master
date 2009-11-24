@@ -16,21 +16,21 @@
 class Weblogic< LogFile
 
     Levels = { 
-       'EMERG' => 0,       #  system is unusable               */
-       'ALERT'     => 1,       #  action must be taken immediately */
-       'CRITICAL'  => 2,       #  critical conditions              */
-       'ERROR'     => 3,       #  error conditions                 */
-       'WARN'      => 4,       #  warning conditions               */
-       'NOTICE'    => 5,       #  normal but significant condition */
-       'INFO'      => 6,       #  informational                    */
-       'DEBUG'     => 7        # debug-level messages             */
+       'emerg' => 0,       #  system is unusable               */
+       'alert'     => 1,       #  action must be taken immediately */
+       'critical'  => 2,       #  critical conditions              */
+       'error'     => 3,       #  error conditions                 */
+       'warn'      => 4,       #  warning conditions               */
+       'notice'    => 5,       #  normal but significant condition */
+       'info'      => 6,       #  informational                    */
+       'debug'     => 7        # debug-level messages             */
 
   }
-
+  Levels_ar = [ 'EMERG', 'ALERT', 'CRITICAL', 'ERROR', 'WARN', 'NOTICE', 'INFO', 'DEBUG' ]
 
     def initialize( name, split_p=nil, head=nil)
 
-      super(  name, /^(\w+)\s+(.+)/ )
+      super(  name, /^(\w+)\s+\[([^\]]+)\]\s*(.+)/ )
 
       @Tokens = {
         'proc' => [ String ],
@@ -46,21 +46,27 @@ class Weblogic< LogFile
 
     def gets( l = nil, raw = nil )  # set l for initial read
 
-      puts "in Weblogic gets l = #{l}\n, raw=#{raw} @rec[0] = #{defined? @rec[0]?  @rec[0] : ''}"  if $options['debug.gets']
-      @rec[0].data = nil if @rec[0]
+#pp  @rec[0]
 
-      while super( l )  && ! @rec[0].level   # until start of next record  
+      puts "in Weblogic gets l = #{l}, raw=#{raw} "  if $options['debug.gets']
+ 
+      while ( r = super( l ) ) && ! r.level   # until start of next record  	
 	l = nil
       end
 
-        return nil unless (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data  # must be end of file
-        r = @rec[0]
-	if m = r.data.match( /(.+) +(StackTrace: .+)/).to_a 
-	  r.data += ": #{m[1]}"
-	  r.extra_data += "#{m[2]}\n"
-	end
+      return nil unless r # not_eof # unless (defined? @rec[0].level or (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data)  # must be end of file
 
-      r.orec = "#{r.time} #{r.h}:  '#{r.data}'"
+#        r = @rec[0]
+#	if m = r.data.match( /(.+) +(StackTrace: .+)/).to_a 
+#        if ! r.data.match( /^[A-Z]+/)
+#	  r.data += ": #{m[1]}"
+#	  r.extra_data += "#{m[2]}\n"
+#	end
+
+# pp r unless r.level
+
+      r.orec = "#{r.time} #{r.h}: #{Levels_ar[r.level]} [#{r.proc}] '#{r.data}'"
+#      r.orec = "#{r.time} #{r.h}:  '#{r.data}'"
       pp r if $options['debug.split']
       return r
 
@@ -79,16 +85,17 @@ class Weblogic< LogFile
 #        all, @utime, @time, @h, @data =  raw.match(pat).to_a
 #      end
 
-
       def split
 
-        all,  @level, d = @data.match(@split_p ).to_a
-	if ! @level then
-	  @level = 7
-	elsif @level = Levels[@level]
+        all,  @level, @proc, d = @data.match(@split_p ).to_a
+
+	if @level and @level = Levels[@level.downcase]
 	  @data = d
 	end
-	@orec = "#{@time} #{@h}: '#{@data}'"
+#STDERR.puts @data unless @level
+#STDERR.puts Levels_ar[@level]
+
+#	@orec = "#{@time} #{@h}: #{Levels_ar[@level]} '#{@data}'"
       end
     end
 end

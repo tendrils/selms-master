@@ -35,6 +35,7 @@ module Parser
     @@debug = false
     @@macros = {}
     @@included_from = []
+    @@included_files = {}
   end
 
   def read_next_line
@@ -66,14 +67,19 @@ module Parser
 	end
 	include.sub!(/^\+/, "#{loc}" ) if loc
       end
-      @@included_from << [@@f.dup, @@file_name.dup, @@macros.dup ]
-      @@f = File.new(include ) 
-      if @@f then
-	@@file_name = include
-	read_next_line
-      else
-	@@f, @@file_name = @@included_from.pop
-	error("failed to open include file '#{$0}'")
+      if ! @@included_files[include] 
+	@@included_from << [@@f.dup, @@file_name.dup, @@macros.dup ]
+	@@f = File.new(include ) 
+	if @@f then
+	  @@included_files[include] = include
+	  @@file_name = include
+	  read_next_line
+	else
+	  @@f, @@file_name = @@included_from.pop
+	  error("failed to open include file '#{$0}'")
+	  read_next_line
+	end
+      else # have already included this file 
 	read_next_line
       end
     end

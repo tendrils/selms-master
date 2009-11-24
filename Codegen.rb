@@ -46,9 +46,11 @@ module Codegen
 
     %W( alert warn report ).each { |type|
       next unless a = actions.assoc( "#{pre}#{type}" )
-      code += "  def #{type}(rec, file = nil)\n"
+      code += "  def #{type}(rec, file = nil, msg=nil)\n"
       this_action = 'ACTION'
       acc_code = ''
+#code << "puts \"#{type}  \#{rec}\"\n"
+
  # jigrery pokery here to cope with acc (accumulate)  before the action 
  # -- the acc.new needs to know the action   
       a[1].each { |action|
@@ -69,12 +71,14 @@ module Codegen
 	  this_action = "$run.action_class('#{action[0]}')"  
 	  if @run_type == 'realtime'
             code << "     if  $bucket[self.name+'-#{type}'] then\n"
-	    code << "       $bucket[self.name+'-#{type}'] << (msg || rec)\n"
+#	    code << "       $bucket[self.name+'-#{type}'] << (msg || rec)\n"
+	    code << "       $bucket[self.name+'-#{type}'] << ( rec)\n"
 	    code << "     else\n"
 	  end
+          code << '       rec << " - #{msg}"  if msg ' +"\n"
 	  code << "       $run.action_class('#{action[0]}').do_#{@run_type}('#{type}', self, file, rec )\n"
 	  code << "     end\n" if @run_type == 'realtime'
-         end
+        end
       }
 
       if acc_code != ''  # perform the substitutions for the actions
@@ -92,7 +96,8 @@ module Codegen
   def scanner_body( matches, gen_code )
 
     @debug = $options['debug.matches']
-    code = ''
+    code = "mdata = msg = nil\n"
+#code << "puts rec.data\n"
     alerts = []
     warns = []
     drops = []
@@ -125,19 +130,22 @@ module Codegen
     all.concat( warns )
     all.concat( ignores )
     all.concat( others )
-    code = ''
     post = ''
 
     count = 0
     all.each{ |match|
       x = nil
+      msg = nil
       count += 1
       print "\nMatch #{count}: " if $options['debug.match']
       pp match if $options['debug.match']
-      c = ''
+      c = ""
       match[0].each{|cond|
         c += ' && ' unless  c == ''
-        case cond[0] 
+        case cond[0]
+	when 'incr'
+#	  c+= "( incr_check( defined? mdata ? mdata:nil,  #{cond[1]}, #{cond[2]}, '#{cond[3]}' ))"
+	  c+= "(msg = incr_check(  mdata,  #{cond[1]}, #{cond[2]}, '#{cond[3]}', rec.utime, rec.count ))"
         when 're'
           c += "( m_data = #{cond[1]}.match(rec.data))"
         when 't_var'
@@ -180,28 +188,32 @@ module Codegen
         case event[0]
         when 'drop', 'ignore'
           ret += "return true\n"
-        when 'alert'
+        when 'alert', 'warn'
 #        a += "alert( #{y}, rec.fn, rec.orec )\n"
-        a += "alert(  rec.orec,  rec.fn )\n"
+        msg = event[1] ? "'#{event[1]}'" : 'nil';
+        a += "#{event[0]}(  rec.orec,  rec.fn, #{msg} )\n"
         when 'switch' 
 	  a += "@rule_set = \"_#{event[1]}\"\n"
 	  a += "report(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
         when 'warn'
 #          a += "warn( #{y}, rec.fn, rec.orec )\n"
-          a += "warn(  rec.orec,  rec.fn )\n"
+          a += "warn(  rec.orec,  rec.fn, msg )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "  @count[x].incr(rec.count)\n"
+                "  @count[x].incr(rec.count)\n" 
         when 'incr'
           a += "@count[x] = Host::TimeCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "      @count[x].incr(time, rec.count)\n"
+                "      @count[x].incr(time, rec.count)\n" +
+                " puts 'incr counrt'\n"
+
         when 'proc'
 	  a << "      Procs.#{event[1]}(rec.data)\n"
 	  post << "    Procs.#{event[1]}()\n"
         end
       }
       code << "    ##{count}:\n" 
-      code << "    if #{c} then\n#{a} #{ret}   end\n"
+      code << "    if #{c} then\n#{a} #{ret}  end\n"
+#code << "puts rec if rec =~ /nrpe/\n"
     }
     return [ code, post ]
   end
@@ -219,6 +231,7 @@ module Codegen
     sb = {}
     post_code = {}
 #pp host
+
     case type
     when 'periodic'
       host.periodic.each{ |name, matches|
@@ -245,7 +258,7 @@ module Codegen
 
    sb.each { |name, scanner| 
      code <<  "  def _#{name}( file, rec )\n" 
-     code <<  "    return unless file\n"
+     code <<  "    return unless file\n" if $run_type == 'periodic' 
      code <<  "    errors = 0\n"
      code <<  "    begin\n"
      code <<  "    #{scanner}\n"
@@ -272,6 +285,7 @@ module Codegen
      
    code <<  "hosts[host.name] = #{class_name}.new( host, code )\n"
    
+#       puts host.name
 #       puts  code
 #puts $options['one_host'], host.name
    if $options['debug.code'] || $options['debug.match-code'] then
