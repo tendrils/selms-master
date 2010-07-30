@@ -39,6 +39,7 @@ class Weblogic< LogFile
       }
       @rc = Record
       @no_look_ahead = true
+      @count = 0
     end
 
 # weblogic logs are (or can be) multiline -- first line consisting of the actual log message
@@ -53,7 +54,6 @@ class Weblogic< LogFile
       while ( r = super( l ) ) && ! r.level   # until start of next record  	
 	l = nil
       end
-
       return nil unless r # not_eof # unless (defined? @rec[0].level or (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data)  # must be end of file
 
 #        r = @rec[0]
