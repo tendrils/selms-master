@@ -772,8 +772,9 @@ module Config
           tok.downcase!
           case tok
           when 'file'
+	    tok = expect('String')
 	    tokens = @file[tok]['logtype'].Tokens if @file[tok]['logtype']
-	    conditions.push( [ 'file', tok ] )
+	    conditions.push( [ 'fn', "'#{tok}'", '==' ] )
           when 're', 'rec'
 
 	    re = expect( 're' )  # a  
