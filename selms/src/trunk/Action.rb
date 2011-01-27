@@ -62,7 +62,7 @@ class Action
 
     def async_mail(host, type, data)
       $threads.push Thread.new {
-	smtp = Mail.new($options['mail_server'], "Russell Fulton <r.fulton@auckland.ac.nz>" ) 
+	smtp = Mail.new($options['mail_server'], "SELMS <security-alert@auckland.ac.nz>" ) 
 
 	begin
 #	smtp.send( host.email, "SELMS #{type} from #{host.name}", data )
