@@ -154,7 +154,7 @@ class Action
     end
 
     if ! $options['no_mail']  || $options['mail_to'] then
-      smtp = Mail.new($options['mail_server'], "SELMS <security-alert@auckland.ac.n" ) 
+      smtp = Mail.new($options['mail_server'], "SELMS <security-alert@auckland.ac.nz" ) 
     end
 
     reports.each { |who, rep|
