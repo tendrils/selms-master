@@ -33,6 +33,7 @@ LOG_STORE = 'LogStore'
 $options = {   # defaults
            'pre' => nil,
            'post' => nil,
+           'lock' => nil,
 	   'mail_to' => nil,
 	   'mail_server' => nil,
  	   'mail_subject' => 'SELMS Periodic Report',
@@ -72,6 +73,8 @@ OptionParser.new { |opts|
     $options['no_write_offset'] = val  }
   opts.on('-m', '--mail_to=MAIL_TO', String, "send all mail to ARG") {|val|
     $options['mail_to'] = val}
+  opts.on('-l', '--label=LOCK_FILE', String, "name of lock file") {|val|
+    $options['lock'] = val}
   opts.on('--mail_server=MAIL_SERVER', String, "send mail via ARG") {|val|
     $options['mail_server'] = val}
   opts.on('--mail_subject=MAIL_SUBJECT', String, "prefix ARG to mail subject line") {|val|
@@ -140,6 +143,15 @@ OptionParser.new { |opts|
 }
 
 
+if $options['lock'] and exists? $options['lock'] 
+  STDERR.puts "lock file '#{$options['lock']}' found - selms still running?  exiting! "
+  exit
+end
+
+if $options['lock']
+  lock = File.open($options['lock'], 'w')
+  lock.close
+end
 
 hosts = {}
 $options['run_type'] =  RUN_TYPE  if $options['run_type'] == 'empty'
@@ -195,6 +207,8 @@ if $options['pre']
   system( $options['pre'] )
 end
 
+begin
+
 case $options['run_type']
 when 'periodic' 
 
@@ -246,4 +260,10 @@ when 'monthly'
   Monthly.new
 end
 
+rescue 
+  File.unlink $options['lock'] if $options['lock']
+  raise
+end
+
+File.unlink $options['lock'] if $options['lock']
 exit 0;
