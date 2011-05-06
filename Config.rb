@@ -73,7 +73,7 @@ module Config
 	    warn( "multiple defintions of service '#{head.name}' last will be used")
 	  end
           $services[head.name] = HostService.new( head )
-        when 'host' 
+        when 'host', 'app'
 	  if $hosts[head.name] then
 	    warn( "multiple defintions of host '#{head.name}' last will be used")
 	  end
