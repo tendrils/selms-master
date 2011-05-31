@@ -508,6 +508,7 @@ module Config
 #pp "global --", $global.services.keys if $global
 #pp '$services', $services
 #end  
+
         if service = $services[s] then
 #          return if @services[s];  # all ready included                                                             
 #          @services[s] = service

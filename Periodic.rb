@@ -40,7 +40,6 @@ include Codegen
     processed_hosts = {}
     
     # walk the log tree 
-
     $log_store.traverse { | dir_name, mach|
 
       priority = -1
@@ -54,7 +53,8 @@ puts "        match" if $options['debug.host-match']
 	    host.name = mach 
 	    priority = host.priority
 	  end
-	} 
+	}
+        host = hosts['default'] unless host 
       end
 
       if $options['one_host']  && ! host
