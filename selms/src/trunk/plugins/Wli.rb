@@ -1,4 +1,4 @@
-class WLI < LogFile
+class Wli < LogFile
     # log4j levels 
     Levels = { 
        'FATAL' => 0, 
@@ -17,8 +17,12 @@ class WLI < LogFile
       #APP: [LEVEL] [PROGRAM_LOCATION] DATA
       #e.g.:
       #WLI_EPRFinanceIntegration: [INFO] [nz.ac.auckland.process.EPRFinancePersonTypeProcess.processFinancePerson] (UoAID:2337651) Person has been sent to Finance successfully
+#WLI [INFO] [nz.ac.auckland.timetable.classMeetingPatternPublisher.processes.PublishCombinedSectionMsgProcess.subscription] Start timer based combined section message publishing at 2011/05/30 23:59:00
 
-      super(  name, /^(\w+):\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s*(.+)/)
+
+
+#      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\(([^)]+)\)\s*(.+)/)
+      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+(.+)/)
 
       @Tokens = {
         'app' => [ String ],
@@ -45,17 +49,20 @@ class WLI < LogFile
     class Record < LogFile::Record
 
       attr_reader :time, :utime, :h, :application, :level, :data, :record, :location, :orec
+      attr_writer  :orec
 
       def split
 
-        all, p, @application, @level, @location, d = @data.match(@split_p).to_a
+        all, @application, @level, @location, d = @data.match(@split_p).to_a
+#puts  @application, @level, @location, d 
 
-	if @level and @level = Levels[@level.upcase]
+	if @level && Levels[@level]
 	  @data = d
 	end
-
 	@level = Levels[@level]
-        @orec = "#{@time} #{@h}: #{@application}: [#{Levels_ar[level]}] [#{location}] #{data}"
+
+        @orec = "#{@time} #{@h}: #{@application}: [#{Levels_ar[@level]}] [#{@location}] #{data}"
       end
     end
 end
+
