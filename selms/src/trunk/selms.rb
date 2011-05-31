@@ -73,7 +73,7 @@ OptionParser.new { |opts|
     $options['no_write_offset'] = val  }
   opts.on('-m', '--mail_to=MAIL_TO', String, "send all mail to ARG") {|val|
     $options['mail_to'] = val}
-  opts.on('-l', '--label=LOCK_FILE', String, "name of lock file") {|val|
+  opts.on('--label=LOCK_FILE', String, "name of lock file") {|val|
     $options['lock'] = val}
   opts.on('--mail_server=MAIL_SERVER', String, "send mail via ARG") {|val|
     $options['mail_server'] = val}
