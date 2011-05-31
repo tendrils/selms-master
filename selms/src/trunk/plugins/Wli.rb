@@ -1,0 +1,61 @@
+class WLI < LogFile
+    # log4j levels 
+    Levels = { 
+       'FATAL' => 0, 
+       'ERROR' => 1, 
+       'WARN'  => 2, 
+       'INFO'  => 3, 
+       'DEBUG' => 4, 
+       'TRACE' => 5
+    }
+
+    Levels_ar = [ 'FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE' ]
+
+    def initialize( name, split_p=nil, head=nil)
+
+      #should parse something along the lines of:
+      #APP: [LEVEL] [PROGRAM_LOCATION] DATA
+      #e.g.:
+      #WLI_EPRFinanceIntegration: [INFO] [nz.ac.auckland.process.EPRFinancePersonTypeProcess.processFinancePerson] (UoAID:2337651) Person has been sent to Finance successfully
+
+      super(  name, /^(\w+):\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s*(.+)/)
+
+      @Tokens = {
+        'app' => [ String ],
+        'level'  => [ Levels ],
+	'proglocation' => [ String ]
+      }
+      @rc = Record
+      @no_look_ahead = true
+      @count = 0
+    end
+
+    def gets(l = nil, raw = nil)
+      while (r = super(l)) && ! r.level
+	l = nil
+      end
+      return nil unless r
+
+      r.orec = "#{r.time} #{r.h}: #{r.application}: [#{Levels_ar[r.level]}] [#{r.location}] #{r.data}"
+
+      return r
+
+    end
+
+    class Record < LogFile::Record
+
+      attr_reader :time, :utime, :h, :application, :level, :data, :record, :location, :orec
+
+      def split
+
+        all, p, @application, @level, @location, d = @data.match(@split_p).to_a
+
+	if @level and @level = Levels[@level.upcase]
+	  @data = d
+	end
+
+	@level = Levels[@level]
+        @orec = "#{@time} #{@h}: #{@application}: [#{Levels_ar[level]}] [#{location}] #{data}"
+      end
+    end
+end
