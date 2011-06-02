@@ -44,28 +44,24 @@ include Codegen
 
       priority = -1
       unless host = hosts[mach] then
-puts mach if $options['debug.host-match']
+	puts mach if $options['debug.host-match']
 	host_patterns.each { |name, h |
-puts "    #{priority} #{h.priority}   #{h.pattern}" if $options['debug.host-match']
+	  puts "    #{priority} #{h.priority}   #{h.pattern}" if $options['debug.host-match']
 	  if mach.match( h.pattern ) && h.priority > priority then
-puts "        match" if $options['debug.host-match']
+	    puts "        match" if $options['debug.host-match']
 	    host = hosts[mach] = h.dup
 	    host.name = mach 
 	    priority = host.priority
 	  end
 	}
-        host = hosts['default'] unless host 
+#        host = hosts['default'] unless host 
       end
 
-      if $options['one_host']  && ! host
-	STDERR.puts "no host definition for #{mach}" 
-	exit
-      end
-
-      # if we get here there was no host entry or pattern for this machine
+       # if we get here there was no host entry or pattern for this machine
 
       if ! host then
 	Find.prune if $options['ignore_unk_hosts']
+#	puts "#{name} #{dir_name} #{$log_store.type_of_host( dir_name ) }"
 	if type = $log_store.type_of_host( dir_name ) then
           if ! hosts[ "default-#{type}"] then
 	    STDERR.puts "No default definition for #{type}"
