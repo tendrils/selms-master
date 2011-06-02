@@ -73,7 +73,7 @@ OptionParser.new { |opts|
     $options['no_write_offset'] = val  }
   opts.on('-m', '--mail_to=MAIL_TO', String, "send all mail to ARG") {|val|
     $options['mail_to'] = val}
-  opts.on('--label=LOCK_FILE', String, "name of lock file") {|val|
+  opts.on('-L', '--lock=LOCK_FILE', String, "name of lock file") {|val|
     $options['lock'] = val}
   opts.on('--mail_server=MAIL_SERVER', String, "send mail via ARG") {|val|
     $options['mail_server'] = val}
@@ -91,7 +91,7 @@ OptionParser.new { |opts|
     $options['file'] = val}
   opts.on('--one_file=FILENAME', "run just for this file"){|val|
     $options['one_file'] = val}
-  opts.on('-l', '--log_type=PLUGIN', "explicitly sepecify plugin -- use with -f"){|val|
+  opts.on('--log_type=PLUGIN', "explicitly sepecify plugin -- use with -f"){|val|
     $options['log_type'] = val}
   opts.on('-l', '--log_dir=LOGDIR', String, "Base directory where logs are located"){
     |val| $options['log_dir'] = val}
@@ -143,7 +143,7 @@ OptionParser.new { |opts|
 }
 
 
-if $options['lock'] and exists? $options['lock'] 
+if $options['lock'] and File.exists? $options['lock'] 
   STDERR.puts "lock file '#{$options['lock']}' found - selms still running?  exiting! "
   exit
 end
