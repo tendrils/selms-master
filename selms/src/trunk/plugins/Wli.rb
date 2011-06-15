@@ -56,6 +56,11 @@ class Wli < LogFile
         all, @application, @level, @location, d = @data.match(@split_p).to_a
 #puts  @application, @level, @location, d 
 
+	if ! all  # split failed
+	  STDERR.puts "failed to split record #{@data} for  #{@fn}"
+	end
+
+
 	if @level && Levels[@level]
 	  @data = d
 	end

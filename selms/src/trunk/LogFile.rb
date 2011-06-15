@@ -289,7 +289,11 @@ gets also will merge records from a number of log files for the same host into t
       def split
         return nil unless @data
 	all, p, data = @data.match( @split_p ).to_a
-        @data = data if data
+
+        if ! all  # split failed
+          STDERR.puts "failed to split record #{@data} for  #{@fn}"
+	end
+	@data = data if data
         if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )
           p=$1
         end
