@@ -22,7 +22,7 @@ class Wli < LogFile
 
 
 #      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\(([^)]+)\)\s*(.+)/)
-      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+(.+)/)
+      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+(.+)?/)
 
       @Tokens = {
         'app' => [ String ],
@@ -59,6 +59,7 @@ class Wli < LogFile
 	if @level && Levels[@level]
 	  @data = d
 	end
+	puts ">>>>>>>>>  #{data}" unless  @level
 	@level = Levels[@level]
 
         @orec = "#{@time} #{@h}: #{@application}: [#{Levels_ar[@level]}] [#{@location}] #{data}"
