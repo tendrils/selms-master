@@ -774,7 +774,7 @@ module Config
           case tok
           when 'file'
 	    tok = expect('String')
-	    tokens = @file[tok]['logtype'].Tokens if @file[tok]['logtype']
+	    tokens = @file[tok]['logtype'].Tokens if @file[tok] && @file[tok]['logtype']
 	    conditions.push( [ 'fn', "'#{tok}'", '==' ] )
           when 're', 'rec'
 
