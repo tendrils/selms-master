@@ -155,12 +155,13 @@ module Config
     end
 
     class MyList < Array
+
       def initialize( values=nil )
-	if values then
-	  super( values )
-	else
-	  super()
-	end
+        if values then
+          super( values )
+        else
+          super()
+        end
       end
 
 # take two sets of event-action lists
@@ -216,7 +217,7 @@ module Config
           return nil
         end
 
-	return unless process_subsections
+	      return unless process_subsections
 
         while ( tok = nextT ) && tok != '}'  
           if tok == '[' then
@@ -228,51 +229,51 @@ module Config
               recover('}')
             else
               case details[0] 
-	      when 'name' 
+	            when 'name'
                 if ! defined? head.name then
                   error("section #{head.kind} must have a name part" )
                 end
-	      when 'optional' 
-		head.name = 'default' unless head.name 
-              end
-
-              if details[5] then
-                s = details[1].new( head, details[3], details[4], details[5] )
-              elsif details[4] then
-                s = details[1].new( head, details[3], details[4] )
-              elsif details[3] then
-                s = details[1].new( head, details[3] )
-              else
-                s = details[1].new( head )
-              end
-	      
-              case details[2].class.to_s
-              when 'Hash' :
-		  if defined? s.item then
-		    details[2].merge!(s.items)
-		  else
-		    details[2][s.name] = s
-		  end
-             when 'Array' :
-		  if defined? s.items then
-                   details[2] << s.items
-		  else
-		    details[2] << s
-		  end
-              when 'Config::MyList' :
-                   details[2] << s.items
-              else
-                error("internal error -- " +
-                             "bad class #{details[2].class.to_s} for section")
-                @errors = true;
-              end
-              @errors ||= s.errors   # propogate errors upwards
+	            when 'optional'
+		            head.name = 'default' unless head.name
             end
-          else
-            specificItem( tok )
+
+            if details[5] then
+              s = details[1].new( head, details[3], details[4], details[5] )
+            elsif details[4] then
+              s = details[1].new( head, details[3], details[4] )
+            elsif details[3] then
+              s = details[1].new( head, details[3] )
+            else
+              s = details[1].new( head )
+            end
+	      
+            case details[2].class.to_s
+            when 'Hash' :
+              if defined? s.item then
+                details[2].merge!(s.items)
+              else
+                details[2][s.name] = s
+              end
+            when 'Array' :
+		          if defined? s.items then
+                details[2] << s.items
+              else
+                details[2] << s
+              end
+            when 'Config::MyList' :
+              details[2] << s.items
+            else
+              error("internal error -- " +
+                    "bad class #{details[2].class.to_s} for section")
+              @errors = true;
+            end
+            @errors ||= s.errors   # propogate errors upwards
           end
-        end   # have the final brace
-      end
+        else
+          specificItem( tok )
+        end
+      end   # have the final brace
+    end
 
       def get_options
         error("extraneous input in header for section #{@kind}")
@@ -719,8 +720,8 @@ module Config
 
       def initialize( head, opts, file, init = false )
         @items = []
-	@opts = opts
-	@file = file
+	      @opts = opts
+	      @file = file
         super( head ) unless init
       end
 
@@ -770,13 +771,13 @@ module Config
 	  @opts.each { |value|
 	    conditions << [ value[0], value[1], '==' ] 
 	  }
-          tok.downcase!
-          case tok
-          when 'file'
+    tok.downcase!
+    case tok
+    when 'file'
 	    tok = expect('String')
 	    tokens = @file[tok]['logtype'].Tokens if @file[tok] && @file[tok]['logtype']
 	    conditions.push( [ 'fn', "'#{tok}'", '==' ] )
-          when 're', 'rec'
+    when 're', 'rec'
 
 	    re = expect( 're' )  # a  
 	    re += 'i' unless tok == 'rec' # default is to ignore case
@@ -788,15 +789,15 @@ module Config
 	    else
                 conditions.push( [ 're', re ] )
             end
-          when 'incr'
+    when 'incr'
             # incr  <report threshold> <time int> <string>
 	    if  (count = expect( /^(\d+)/, "interger Threshold", SAME_LINE )) && (
 	        (int = timeInterval) && label = quoted_string( SAME_LINE )) then
               conditions.push( [tok, count, int, label ] )
-            else
-              err = true
-            end
-          when 'test'
+      else
+        err = true
+      end
+    when 'test'
             if expect(/^\$(\w+)/, nil, SAME_LINE, Optional ) 
 	      tt = 't_var' 
 	      var = tok
@@ -809,49 +810,50 @@ module Config
 	      val = quoted_string( SAME_LINE, Optional ) ? tok :
 		                    expect(/^(\d+)/, "<integer value>").to_i 
 	      if val
-		conditions.push([tt, var, op, val])
-		ok = true
+      		conditions.push([tt, var, op, val])
+  		    ok = true
 	      end
 	    end           
 	    if ! defined? val then # syntax error
 	      rest_of_line
 	    end
 	    recover( /,|:/, SAME_LINE ) unless ok
-          else
+    else
 
-           if t = tokens[tok]  # it is a custom attribute 
+      if t = tokens[tok]  # it is a custom attribute
 	      value = nil
 	      op = expect( /^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional ) || '=='
 #              puts "tok #{tok} op #{op}" unless op == '=='
-	      if op_class = OPS[op] then
-		if expect('(', '(', SAME_LINE, Optional) then # it is a range
-		  ( v1 = expect( t[0] )) && expect('..') && (v2 = expect( t[0] ))
-		  if defined? v2 then
-		    d = t[0].to_s == 'String' ? "'" : ""
-		    value = "(#{d}#{v1}#{d}..#{d}#{v2}#{d})"
-		    op = '==='
-		    expect(')')
+	    if op_class = OPS[op] then
+		    if expect('(', '(', SAME_LINE, Optional) then # it is a range
+    		  ( v1 = expect( t[0] )) && expect('..') && (v2 = expect( t[0] ))
+    		  if defined? v2 then
+		        d = t[0].to_s == 'String' ? "'" : ""
+		        value = "(#{d}#{v1}#{d}..#{d}#{v2}#{d})"
+		        op = '==='
+		        expect(')')
+		      else
+		        rest_of_line
+		    end
 		  else
-		    rest_of_line
+		    value = expect(op_class == 're'? 're' : t[0])
+		    value = "'#{value}'" if ( t[0].to_s == 'String' )  && (op != '=~') && (op != '!~')
 		  end
-		else
-		  value = expect(op_class == 're'? 're' : t[0])
-		  value = "'#{value}'" if ( t[0].to_s == 'String' )  && (op != '=~') && (op != '!~')
-		end
-                if op_class == 'string' && t[0] == 'Integer'
-                  error("#{op} is valid only with Strings")
-                  value = nil
-                end
-		conditions.push( [tok, value, op ] ) if value 
-	      else
-		error("Unknown operator '#{op}'")
-		rest_of_line
-	      end
-	    else
-	      error( "'#{tok}' not valid here - expecting a condition" )
-	      rest_of_line
-	    end
+      if op_class == 'string' && t[0] == 'Integer'
+        error("#{op} is valid only with Strings")
+        value = nil
+      end
+
+  		conditions.push( [tok, value, op ] ) if value
+	  else
+		  error("Unknown operator '#{op}'")
+		  rest_of_line
 	  end
+	else
+	  error( "'#{tok}' not valid here - expecting a condition" )
+	  rest_of_line
+	end
+end
         end while (tok = nextT(SAME_LINE)) && ( tok == '&' ) 
 
         if tok && tok != ':' then
