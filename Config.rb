@@ -819,7 +819,7 @@ module Config
 	    recover( /,|:/, SAME_LINE ) unless ok
           else
 
-           if t = tokens[tok] 
+           if t = tokens[tok]  # it is a custom attribute 
 	      value = nil
 	      op = expect( /^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional ) || '=='
 #              puts "tok #{tok} op #{op}" unless op == '=='

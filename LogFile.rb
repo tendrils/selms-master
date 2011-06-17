@@ -35,6 +35,7 @@ The process of parsing the log record has two phases:
       @file = nil
       @off_name = nil
       @no_look_ahead = nil
+      @recs = @split_failures = 0
       @rc = Record
     end
 
@@ -67,6 +68,7 @@ gets also will merge records from a number of log files for the same host into t
 
       return nil if ! @file || @file.size == 0
 
+      @recs += 1
       initial = l
       previous_rec = nil
       count = 0  # number of duplicates  
@@ -169,8 +171,8 @@ gets also will merge records from a number of log files for the same host into t
 
       puts "final count #{count}" if $options['debug.gets']
       if count > 1      
-	if ! r.orec  # something broken in the parsine
-	  STDERR.puts "Paring problems in file #{@fn} for host #{@rec[0].h} parser #{@rc}- aborting this file"
+	if ! r.orec  # something broken in the parsing
+	  STDERR.puts "Parsing problems in file #{@fn} for host #{@rec[0].h} parser #{@rc}- aborting this file"
 	  return nil
 	end
 
@@ -267,7 +269,7 @@ gets also will merge records from a number of log files for the same host into t
 
         @raw = raw
         @split_p = split_p
-        @pat = pat
+	@pat = pat
         @time = nil
         @utime = nil
         @h = nil
@@ -291,17 +293,16 @@ gets also will merge records from a number of log files for the same host into t
 	all, p, data = @data.match( @split_p ).to_a
 
         if ! all  # split failed
-          STDERR.puts "failed to split record #{@data} for  #{@fn}"
+	  @orec = nil
+	else
+	  @data = data if data
+	  if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )
+	    p=$1
+	  end
+
+	  @proc = canonical_proc( p )
+	  @orec = "#{@time} #{@h}: #{p}: '#{@data}'"
 	end
-	@data = data if data
-        if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )
-          p=$1
-        end
-
-	@proc = canonical_proc( p )
-      
-	@orec = "#{@time} #{@h}: #{p}: '#{@data}'"
-
       end
 
       def canonical_proc( p )
