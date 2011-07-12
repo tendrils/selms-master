@@ -51,7 +51,7 @@
 	  end
 	end
 
-	yield filename, mach
+	yield filename, mach.downcase!
       }
     end
 
