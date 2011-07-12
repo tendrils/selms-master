@@ -30,7 +30,6 @@
 	mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
 
 	next if ! mach
-
 	mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
 	if $options['one_host'] && 
@@ -50,8 +49,8 @@
 	    next;
 	  end
 	end
-
-	yield filename, mach.downcase!
+	mach.downcase!
+	yield filename, mach
       }
     end
 
