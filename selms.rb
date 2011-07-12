@@ -96,7 +96,7 @@ OptionParser.new { |opts|
   opts.on('-l', '--log_dir=LOGDIR', String, "Base directory where logs are located"){
     |val| $options['log_dir'] = val}
   opts.on('-S', '--log_store=LOGSTORE', String, "Plugin to traverse log store"){
-    |val| $options['log_dir'] = val}
+    |val| $options['log_store'] = val}
   opts.on( '-p', '--pre', String, "run this script before taking action") {
     |val| $options['pre'] = true
   }
