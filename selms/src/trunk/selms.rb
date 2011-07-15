@@ -54,7 +54,8 @@ $options = {   # defaults
            'one_file' => nil,
            'log_type' => nil,
 	   'log_store' => LOG_STORE,
-           'merge_files' => 'yes'
+           'merge_files' => 'yes',
+           'ignore_unk_hosts' => nil,
 }
 
 $options.default = 'empty'  # returned for unknown keys 

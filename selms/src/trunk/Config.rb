@@ -204,7 +204,7 @@ module Config
 
       def initialize( head, process_subsections=true )
 
-        @kind = head.kind
+        @kind = head.kind unless defined? @kind
         @name = head.name
         @sectionstart = head.sectionstart
         @errors = 0
@@ -339,7 +339,8 @@ module Config
 
       def initialize( head) 
 	@kind = head.kind
-#uts "defining service #{head.name}" if @kind == 'service'
+#uts "defining service #{head.name}" if @kind == 'service
+	@kind = 'host' if @kind == 'app'
 
 #        @services = {}
         @actions = MyList.new
