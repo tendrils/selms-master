@@ -1,7 +1,7 @@
 class Snare < LogFile
 
-  def initialize(name=nil)
-    super(name)
+  def initialize(name=nil, fn=nil )
+    super(name, fn)
     @Tokens = {
       'criticality' => [Integer ],
       'source'   => [ String ],

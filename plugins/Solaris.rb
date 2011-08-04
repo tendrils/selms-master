@@ -15,9 +15,9 @@ class Solaris < LogFile
   }
 
 
-    def initialize( name, split_p=nil, head=nil)
+    def initialize( name, fn=nil, split_p=nil, head=nil)
 
-      super(  name, /^([^:]+):\s+\[ID \d+ (\w+)\.(\w+)\]\s*(.+)/ )
+      super(  name, fn, /^([^:]+):\s+\[ID \d+ (\w+)\.(\w+)\]\s*(.+)/ )
 
       @Tokens = {
         'proc' => [ String ],

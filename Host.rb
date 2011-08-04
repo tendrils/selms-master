@@ -197,14 +197,14 @@ class Host
 	next if base_name == 'cron' &&  @file['cron'] != 'process'
         next if @file[base_name] && @file[base_name]['ignore']	
 
-	lf =  @file[l]['re'] ? LogFile.new( @file[l]['re'] ) : @file[l]['logtype']
+	lf =  @file[l]['re'] ? LogFile.new( @file[l]['re'], log_dir + '/' + log ) : @file[l]['logtype']
 
 	count = 0
 	if f = (  @file[base_name] || @file['all'] ) then
           f.to_s =~ /#<(\w+):/
           rs = $1.downcase
           @rule_set = @file[base_name].to_s.downcase if @file[base_name]  ###########  temp fudge -- fix this
-	  c_logf = f.class != Regexp ? f : LogFile.new( f ) 
+	  c_logf = f.class != Regexp ? f : LogFile.new( f, log_dir + '/' + log ) 
           @rule_set = '_'+rs
           begin
             self.send @rule_set, nil, nil 
