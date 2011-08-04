@@ -4,9 +4,9 @@
 
 class Apache < LogFile
   
-  def initialize( name=nil, split_p=nil, head=nil)
+  def initialize( name=nil, fn=nil, split_p=nil, head=nil)
     
-    super( name, split_p, head )
+    super( name, fn, split_p, head )
 
     @Tokens = {
      'source'    => [String],

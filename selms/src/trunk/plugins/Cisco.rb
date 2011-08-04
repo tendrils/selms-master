@@ -2,11 +2,11 @@
 
 class Cisco < LogFile
 
-    def initialize(name, split_p=nil, head=nil)
+    def initialize(name, fn=nil, split_p=nil, head=nil)
 
       split_p = /^(\d+)?[^%]*(%(\w+)-(\d)-(\S+):.+)?/ unless split_p
 
-      super(name, split_p  )
+      super(name, fn, split_p  )
 
       @Tokens = {
 	'cat'    => [String, 'options'],
@@ -43,8 +43,8 @@ end
 
 class Ciscowlan < Cisco
 
-   def initialize(name, split_p=nil, head=nil)
-     super( name, /^(\S+) ((\w+)-(\d)-(\S+):.+)?/ )
+   def initialize(name, fn=nil, split_p=nil, head=nil)
+     super( name, fn, /^(\S+) ((\w+)-(\d)-(\S+):.+)?/ )
    end
 
     class Record < Cisco::Record
