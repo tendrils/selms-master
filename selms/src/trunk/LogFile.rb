@@ -134,20 +134,14 @@ gets also will merge records from a number of log files for the same host into t
 	      puts "gets: no_look_ahead return '#{@rec[l].data}'" if (defined? @rec[l].data) &&  $options['debug.gets']
 	      return @rec[l] 
 	    end
-#pp @rec[l]#
-#puts "data #{@rec[l].data}"
-#puts  @rec[l].data =~ /^last message repeated (\d+) times/
+
 	    repeat = ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
 		      @rec[l].data =~ /^Previous message occurred (\d+) times./ )
             if ! closed && repeat
-    
-#puts "have repeat #{$1} initial #{initial}"
 	      if initial
                 @rec[l] = nil
                 count = 0
-#puts "resetung count"
               else
-#puts "incr count"
                 puts "repeated #{$1}" if $options['debug.gets']
                 count += $1.to_i 
                 @rec[l] = previous_rec
@@ -170,13 +164,13 @@ gets also will merge records from a number of log files for the same host into t
       end
 
       puts "final count #{count}" if $options['debug.gets']
+      r.count = count
       if count > 1      
 	if ! r.orec  # something broken in the parsing
 	  STDERR.puts "Parsing problems in file #{@fn} for host #{@rec[0].h} parser #{@rc}- aborting this file"
 	  return nil
 	end
 
-	r.count = count
          r.orec << " -- repeated #{count} times since #{time}"
       end
       
@@ -212,7 +206,7 @@ gets also will merge records from a number of log files for the same host into t
       f = File.open( fn )
       if f then
 	puts "opened file #{fn} log type #{self}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files'] 
-      else
+     else
 	puts( STDERR, "failed to open #{fn} #{$!}")
 	return nil
       end
