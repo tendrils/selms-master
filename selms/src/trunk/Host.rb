@@ -247,8 +247,6 @@ end
      log_files(log_dir, @logf) { |lf|
 
        while @rec = lf.gets
-#	 pp 'preliminary split:', @rec if $options['debug.split']
-#	 next unless @rec.split
 	 pp '', "final split", @rec if $options['debug.split']
 	 break unless self.send @rule_set, 'TEST' , @rec 
 	 if $options['max_log_recs'] && 

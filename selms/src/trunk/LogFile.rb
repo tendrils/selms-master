@@ -37,7 +37,6 @@ The process of parsing the log record has two phases:
       @no_look_ahead = nil
       @recs = @split_failures = 0
       @rc = Record
-      @f_name = fn || 'unknow'
     end
 
 
@@ -107,8 +106,8 @@ gets also will merge records from a number of log files for the same host into t
 	      begin  # corrupt offset or eof ?? 
 		@rec[l] = @rc.new( raw, @head, @split_p)
 	      rescue NoMethodError
-		warn "NoMethodError file #{@f_name} type #{@name} #{$!} "
-		return false
+		warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
+		next
 	      end
 
 
