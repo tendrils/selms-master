@@ -177,7 +177,6 @@ class Host
       logf.each { | log |
         log =~ /^(.+)\.\d+/
         base_name = $1
-
 	next if $options['file'] != base_name
 	next if base_name == 'cron' &&  @file['cron'] != 'process'
         next if @file[base_name]['ignore']               
@@ -192,13 +191,13 @@ class Host
         log =~ /^(.+)\.\d+/
         base_name = $1
 
+pp  @file[base_name]
 	l = @file[base_name] ? base_name : 'all'
         next if  $options['file'] && $options['file'] != base_name
 	next if base_name == 'cron' &&  @file['cron'] != 'process'
         next if @file[base_name] && @file[base_name]['ignore']	
 
 	lf =  @file[l]['re'] ? LogFile.new( @file[l]['re'], log_dir + '/' + log ) : @file[l]['logtype']
-
 	count = 0
 	if f = (  @file[base_name] || @file['all'] ) then
           f.to_s =~ /#<(\w+):/
