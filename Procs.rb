@@ -1,6 +1,7 @@
 module Procs
 
-  def Procs.test( rec=nil )
+  def Procs.pw_check(ip, upi, rec=nil )
+    puts "#{ip}  #{upi}"
   end
 
 end

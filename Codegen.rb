@@ -207,6 +207,7 @@ module Codegen
                 " puts 'incr counrt'\n"
 
         when 'proc'
+
 	  a << "      Procs.#{event[1]}(rec.data)\n"
 	  post << "    Procs.#{event[1]}()\n"
         end
@@ -277,6 +278,15 @@ module Codegen
      code <<  "  return true\n"
      code <<  "  end\n"
      code <<  "  def _post_#{name}\n"
+     pc = {}
+     post_code.each {|p|
+       proc = p.match(/Proc.(\w+)/).to_a[1]
+       if p
+	 next if pc[p] # already have this one
+	 pc[p] = 1
+       end
+       code << p
+     }
      code <<  post_code[name]
      code <<  "  end\n"
    }
