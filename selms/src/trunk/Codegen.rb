@@ -114,7 +114,7 @@ module Codegen
 	when 'alert' :  alerts.push( match )
 	when 'warn' :   warns.push( match )
 	when 'ignore' : ignores.push( match )
-	when 'count', 'incr', 'proc': others.push( match )
+	when 'count', 'incr', 'proc' : others.push( match )
 	else
 	  print "codegen error unknown action '#{e[0]}'\n"
 	end
@@ -173,18 +173,18 @@ module Codegen
       a = ''
       match[1].each { |event|
         a += '      '
-	y = 'nil'
-	if event[2] then
-          a += 'x = ' + ( event[2]=~/%/ ? %Q'expand("#{event[2]}", m_data)\n' : "'#{event[2]}'\n" )
+        y = 'nil'
+        if event[2] then
+          a += 'x = ' + (event[2]=~/%/ ? %Q'expand("#{event[2]}", m_data)\n' : "'#{event[2]}'\n")
           a += '      '
-	  y = 'x'
-	end
-	if $options["debug.rules-#{event[0]}"] then
-	  key = "#{event[0]}-#{count}"
-	  a << "    @count['#{key}'] = Host::SimpleCounter.new( 0, '#{key}') unless @count['#{key}']\n" +
-               "    @count['#{key}'].incr(rec.count);\n"  if @run_type == 'periodic'
-	end
-	ret = ''
+          y = 'x'
+        end
+        if $options["debug.rules-#{event[0]}"] then
+          key = "#{event[0]}-#{count}"
+          a << "    @count['#{key}'] = Host::SimpleCounter.new( 0, '#{key}') unless @count['#{key}']\n" +
+              "    @count['#{key}'].incr(rec.count);\n" if @run_type == 'periodic'
+        end
+        ret = ''
         case event[0]
         when 'drop', 'ignore'
           ret += "return true\n"
@@ -207,9 +207,8 @@ module Codegen
                 " puts 'incr counrt'\n"
 
         when 'proc'
-
-	  a << "      Procs.#{event[1]}(rec.data)\n"
-	  post << "    Procs.#{event[1]}()\n"
+          a << "      Procs.#{event[1]}(" + ((defined? event[2]) ? "#{event[2]}, " :'') + "rec.data)\n"
+	        post << "    Procs.#{event[1]}()\n"
         end
       }
       code << "    ##{count}:\n" 
@@ -279,7 +278,8 @@ module Codegen
      code <<  "  end\n"
      code <<  "  def _post_#{name}\n"
      pc = {}
-     post_code.each {|p|
+     post_code[name].each {|p|
+       next unless p
        proc = p.match(/Proc.(\w+)/).to_a[1]
        if p
 	 next if pc[p] # already have this one
