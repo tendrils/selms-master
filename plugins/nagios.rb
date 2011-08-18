@@ -13,12 +13,12 @@ module Alarm
   end
   dlload "libc.#{so_ext}"
   extern "unsigned int alarm(unsigned int)"
-end                                                                                
+end
 
 class Nagiosx
   include Zlib
-  
-  def initialize( host, pass, debug = false, port=5667, time_out=20 )
+
+  def initialize(host, pass, debug = false, port=5667, time_out=20)
     @host = host
     @port = port
     @password = pass
@@ -30,13 +30,13 @@ class Nagiosx
 
   end
 
-  def test( host, pass, debug = false, port=5667, time_out=20 )
+  def test(host, pass, debug = false, port=5667, time_out=20)
     host+pass+debug.to_s+port.to_s+time_out.to_s
-  end 
-  
-    # Open the socket
+  end
+
+  # Open the socket
   def open_socket
-    if !( @socket = TCPSocket.new( @host, @port )) then
+    if !(@socket = TCPSocket.new(@host, @port)) then
       raise "OpenProblem"
     end
 
@@ -47,32 +47,32 @@ class Nagiosx
       @status = 'stale'
     }
     @d = 0
-    Alarm.alarm(@time_out)  
+    Alarm.alarm(@time_out)
     'open'
   end
 
   def debugit(msg)
 
-    if @debug then 
+    if @debug then
       puts "# DEBUG #{$$}# #{msg}"
     end
   end
 
 # xor the data (the only type of "encryption" we currently use)
-  def myxor( xor_key, str)
- 
+  def myxor(xor_key, str)
+
     xlen = xor_key.length
-    str.length.times{ |i| str[i] ^= xor_key[i % xlen]}
+    str.length.times { |i| str[i] ^= xor_key[i % xlen] }
     return str
   end
 
-  def send( hostname, service, return_code, status )
+  def send(hostname, service, return_code, status)
 
 #    puts " send  #{hostname}, #{service}, #{return_code}, #{status} "
 
     return if hostname == '' || service == '' || return_code == '' || status == ''
 
-    if @status != 'open' 
+    if @status != 'open'
       close
       @status = open_socket
     end
@@ -80,34 +80,34 @@ class Nagiosx
     # Reset the crc value
     crc = 0
     @d += 1
-    
-   hostname.sub!(/\.itss$/,'');
 
-   debugit("Read input: '" + [hostname,service,return_code,status].join("\t'"))
-    
+    hostname.sub!(/\.itss$/, '');
+
+    debugit("Read input: '" + [hostname, service, return_code, status].join("\t'"))
+
     # Build our packet.
 #puts @packet_version, crc, @timestamp, return_code, hostname, service, status
-	  tobecrced = [@packet_version, crc, @timestamp, return_code, hostname, service, status].
-	  pack("nxx N a4 n a64 a128 a512xx")
+    tobecrced = [@packet_version, crc, @timestamp, return_code, hostname, service, status].
+        pack("nxx N a4 n a64 a128 a512xx")
     # Get a signature for the packet.
     crc = crc32(tobecrced)
-  puts crc
-	# Build the final packet with the sig.
+    puts crc
+    # Build the final packet with the sig.
     str = [@packet_version, crc, @timestamp, return_code, hostname, service, status].
-      pack("nxx N a4 n a64 a128 a512xx")
-    
+        pack("nxx N a4 n a64 a128 a512xx")
+
     # Xor the sucker.
     myxor(@iv, str)
     myxor(@password, str)
 # puts str
 
-  begin
-    @socket.send(str, 0) 
-  
-  rescue Exception => e
-    STDERR.puts "Could not send nagios packet #{@d} #{e}"
-    raise "SendError"
-  end
+    begin
+      @socket.send(str, 0)
+
+    rescue Exception => e
+      STDERR.puts "Could not send nagios packet #{@d} #{e}"
+      raise "SendError"
+    end
 
     debugit("Sent #{return_code}, #{hostname}, #{service}, #{status} to #{@host}")
   end
@@ -116,16 +116,16 @@ class Nagiosx
   def close
     # Goodbye
     @socket.close
-    
+
     puts "Sent #{@d} packets to #{@host}\n";
   end
 end
 
 class Action
-  
+
   class Nagios < Action::Base
-    
-    def initialize( host, pass, debug = true, port=5667, time_out=20 )
+
+    def initialize(host, pass, debug = true, port=5667, time_out=20)
       @host = host
       @pass = pass
       @debug = debug
@@ -133,74 +133,75 @@ class Action
       @time_out = time_out
       @bucket = {}
       @n = nil
-      
+
       @types = {
-        'alert'   => 2,
-        'warn'    => 1,
-        'unusual' => 0
+          'alert' => 2,
+          'warn' => 1,
+          'unusual' => 0
       }
     end
-    
-    def do_periodic ( type, host, file, rec )
-      if ! host.recs[type + '-Nagios'] then 
-	 host.recs[type + '-Nagios'] = []
-      end
-      host.recs[type + '-Nagios'] <<  rec 
-    end
-  
 
-    def do_realtime ( type, host, file, rec )
+    def do_periodic (type, host, file, rec)
+      if !host.recs[type + '-Nagios'] then
+        host.recs[type + '-Nagios'] = []
+      end
+      host.recs[type + '-Nagios'] << rec
+    end
+
+
+    def do_realtime (type, host, file, rec)
       data = []
       if @bucket[type] then
         data = @bucket[type]
       else
-        data << rec 
+        data << rec
       end
 #pp data
 
-      @n = Nagiosx.new( @host, @pass, @debug, @port, @time_out) unless @n
+      @n = Nagiosx.new(@host, @pass, @debug, @port, @time_out) unless @n
 
-      data.each{ |line|
+      data.each { |line|
 #puts line
-        @n.send( host.name, 'SELMS', @types[type], line )
+        @n.send(host.name, 'SELMS', @types[type], line)
       }
       @n.close
       @n = nil
 #exit
     end
   end
-  
-  def produce_reports( processed_hosts )
-    
+
+  def produce_reports(processed_hosts)
+
     # go through the hosts and build reports for each reporting address                                        
 
     processed_hosts.each { |host, count| # each host we have logs to report for                                       
-      # skip unless we have something to report 
+    # skip unless we have something to report
 
       next unless host.recs['UNUSUAL-Nagios'].size + host.recs['ALERTL-Nagios'].size +
-                  host.recs['WARNL-Nagios'].size > 0 || host.count.size > 4; 
-      @n = Nagios.new( @host, @pass, @debug, @port, @time_out) unless defined @n
-      
+          host.recs['WARNL-Nagios'].size > 0 || host.count.size > 4;
+      @n = Nagios.new(@host, @pass, @debug, @port, @time_out) unless defined @n
+
       types.keys.each { |type|
-	next unless type -~ /-Nagios$/
+        next unless type -~/-Nagios$/
         host.recs[type].each { |r|
           proc, rec = r.split(/\t/)
-          @n.send( host.name, proc, result[type], rec)
+          @n.send(host.name, proc, result[type], rec)
         }
       }
     }
   end
-      public :test
+
+  public :test
 end
 
-if __FILE__ == $0     # someone is running me!
+if __FILE__ == $0 # someone is running me!
   host = ARGV.shift
 
   n = Nagiosx.new(host, '2bmshtr', true)
   while gets
     chomp
     (h, r, m) = $_.split(/\s*,\s*/)
-    n.send(h, 'SELMS', r.to_i, m )
+    n.send(h, 'SELMS', r.to_i, m)
   end
   n.close
 end

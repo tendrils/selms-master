@@ -11,7 +11,7 @@ class RunType
     @buckets = {}
     @counters = {}
     @host_patterns = {}
-    
+
   end
 
 
