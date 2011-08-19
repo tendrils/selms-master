@@ -1,7 +1,7 @@
 module Procs
 
 
-  @pw_check = []
+  @pw_check = {}
   def Procs.pw_check(what=nil, rec=nil )
     if rec
       ip, upi = what.split(/\s*,\s*/)
