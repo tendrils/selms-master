@@ -885,7 +885,7 @@ module Config
             if p = expect(/^(\w+)/) then
               params = expect(/\(([^)]+)\)/)
               begin
-                eval "Procs.#{p}("+(params ? "#{params}" :'nil') + ", 'test')" # known proc ?
+                eval "Procs.#{p}("+(params ? "''#{params}''" :'nil') + ", 'test')" # known proc ?
                 actions.push(['proc', p, params])
               rescue SyntaxError, StandardError =>e
                 error("bad paramers or unknown proc #{p}(#{params}): #{e}")
