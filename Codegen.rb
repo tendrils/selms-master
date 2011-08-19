@@ -143,29 +143,28 @@ module Codegen
       match[0].each{|cond|
         c += ' && ' unless  c == ''
         case cond[0]
-	when 'incr'
+	        when 'incr'
 #	  c+= "( incr_check( defined? mdata ? mdata:nil,  #{cond[1]}, #{cond[2]}, '#{cond[3]}' ))"
-	  c+= "(msg = incr_check(  mdata,  #{cond[1]}, #{cond[2]}, '#{cond[3]}', rec.utime, rec.count ))"
-        when 're'
-          c += "( m_data = #{cond[1]}.match(rec.data))"
-        when 't_var'
-          c += cond[1] =~ /%/ ?
-             %Q'count[expand("#{cond[1]}",m_data)].var #{cond[2]}  #{cond[3]} ' :
-             %Q'count["#{cond[1]}"].var #{cond[2]}  #{cond[3]} '
-        when 't_val'
-          if cond[3].class == Integer 
-            c += "m_data[#{cond[1]}].to_i #{cond[2]}  #{cond[3]} "
+	          c+= "(msg = incr_check(  mdata,  #{cond[1]}, #{cond[2]}, '#{cond[3]}', rec.utime, rec.count ))"
+          when 're'
+            c += "( m_data = #{cond[1]}.match(rec.data))"
+          when 't_var'
+            c += cond[1] =~ /%/ ?
+              %Q'count[expand("#{cond[1]}",m_data)].var #{cond[2]}  #{cond[3]} ' :
+              %Q'count["#{cond[1]}"].var #{cond[2]}  #{cond[3]} '
+          when 't_val'
+            if cond[3].class == Integer
+              c += "m_data[#{cond[1]}].to_i #{cond[2]}  #{cond[3]} "
+            else
+	            c += "m_data[#{cond[1]}] #{cond[2]}  '#{cond[3]}' "
+            end
           else
-	    c += "m_data[#{cond[1]}] #{cond[2]}  '#{cond[3]}' "
-          end
-        else
-          if cond[2] == '=~' || cond[2] == '!~'
-            c << "! " if cond[2] == '!~'
-            c += "m_data = rec.#{cond[0]}.match(#{cond[1]})"
-          else
-            c += "rec.#{cond[0]} #{cond[2]} #{cond[1]}" 
-          end
-            
+            if cond[2] == '=~' || cond[2] == '!~'
+              c << "! " if cond[2] == '!~'
+              c += "m_data = rec.#{cond[0]}.match(#{cond[1]})"
+            else
+              c += "rec.#{cond[0]} #{cond[2]} #{cond[1]}"
+            end
         end
       }
 
@@ -182,7 +181,7 @@ module Codegen
         if $options["debug.rules-#{event[0]}"] then
           key = "#{event[0]}-#{count}"
           a << "    @count['#{key}'] = Host::SimpleCounter.new( 0, '#{key}') unless @count['#{key}']\n" +
-              "    @count['#{key}'].incr(rec.count);\n" if @run_type == 'periodic'
+              "     @count['#{key}'].incr(rec.count);\n" if @run_type == 'periodic'
         end
         ret = ''
         case event[0]
@@ -200,14 +199,14 @@ module Codegen
           a += "warn(  rec.orec,  rec.fn, msg )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "  @count[x].incr(rec.count)\n" 
+                "    @count[x].incr(rec.count)\n"
         when 'incr'
           a += "@count[x] = Host::TimeCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
                 "      @count[x].incr(time, rec.count)\n" +
-                " puts 'incr counrt'\n"
+                " puts 'incr count'\n"
 
         when 'proc'
-          a << "      Procs.#{event[1]}(" + ((defined? event[2]) ? "#{event[2]}, " :'') + "rec.data)\n"
+          a << " Procs.#{event[1]}(" + ((defined? event[2]) ? "x, " :'') + "rec.data)\n"
 	        post << "    Procs.#{event[1]}()\n"
         end
       }
