@@ -885,6 +885,8 @@ module Config
             if p = expect(/^(\w+)/) then
               params = expect(/\(([^)]+)\)/)
               begin
+                puts p
+                puts params
                 eval "tst = Procs.#{p}"+(params ? "(#{params})" :'') # known proc ?
               rescue SyntaxError, StandardError =>e
                 error("bad paramers or unknown proc #{p}(#{params}): #{e}")
