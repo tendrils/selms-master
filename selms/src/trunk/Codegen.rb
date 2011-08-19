@@ -189,11 +189,11 @@ module Codegen
           ret += "return true\n"
         when 'alert', 'warn'
 #        a += "alert( #{y}, rec.fn, rec.orec )\n"
-        msg = event[1] ? "'#{event[1]}'" : 'nil';
-        a += "#{event[0]}(  rec.orec,  rec.fn, #{msg} )\n"
+          msg = event[1] ? "'#{event[1]}'" : 'nil';
+          a += "#{event[0]}(  rec.orec,  rec.fn, #{msg} )\n"
         when 'switch' 
-	  a += "@rule_set = \"_#{event[1]}\"\n"
-	  a += "report(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
+	        a += "@rule_set = \"_#{event[1]}\"\n"
+	        a += "report(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
         when 'warn'
 #          a += "warn( #{y}, rec.fn, rec.orec )\n"
           a += "warn(  rec.orec,  rec.fn, msg )\n"
@@ -206,7 +206,7 @@ module Codegen
                 " puts 'incr count'\n"
 
         when 'proc'
-          a << %Q|puts " proc #{x}"\n|
+          a << %Q|puts " proc  #{event[1]} #{m_data} "\n|
           a << " Procs.#{event[1]}(" + ((defined? event[2]) ? "x, " :'nil') + "rec.data)\n"
 	        post << "    Procs.#{event[1]}(nil, 'host')\n"
         end
