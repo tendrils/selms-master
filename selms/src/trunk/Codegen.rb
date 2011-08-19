@@ -281,12 +281,12 @@ module Codegen
        next unless p
        proc = p.match(/Proc.(\w+)/).to_a[1]
        if p
-	 next if pc[p] # already have this one
-	 pc[p] = 1
+      	 next if pc[p] # already have this one
+      	 pc[p] = 1
        end
        code << p
      }
-     code <<  post_code[name]
+#     code <<  post_code[name]
      code <<  "  end\n"
    }
 
