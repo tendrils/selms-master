@@ -206,7 +206,7 @@ module Codegen
                 " puts 'incr count'\n"
 
         when 'proc'
-          a << %Q|puts " proc #{x}"|
+          a << %Q|puts " proc #{x}"\n|
           a << " Procs.#{event[1]}(" + ((defined? event[2]) ? "x, " :'nil') + "rec.data)\n"
 	        post << "    Procs.#{event[1]}(nil, 'host')\n"
         end
