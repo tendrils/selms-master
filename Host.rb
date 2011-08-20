@@ -6,6 +6,7 @@ class Host
   WARN    = 1
   UNUSUAL = 2
   SUMM    = 3
+  POST    = 4
 
 
   attr_reader :src, :alerts, :warns, :name, :unusual, :conf, :count, :email,
@@ -124,6 +125,7 @@ class Host
     @recs['report'] = []
     @recs['alert'] = []
     @recs['warn'] = []
+    @recs['post'] = []
     @merge_files = conf.merge_files
     @rule_set = '_default'
   end

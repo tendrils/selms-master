@@ -134,7 +134,7 @@ class Action
 
             host.recs[t].each { |rec|
               reports[w][type][name] << rec
-              if reports[w][type][name].size > $option['max_report_recs']
+              if reports[w][type][name].size > $options['max_report_recs']
                 reports[w][type][name] << "***** output truncated *****\n"
                 break
               end

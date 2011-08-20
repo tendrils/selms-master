@@ -286,7 +286,7 @@ module Codegen
        end
        code << p
      }
-#     code <<  post_code[name]
+#     code <<  @recs['post'] = post_code[name]
      code <<  "  end\n"
    }
 
