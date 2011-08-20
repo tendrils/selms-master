@@ -48,14 +48,15 @@ $options = {   # defaults
 	   'rt_socket'=> nil,
 	   'maildomain'=> nil,
 	   'hostdomain'=> nil,
-	   'max_log_recs'=> nil,
+     'max_report_recs'=> 1000,
+     'max_read_recs'=> nil,
 	   'date'=> nil,
-           'file' => nil,
-           'one_file' => nil,
-           'log_type' => nil,
+     'file' => nil,
+     'one_file' => nil,
+     'log_type' => nil,
 	   'log_store' => LOG_STORE,
-           'merge_files' => 'yes',
-           'ignore_unk_hosts' => nil,
+     'merge_files' => 'yes',
+     'ignore_unk_hosts' => nil,
 }
 
 $options.default = 'empty'  # returned for unknown keys 
@@ -104,10 +105,16 @@ OptionParser.new { |opts|
   opts.on( '-P','--post', String, "run this script after taking action") {
     |val| $options['post'] = true
   }
-   opts.on( '--syntax', String, "just check the syntax of the configuration file") {
-    |val| $options['syntax'] = true
-  }
- opts.on( '--date=DAY', String, "Run for this day") { |val| 
+  opts.on( '--syntax', String, "just check the syntax of the configuration file") {
+   |val| $options['syntax'] = true
+ }
+  opts.on( '--max_report_recs', String, "give up listing records after this many (default 1000)") {
+   |val| $options['max_report_recs'] = val
+ }
+  opts.on( '--max_read_recs', String, "just check the syntax of the configuration file") {
+   |val| $options['max_read_recs'] = val
+ }
+ opts.on( '--date=DAY', String, "Run for this day") { |val|
     $options['date'] = val
     $options['no_offset'] = true
     $options['no_write_offset'] = true

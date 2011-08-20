@@ -69,6 +69,7 @@ gets also will merge records from a number of log files for the same host into t
       return nil if ! @file || @file.size == 0
 
       @recs += 1
+      return nil if $options['max_read_recs'] && @recs > $options['max_read_recs']
       initial = l
       previous_rec = nil
       count = 0  # number of duplicates  
@@ -103,18 +104,18 @@ gets also will merge records from a number of log files for the same host into t
                 puts "gets: not initial #{count}" if $options['debug.gets']
                 previous_rec = @rec[l].dup if count == 1 && ! @no_look_ahead
               end
-	      begin  # corrupt offset or eof ?? 
-		@rec[l] = @rc.new( raw, @head, @split_p)
-	      rescue NoMethodError
-		warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
-		next
-	      end
+	            begin  # corrupt offset or eof ??
+      		      @rec[l] = @rc.new( raw, @head, @split_p)
+	            rescue NoMethodError
+		            warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
+		            next
+	            end
 
 
               @rec[l].fn = @fn[l]
               time = @rec[l].time if count == 1  # first time
             else # end of file 
-	      puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets']
+	            puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets']
               if !initial || @closing[l] || count != 1 # don't loose last record!
                 close_lf( l ) 
    #              puts "closing file #{l}"
@@ -138,29 +139,29 @@ gets also will merge records from a number of log files for the same host into t
 	    repeat = ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
 		      @rec[l].data =~ /^Previous message occurred (\d+) times./ )
             if ! closed && repeat
-	      if initial
+              if initial
                 @rec[l] = nil
                 count = 0
               else
                 puts "repeated #{$1}" if $options['debug.gets']
-                count += $1.to_i 
+                count += $1.to_i
                 @rec[l] = previous_rec
               end
             end
-          end until ( closed || (@rec[l] && @rec[l].data )) 
-          
-          if $options['debug.gets'] && ! repeat
-            puts "comparing" 
+          end until (closed || (@rec[l] && @rec[l].data))
+
+          if $options['debug.gets'] && !repeat
+            puts "comparing"
             puts @rec[l].data unless closed
-            puts previous_rec.data  unless closed
+            puts previous_rec.data unless closed
           end
-        end while ( ! closed && !repeat && @rec[l].data == previous_rec.data  )
+        end while (!closed && !repeat && @rec[l].data == previous_rec.data)
       end
 
       begin
         r.method(:data)    # corrupt offset or eof ??
-	rescue NameError
-          return false
+    	rescue NameError
+        return false
       end
 
       puts "final count #{count}" if $options['debug.gets']
@@ -188,27 +189,27 @@ gets also will merge records from a number of log files for the same host into t
         offset = nil
       end
       if !@file then
-	@file = []
-	@rec = []
+        @file = []
+	      @rec = []
         @cache = []
-	@off_name = []
+	      @off_name = []
         @closing = []
         @fn = []
       end
       
       $fstate = 'opening'
       if $run_type != 'realtime' && (File.file? off_name) && ! $options['no_offset'] && ! $options['one_file'] 
-	File::open(off_name) { |o|
-	  offset = o.gets.to_i
-	}
+      	File::open(off_name) { |o|
+	        offset = o.gets.to_i
+	      }
       end
 
       f = File.open( fn )
       if f then
-	puts "opened file #{fn} log type #{self}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files'] 
-     else
-	puts( STDERR, "failed to open #{fn} #{$!}")
-	return nil
+	      puts "opened file #{fn} log type #{self}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files']
+      else
+	      puts( STDERR, "failed to open #{fn} #{$!}")
+	      return nil
       end
       $fstate = 'seeking'
       f.seek( offset ) if offset
