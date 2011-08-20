@@ -14,6 +14,7 @@ module Procs
         next if upis.size == 1
         report << ip
         upis.each do |upi, count|
+          puts "   #{upi}: #{count}"
           report << "   #{upi}: #{count}"
         end
       end
