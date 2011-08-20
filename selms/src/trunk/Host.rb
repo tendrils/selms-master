@@ -162,51 +162,51 @@ class Host
     @recs['report'] = []
     @recs['alert'] = []
     @recs['warn'] = []
-  end 
- 
-  def log_files( log_dir, logf=nil )
+  end
+
+  def log_files(log_dir, logf=nil)
 
 
-    if ! logf
-      lf = @file[$options['log_type']]['logtype'] 
-      lf.open_lf( log_dir )
+    if !logf
+      lf = @file[$options['log_type']]['logtype']
+      lf.open_lf(log_dir)
 
       yield lf if lf.file
     elsif @merge_files then
 
-      logf.each { | log |
+      logf.each { |log|
         log =~ /^(.+)\.\d+/
         base_name = $1
-	next if $options['file'] != base_name
-	next if base_name == 'cron' &&  @file['cron'] != 'process'
-        next if @file[base_name]['ignore']               
+        next if $options['file'] != base_name
+        next if base_name == 'cron' && @file['cron'] != 'process'
+        next if @file[base_name]['ignore']
 
-	l = @file[base_name] ? base_name : 'all'
+        l = @file[base_name] ? base_name : 'all'
 
-	lf.open_lf( log_dir + '/' + log )
+        lf.open_lf(log_dir + '/' + log)
       }
       yield lf if lf.file
-    else  # process files indivdually 
+    else # process files indivdually
       logf.each { |log|
         log =~ /^(.+)\.\d+/
         base_name = $1
 
-pp  @file[base_name]
-	l = @file[base_name] ? base_name : 'all'
+        pp @file[base_name]
+        l = @file[base_name] ? base_name : 'all'
         next if  $options['file'] && $options['file'] != base_name
-	next if base_name == 'cron' &&  @file['cron'] != 'process'
-        next if @file[base_name] && @file[base_name]['ignore']	
+        next if base_name == 'cron' && @file['cron'] != 'process'
+        next if @file[base_name] && @file[base_name]['ignore']
 
-	lf =  @file[l]['re'] ? LogFile.new( @file[l]['re'], log_dir + '/' + log ) : @file[l]['logtype']
-	count = 0
-	if f = (  @file[base_name] || @file['all'] ) then
+        lf = @file[l]['re'] ? LogFile.new(@file[l]['re'], log_dir + '/' + log) : @file[l]['logtype']
+        count = 0
+        if f = (@file[base_name] || @file['all']) then
           f.to_s =~ /#<(\w+):/
           rs = $1.downcase
-          @rule_set = @file[base_name].to_s.downcase if @file[base_name]  ###########  temp fudge -- fix this
-	  c_logf = f.class != Regexp ? f : LogFile.new( f, log_dir + '/' + log ) 
+          @rule_set = @file[base_name].to_s.downcase if @file[base_name] ###########  temp fudge -- fix this
+          c_logf = f.class != Regexp ? f : LogFile.new(f, log_dir + '/' + log)
           @rule_set = '_'+rs
           begin
-            self.send @rule_set, nil, nil 
+            self.send @rule_set, nil, nil
           rescue StandardError => ex
             @rule_set = '_default'
           end
@@ -214,53 +214,53 @@ pp  @file[base_name]
 
 
 #puts "#{log_dir} #{log} ", lf
-        lf.open_lf( log_dir + '/' + log )
+        lf.open_lf(log_dir + '/' + log)
 
-	pp "using logformat:", c_logf.to_s if $options['debug.split']
-	yield lf
+        pp "using logformat:", c_logf.to_s if $options['debug.split']
+        yield lf
       }
+    end
   end
-end
 
 # does a periodic scan of all files associated with self 
 
-  def pscan( log_dir, hostname )
+  def pscan(log_dir, hostname)
 
-  puts "in Host::pscan #{hostname}" if $options['debug.hosts'] 
+    puts "in Host::pscan #{hostname}" if $options['debug.hosts']
 
-  @logf = []
+    @logf = []
 
-    if File.directory?( log_dir)
-      logs = Dir.new( log_dir );
+    if File.directory?(log_dir)
+      logs = Dir.new(log_dir);
       logs.each { |filename|
-	next unless filename =~ /(.+)\.\d{8}$/
-	@logf.push( filename )
+        next unless filename =~ /(.+)\.\d{8}$/
+        @logf.push(filename)
       }
-    elsif File.exists?( log_dir)
+    elsif File.exists?(log_dir)
       @logf = nil #   Mark as a single file
     else
       return nil
     end
 
-   begin
-     log_files(log_dir, @logf) { |lf|
+    begin
+      log_files(log_dir, @logf) { |lf|
 
-       while @rec = lf.gets
-	 pp '', "final split", @rec if $options['debug.split']
-	 break unless self.send @rule_set, 'TEST' , @rec 
-	 if $options['max_log_recs'] && 
-	     recs['report'].size + recs['alert'].size + recs['warn'].size  >= $options['max_log_recs'] then
-	   lf.abort
-	   alert(  "more than #{$options['max_log_recs'].to_s} reported records ")
-	   break;
-	 end 
-       end
-       _post_default()   # run any post code
-     }
+        while @rec = lf.gets
+          pp '', "final split", @rec if $options['debug.split']
+          break unless self.send @rule_set, 'TEST', @rec
+          if $options['max_log_recs'] &&
+              recs['report'].size + recs['alert'].size + recs['warn'].size >= $options['max_log_recs'] then
+            lf.abort
+            alert("more than #{$options['max_log_recs'].to_s} reported records ")
+            break;
+          end
+        end
+        _post_default() # run any post code
+      }
 #   rescue IOError
 #     STDERR.puts "IO error accurred while #{$fstate} log file file " +
 #       "for #{hostname}: #{$!}"
 #     post()
-   end
- end
- end
+    end
+  end
+end
