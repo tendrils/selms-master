@@ -884,7 +884,7 @@ module Config
             params = nil
             if p = expect(/^(\w+)/) then
               params = expect(/\(([^)]+)\)/)
-              if Procs.method_defined?(p)
+              if Procs.method_defined?( p.to_s )
                 actions.push(['proc', p, params])
               else
                 error("bad paramers or unknown proc #{p}(#{params}): #{e}")
