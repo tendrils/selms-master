@@ -162,6 +162,7 @@ class Action
         list_recs(report, rep['alert'], "Alerts") if  rep['alert']
         list_recs(report, rep['warn'], "Warnings") if  rep['warn']
         list_recs(report, rep['summ'], "Summary") if  rep['summ']
+        list_recs(report, rep['post'], "post process report") if  rep['post']
         list_recs(report, rep['report'], "Unusual Records") if rep['report']
 
 # loop over destinations for report
