@@ -116,9 +116,9 @@ class Action
         end
 
 
-        host.recs.keys.each { |t|
-#pp host.recs
-          next unless host.recs[t].size > 0
+        host.recs.keys.each { |t, recs|
+puts "#{t} #{recs.size}"
+          next unless recs.size > 0
 
           all, type, email = t.match(/(\w+)-?(.+)?/).to_a
           if  email
@@ -128,11 +128,11 @@ class Action
             who = def_who
           end
           who.each { |w|
-            reports[w] = {} unless reports[w]
-            reports[w][type] = {} if !reports[w][type] # and ! host.recs[type]
-            reports[w][type][name] = []
+            reports[w] ||= {}
+            reports[w][type] ||= {}
+            reports[w][type][name] ||= []
 
-            host.recs[t].each { |rec|
+            recs.each { |rec|
               reports[w][type][name] << rec
               if reports[w][type][name].size > $options['max_report_recs']
                 reports[w][type][name] << "***** output truncated *****\n"
