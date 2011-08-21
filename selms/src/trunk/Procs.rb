@@ -1,14 +1,17 @@
+require pp
+
 module Procs
 
-  pw_check = {}
+  @pw_count = {}
 
   def pw_check(what=nil, rec=nil )
-    pwc = pw_check[:object_id] ||= {}
+    pw_count ||= {}
+    pp pwc
     case rec
     when 'host'
-      return [] if @pw_check.size == 0
+      return [] if pw_count.size == 0
       report = ["IPs with login failures on multiple accounts"]
-      pw.sort{|a,b| b[1].size<=>a[1].size}.each do |entry|
+      pw_count.sort{|a,b| b[1].size<=>a[1].size}.each do |entry|
         ip, upis = entry
         break if upis.size == 1
         report << "#{ip}:"
@@ -20,9 +23,9 @@ module Procs
     when 'test'
       else
       upi, ip = what.split(/\s*,\s*/)
-      pwc[ip] ||= {}
-      pwc[ip][upi] ||= 0;
-      pwc[ip][upi] += 1;
+      pw_count[ip] ||= {}
+      pw_count[ip][upi] ||= 0;
+      pw_count[ip][upi] += 1;
     end
   end
 
