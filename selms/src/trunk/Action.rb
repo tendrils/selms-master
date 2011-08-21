@@ -106,7 +106,7 @@ class Action
             end
           }
           hosts.recs['post'].each do |rec|
-           summ << "    #{recs}"
+           summ << "    #{rec}"
           end
           hosts.recs['post'].delete
 
