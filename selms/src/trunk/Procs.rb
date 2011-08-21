@@ -1,8 +1,8 @@
 module Procs
 
+  @pw_check = {}
 
   def Procs.pw_check(what=nil, rec=nil )
-    @pw_check ||= {}
     case rec
     when 'host'
       return [] if @pw_check.size == 0
@@ -18,8 +18,7 @@ module Procs
       return report.size > 1 ? report : []
     when 'test'
       else
-      next if ip == 'Error'
-      ip, upi = what.split(/\s*,\s*/)
+      upi, ip = what.split(/\s*,\s*/)
       @pw_check[ip] ||= {}
       @pw_check[ip][upi] ||= 0;
       @pw_check[ip][upi] += 1;
