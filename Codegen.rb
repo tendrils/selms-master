@@ -207,7 +207,7 @@ module Codegen
 
         when 'proc'
           a << " Procs.#{event[1]}(" + ((defined? event[2]) ? "x, " :'nil') + "rec.data)\n"
-	        post << "    Procs.#{event[1]}(nil, 'host')\n"
+	        post << "    #{event[1]}(nil, 'host')\n"
         end
       }
       code << "    ##{count}:\n" 
@@ -279,7 +279,7 @@ module Codegen
      pc = {}
      post_code[name].each {|p|
        next unless p
-       proc = p.match(/Proc.(\w+)/).to_a[1]
+       proc = p.match(/(\w+)\(/).to_a[1]
        if p
       	 next if pc[p] # already have this one
       	 pc[p] = 1
