@@ -216,7 +216,22 @@ module Codegen
   end
 
 
+  def print_code( code, err=nil )
+    errs = {}
+    if err
+      err.to_s.split(/\n/).each { |line|
+        all, n, msg = line.match(/\(eval\):(\d+):(.*)/).to_a
+        errs[n.to_i] = msg
+      }
+    end
+    l = 1
+    code.split( /\n/ ).each { |line|
+      puts "#{l}: #{line}"
+      puts ">>>>> #{errs[l]}" if errs[l]
+      l +=1;
+    }
 
+  end
 
   def make_host_class( host, hosts, type )
 
@@ -300,24 +315,14 @@ module Codegen
           $options['one_host'] == host.name ||
 	 ( host.pattern && $options['one_host'].match(  host.pattern ) ) then
        puts host.name
-       puts code
+       print_code( code )
      end
    end
 #puts code
    begin
      eval code
    rescue SyntaxError
-     errs = {}
-     $!.to_s.split(/\n/).each { |line|
-       all, n, msg = line.match(/\(eval\):(\d+):(.*)/).to_a
-       errs[n.to_i] = msg
-     }
-     l = 1
-     code.split( /\n/ ).each { |line|
-       puts "#{l}: #{line}"
-       puts ">>>>> #{errs[l]}" if errs[l]
-       l +=1;
-     }
+     print_code( code, $! )
    end
 #pp hosts[host.name].class,  hosts[host.name].class.instance_methods
  end
