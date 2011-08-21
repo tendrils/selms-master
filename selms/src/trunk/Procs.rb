@@ -1,15 +1,14 @@
 module Procs
 
-  @pw_count = {}
 
   def pw_check(what=nil, rec=nil )
-    pw_count ||= {}
+    @pw_count ||= {}
 
     case rec
     when 'host'
-      return [] if pw_count.size == 0
+      return [] if @pw_count.size == 0
       report = ["IPs with login failures on multiple accounts"]
-      pw_count.sort{|a,b| b[1].size<=>a[1].size}.each do |entry|
+      @pw_count.sort{|a,b| b[1].size<=>a[1].size}.each do |entry|
         ip, upis = entry
         break if upis.size == 1
         report << "#{ip}:"
@@ -21,10 +20,10 @@ module Procs
     when 'test'
       else
       upi, ip = what.split(/\s*,\s*/)
-      return if ip = ''
-      pw_count[ip] ||= {}
-      pw_count[ip][upi] ||= 0;
-      pw_count[ip][upi] += 1;
+      return if ip == '' || ip.match(/^UXCHANGE10/)
+      @pw_count[ip] ||= {}
+      @pw_count[ip][upi] ||= 0;
+      @pw_count[ip][upi] += 1;
     end
   end
 
