@@ -284,7 +284,7 @@ module Codegen
       	 next if pc[p] # already have this one
       	 pc[p] = 1
        end
-       code <<  host.recs['post'] = p
+       code <<  "@recs['post'] = " + p
      }
      code <<  "  end\n"
    }
