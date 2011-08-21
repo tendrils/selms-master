@@ -117,8 +117,9 @@ class Action
 
 
         host.recs.keys.each { |t, recs|
-puts "#{t} #{recs.size}"  if recs
-          next unless recs.size > 0
+puts t
+puts recs.size  if recs
+          next unless recs and recs.size > 0
 
           all, type, email = t.match(/(\w+)-?(.+)?/).to_a
           if  email
