@@ -105,10 +105,10 @@ class Action
                 summ << "    #{v.label} = #{v.val}" if v.val > v.thresh
             end
           }
-          hosts.recs['post'].each do |rec|
+          host.recs['post'].each do |rec|
            summ << "    #{rec}"
           end
-          hosts.recs['post'].delete
+          host.recs.delete('post')
 
           if summ.size > 0 then
             def_who.each { |w|
