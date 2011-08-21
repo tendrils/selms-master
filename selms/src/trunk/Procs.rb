@@ -6,7 +6,7 @@ module Procs
     @pw_check ||= {}
     case rec
     when 'host'
-      return nil if @pw_check.size == 0
+      return []] if @pw_check.size == 0
       report = ["IPs with login failures on multiple accounts"]
       @pw_check.sort{|a,b| b[1].size<=>a[1].size}.each do |entry|
         ip, upis = entry
