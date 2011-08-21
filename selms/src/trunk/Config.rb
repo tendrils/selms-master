@@ -507,12 +507,6 @@ module Config
 # this handles the non section items in the section
 
     def merge_services(s)
-# if @name == 'linux'
-#puts "merg service #{s}"
-#pp "global --", $global.services.keys if $global
-#pp '$services', $services
-#end  
-
       if service = $services[s] then
 #          return if @services[s];  # all ready included                                                             
 #          @services[s] = service
@@ -523,8 +517,6 @@ module Config
         # merge in the file items
 
       service.file.each { |name, val|
-#pp "xxx  '#{name}'",  @file.keys, @file[name]  if @name == 'linux'
-#puts name, val, @name
         if val.class == Regexp
           @file[name]['re'] = val
         elsif !@file[name]

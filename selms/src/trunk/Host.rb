@@ -197,7 +197,6 @@ class Host
         log =~ /^(.+)\.\d+/
         base_name = $1
 
-        pp @file[base_name]
         l = @file[base_name] ? base_name : 'all'
         next if  $options['file'] && $options['file'] != base_name
         next if base_name == 'cron' && @file['cron'] != 'process'
@@ -218,8 +217,6 @@ class Host
           end
         end
 
-
-#puts "#{log_dir} #{log} ", lf
         lf.open_lf(log_dir + '/' + log)
 
         pp "using logformat:", c_logf.to_s if $options['debug.split']
