@@ -84,8 +84,8 @@ class Action
       # skip unless we have something to report
 
         c = 0
-        host.recs.keys.each { |key|
-          c += host.recs[key].size
+        host.recs.each { |key, recs |
+          c += recs.size
         }
 
         next unless c > 0 || host.count.size > 3;
@@ -116,9 +116,7 @@ class Action
         end
 
 
-        host.recs.keys.each { |t, recs|
-puts t
-puts recs.size  if recs
+        host.recs.each { |t, recs|
           next unless recs and recs.size > 0
 
           all, type, email = t.match(/(\w+)-?(.+)?/).to_a
