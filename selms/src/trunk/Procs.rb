@@ -1,12 +1,10 @@
-require pp
-
 module Procs
 
   @pw_count = {}
 
   def pw_check(what=nil, rec=nil )
     pw_count ||= {}
-    pp pwc
+
     case rec
     when 'host'
       return [] if pw_count.size == 0
@@ -23,6 +21,7 @@ module Procs
     when 'test'
       else
       upi, ip = what.split(/\s*,\s*/)
+      return if ip = ''
       pw_count[ip] ||= {}
       pw_count[ip][upi] ||= 0;
       pw_count[ip][upi] += 1;
