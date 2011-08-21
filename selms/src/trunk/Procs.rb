@@ -18,7 +18,7 @@ module Procs
           report << "   #{upi}: #{count}"
         end
       end
-      return report.size > 1 ? report : []]
+      return report.size > 1 ? report : []
     when 'test'
     else
       ip, upi = what.split(/\s*,\s*/)
