@@ -164,6 +164,7 @@ class Host
     @recs['report'] = []
     @recs['alert'] = []
     @recs['warn'] = []
+    @recs['post'] = []
   end
 
   def log_files(log_dir, logf=nil)
