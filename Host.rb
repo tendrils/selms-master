@@ -1,6 +1,9 @@
 #require "Codegen"
 require "LogFile.rb"
+require "Procs.rb"
 class Host
+
+  include Procs
 
   ALERT   = 0
   WARN    = 1
