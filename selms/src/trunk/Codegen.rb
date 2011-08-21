@@ -15,16 +15,14 @@ module Codegen
 
     $hosts.each { |name, h| 
       if name =~ /^default/ || ! $options['one_host'] ||
-           ($options['one_host'].class == Regexp ||$options['one_host'].match(name)) || 
-           $options['one_host'] == name then
-	make_host_class( h, hosts, @run_type ) 
+           ($options['one_host'].class == Regexp ||$options['one_host'].match(name)) || $options['one_host'] == name then
+	      make_host_class( h, hosts, @run_type )
       end
    }
 
     $host_patterns.each { |name, h|
-      if  ! $options['one_host'] || $options['one_host'].class == Regexp ||
-        $options['one_host'].match(h.pattern)  then
-	make_host_class( h, host_patterns, @run_type )
+      if  ! $options['one_host'] || $options['one_host'].class == Regexp || $options['one_host'].match(h.pattern)  then
+	      make_host_class( h, host_patterns, @run_type )
       end
     }
 
@@ -234,26 +232,27 @@ module Codegen
     case type
     when 'periodic'
       host.periodic.each{ |name, matches|
-	sb[name], post_code[name] = scanner_body( matches, 1  )
+	      sb[name], post_code[name] = scanner_body( matches, 1  )
       }
     when 'realtime'
       host.real_time.each{ |name, matches|
-	sb[name], post_code[name] = scanner_body( matches, 1  )
+	      sb[name], post_code[name] = scanner_body( matches, 1  )
       }
     end    
 
-   class_name = host.name.to_s.gsub(/[^a-zA-Z0-9]/, '_') 
+    class_name = host.name.to_s.gsub(/[^a-zA-Z0-9]/, '_')
 
-   class_name = "RE#{class_name}" if class_name[0] == 95 # an' _'
-   class_name.capitalize!
-   code = "class #{class_name} < Host\n"
-   code <<  "  def initialize( conf, src )\n"
-   code <<  "    super(conf, src)\n"
-   code <<  "    @scanner = '_default'\n"
-   code <<  "  end\n"
+    class_name = "RE#{class_name}" if class_name[0] == 95 # an' _'
+    class_name.capitalize!
+    code = "class #{class_name} < Host\n"
+    code << "include Procs"
+    code <<  "  def initialize( conf, src )\n"
+    code <<  "    super(conf, src)\n"
+    code <<  "    @scanner = '_default'\n"
+    code <<  "  end\n"
 
 
-   code <<  "#{action_defs}\n"
+    code <<  "#{action_defs}\n"
 
    sb.each { |name, scanner| 
      code <<  "  def _#{name}( file, rec )\n" 
