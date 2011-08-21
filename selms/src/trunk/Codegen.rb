@@ -204,8 +204,8 @@ module Codegen
                 " puts 'incr count'\n"
 
         when 'proc'
-          a << " #{event[1]}(" + ((defined? event[2]) ? "x, " :'nil') + "rec.data)\n"
-	        post << "    #{event[1]}(nil, 'host')\n"
+          a << " self.#{event[1]}(" + ((defined? event[2]) ? "x, " :'nil') + "rec.data)\n"
+	        post << "self.#{event[1]}(nil, 'host')\n"
         end
       }
       code << "    ##{count}:\n" 
@@ -245,7 +245,7 @@ module Codegen
     class_name = "RE#{class_name}" if class_name[0] == 95 # an' _'
     class_name.capitalize!
     code = "class #{class_name} < Host\n"
-    code << "include Procs"
+    code << "include Procs\n"
     code <<  "  def initialize( conf, src )\n"
     code <<  "    super(conf, src)\n"
     code <<  "    @scanner = '_default'\n"
