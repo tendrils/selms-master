@@ -12,7 +12,7 @@ class Host
   attr_reader :src, :alerts, :warns, :name, :unusual, :conf, :count, :email,
               :ignore, :recs, :pattern, :file, :priority, :rule_set
              
-  attr_writer :name, :rule_set
+  attr_writer :name, :rule_set, :recs
 
   class Accumulator
     def initialize( host, type, action, interval )
