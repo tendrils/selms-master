@@ -107,12 +107,18 @@ module Codegen
       pp "match",  match if $options['debug.match']
       match[1].each{ |e|
 	case e[0]
-	when 'switch':  switches.push( match )
-	when 'drop' :   drops.push( match )
-	when 'alert' :  alerts.push( match )
-	when 'warn' :   warns.push( match )
-	when 'ignore' : ignores.push( match )
-	when 'count', 'incr', 'proc' : others.push( match )
+    when 'switch'
+      switches.push( match )
+    when 'drop'
+      drops.push( match )
+    when 'alert'
+      alerts.push( match )
+    when 'warn'
+      warns.push( match )
+    when 'ignore'
+      ignores.push( match )
+    when 'count', 'incr', 'proc'
+      others.push( match )
 	else
 	  print "codegen error unknown action '#{e[0]}'\n"
 	end
@@ -256,17 +262,19 @@ module Codegen
     end    
 
     class_name = host.name.to_s.gsub(/[^a-zA-Z0-9]/, '_')
-
     class_name = "RE#{class_name}" if class_name[0] == 95 # an' _'
     class_name.capitalize!
+
+#    NewHost=constantise(class_name) = Class.new(Host)
+# kill  +
     code = "class #{class_name} < Host\n"
     code << "include Procs\n"
     code <<  "  def initialize( conf, src )\n"
     code <<  "    super(conf, src)\n"
     code <<  "    @scanner = '_default'\n"
     code <<  "  end\n"
-
-
+#kill   -
+#   New_Host.class_eval( action_defs )
     code <<  "#{action_defs}\n"
 
    sb.each { |name, scanner| 
@@ -301,12 +309,14 @@ module Codegen
        code <<  "@recs['post'] = " + p
      }
      code <<  "  end\n"
+#     NewHost.class_eval(code )
    }
 
    code <<  "end\n"
      
    code <<  "hosts[host.name] = #{class_name}.new( host, code )\n"
-   
+#  hosts[host.name] = NewHost.new( host, code )
+
 #       puts host.name
 #       puts  code
 #puts $options['one_host'], host.name
@@ -324,6 +334,6 @@ module Codegen
    rescue SyntaxError
      print_code( code, $! )
    end
-#pp hosts[host.name].class,  hosts[host.name].class.instance_methods
+#pp hosts<[host.name].class,  hosts[host.name].class.instance_methods
  end
 end

@@ -106,10 +106,10 @@ class Host
 
   end
 
-  def incr_check( mdata, threshold, interval, label, time, count)
-    label = expand(label, m_data) if label =~/%/ && defined? mdata 
+  def incr_check( m_data, threshold, interval, label, time, count)
+    label = expand(label, m_data) if label =~/%/ && ( defined? m_data )
     @count[label] = TimeCounter.new(threshold, interval , label ) unless @count[label]
-#    puts "incr counrt #{label} #{@count[label].val}"
+#    puts "incr count #{label} #{@count[label].val}"
     return @count[label].incr(time, count) ? "#{label}: #{threshold} events in #{interval} seconds" : nil
   end
 
@@ -168,6 +168,7 @@ class Host
     @recs['alert'] = []
     @recs['warn'] = []
     @recs['post'] = []
+    @scanner = '_default'
   end
 
   def log_files(log_dir, logf=nil)
