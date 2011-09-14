@@ -81,11 +81,11 @@ include Codegen
 	next
       end
 
+
       if host.ignore then
 	Find.prune  
 	next
       end
-
       if processed_hosts[host] then 
 	      processed_hosts[host] += 1
       else
