@@ -10,8 +10,8 @@ class Wli < LogFile
   }
 
   Levels_ar = ['FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
-
-  def initialize(name, split_p=nil, head=nil)
+   
+  def initialize(name, fn = nil, split_p=nil, head=nil)
 
     #should parse something along the lines of:
     #APP: [LEVEL] [PROGRAM_LOCATION] DATA
@@ -21,7 +21,8 @@ class Wli < LogFile
 
 
 #      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\(([^)]+)\)\s*(.+)/)
-    super(name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+(.+)?/)
+
+    super(name,fn, /^(\w+):*\s+\[\s*(\w+)\s*\]\s+\[([^\]]+)\]\s+(.+)?/)
 
     @Tokens = {
         'app' => [String],
@@ -53,17 +54,15 @@ class Wli < LogFile
     def split
 
       all, @application, @level, @location, d = @data.match(@split_p).to_a
-#puts  @application, @level, @location, d 
-
+      
       if !all # split failed
         STDERR.puts "failed to split record #{@data} for  #{@fn}"
       end
 
-
       if @level && Levels[@level]
         @data = d
       end
-      puts ">>>>>>>>>  #{data}" unless  @level
+
       @level = Levels[@level]
 
       @orec = "#{@time} #{@h}: #{@application}: [#{Levels_ar[@level]}] [#{@location}] #{data}"
