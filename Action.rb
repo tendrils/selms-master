@@ -157,7 +157,13 @@ class Action
       end
 
       if !$options['no_mail'] || $options['mail_to'] then
-        smtp = Mail.new($options['mail_server'], "SELMS <security-alert@auckland.ac.nz")
+	begin
+          smtp = Mail.new($options['mail_server'], "SELMS <security-alert@auckland.ac.nz")
+	rescue
+	  STDERR.puts "mail  coonection to #{$options['mail_server']} failed: $!" 
+	  of = STDOUT
+	  no_mail = true
+	end
       end
 
       reports.each { |who, rep|
