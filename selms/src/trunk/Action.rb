@@ -1,6 +1,6 @@
 require 'net/smtp'
 class Action
-
+# SS COMMENT!
   class Base
 
     def test
