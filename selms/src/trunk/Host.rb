@@ -263,7 +263,7 @@ class Host
         end
 
       rescue Timeout::Error
-        STDERR.puts "File #{lf.name} for}#{mach} took too long to process!  Terminated"
+        STDERR.puts "File #{lf.name} for}#{hostname} took too long to process!  Terminated"
         lf.abort
         _post_default() # run any post code
       end
