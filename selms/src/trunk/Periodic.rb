@@ -42,7 +42,15 @@ include Codegen
     
     # walk the log tree 
       $log_store.traverse do | dir_name, mach|
-	process_host( dir_name, mach )
+        begin
+	        process_host( dir_name, mach )
+        rescue RunOutMemory
+          @action_classes.each{ |key, act_cla|
+            act_cla.produce_reports(@processed_hosts)
+          }
+          @processed_hosts.keys.each{|host| @processed_hosts.delete(host) }
+        end
+
       end
 
     @action_classes.each{ |key, act_cla|
@@ -101,8 +109,11 @@ include Codegen
       else
 	      @processed_hosts[host] = 1
       end
-        t = Benchmark.measure(mach){ host.pscan( dir_name, mach )}
-        STDERR.printf  "%-20s: real %5.2f total cpu %5.2f \n", t.label, t.real, t.total if $options['time-hosts'] and t.real > $options['time-hosts']
+      t = Benchmark.measure(mach){ host.pscan( dir_name, mach )}
+      STDERR.printf  "%-20s: real %5.2f total cpu %5.2f \n", t.label, t.real, t.total if $options['time-hosts'] and t.real > $options['time-hosts']
+      if  t.real/t.tolal < .1    # it is thrashing!
+        raise RunOutMemory
+      end
       Find.prune  unless $options['one_file']
 
     end

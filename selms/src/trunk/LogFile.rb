@@ -125,7 +125,7 @@ gets also will merge records from a number of log files for the same host into t
               closed = true
             end  # gets
 
-            if initial && ! defined? @rec[l].data then  # corrupt offset value?
+            if initial && ! (defined? @rec[l].data) then  # corrupt offset value?
               count = 0
 	      puts "gets: corrupt record" if $options['debug.gets']
               next
