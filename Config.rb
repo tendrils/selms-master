@@ -113,7 +113,7 @@ module Config
       @options = false
 
         # we have the start of a section
-      if ! @kind = expect(/(\w+)/, "section type(word)", SAME_LINE) then
+      if ! (@kind = expect(/(\w+)/, "section type(word)", SAME_LINE)) then
         error("Could not find valid section type this section " +
                   "will be skipped")
         recover('}', SAME_LINE)

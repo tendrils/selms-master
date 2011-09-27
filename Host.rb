@@ -107,7 +107,7 @@ class Host
   end
 
   def incr_check( mdata, threshold, interval, label, time, count)
-    label = expand(label, m_data) if label =~/%/ && defined? mdata 
+    label = expand(label, m_data) if label =~/%/ && (defined? mdata)
     @count[label] = TimeCounter.new(threshold, interval , label ) unless @count[label]
 #    puts "incr counrt #{label} #{@count[label].val}"
     return @count[label].incr(time, count) ? "#{label}: #{threshold} events in #{interval} seconds" : nil
@@ -249,27 +249,24 @@ class Host
       begin
         Timeout.timeout($options['timeout']) do
 
-        while @rec = lf.gets
-          pp '', "final split", @rec if $options['debug.split']
-          break unless self.send @rule_set, 'TEST', @rec
-          if $options['max_log_recs'] &&
-              recs['report'].size + recs['alert'].size + recs['warn'].size >= $options['max_log_recs'] then
-            lf.abort
-            alert("more than #{$options['max_log_recs'].to_s} reported records ")
-            break;
+          while @rec = lf.gets
+            pp '', "final split", @rec if $options['debug.split']
+            break unless self.send @rule_set, 'TEST', @rec
+            if $options['max_log_recs'] &&
+                recs['report'].size + recs['alert'].size + recs['warn'].size >= $options['max_log_recs'] then
+              lf.abort
+              alert("more than #{$options['max_log_recs'].to_s} reported records ")
+              break;
+            end
           end
+          _post_default() # run any post code
         end
-        _post_default() # run any post code
-	end
 
       rescue Timeout::Error
         STDERR.puts "File #{lf.name} for}#{mach} took too long to process!  Terminated"
-	lf.abort
-
-#   rescue IOError
-#     STDERR.puts "IO error accurred while #{$fstate} log file file " +
-#       "for #{hostname}: #{$!}"
-#     post()
+        lf.abort
+        _post_default() # run any post code
+      end
     end
   end
 end
