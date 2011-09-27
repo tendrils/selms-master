@@ -110,7 +110,8 @@ include Codegen
       @processed_hosts[host] = 1
     end
     t = Benchmark.measure(mach) { host.pscan(dir_name, mach) }
-    STDERR.printf "%-20s: real %5.2f total cpu %5.2f \n", t.label, t.real, t.total if $options['time-hosts'] and t.real > $options['time-hosts']
+    STDERR.printf "%-30s: real %5.2f total cpu %5.2f ratio %5.3f\n",
+                  t.label, t.real, t.total, t.total/t.real if $options['time-hosts'] and t.real > $options['time-hosts']
     Find.prune unless $options['one_file']
 
     if  t.real/t.total < 0.1 # it is thrashing!
