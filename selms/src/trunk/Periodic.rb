@@ -60,62 +60,65 @@ include Codegen
   end
 
   def process_host (dir_name, mach)
-      priority = -1
-      unless host = @hosts[mach] then
-	puts "host-match debug:#{mach}" if $options['debug.host-match']
-	@host_patterns.each { |name, h |
-	  puts "    #{priority} #{h.priority}   #{h.pattern}" if $options['debug.host-match']
-	  if mach.match( h.pattern ) && h.priority > priority then
-	    puts "        match" if $options['debug.host-match']
-	    host = @hosts[mach] = h.dup
-	    host.name = mach 
-	    priority = host.priority
-	  end
-	}
+    priority = -1
+    unless host = @hosts[mach] then
+      puts "host-match debug:#{mach}" if $options['debug.host-match']
+      @host_patterns.each { |name, h|
+        puts "    #{priority} #{h.priority}   #{h.pattern}" if $options['debug.host-match']
+        if mach.match(h.pattern) && h.priority > priority then
+          puts "        match" if $options['debug.host-match']
+          host = @hosts[mach] = h.dup
+          host.name = mach
+          priority = host.priority
+        end
+      }
 #        host = hosts['default'] unless host 
-      end
-
-       # if we get here there was no host entry or pattern for this machine
-
-      if ! host then
-	Find.prune if $options['ignore_unk_hosts']
-#	puts "#{name} #{dir_name} #{$log_store.type_of_host( dir_name ) }"
-	if type = $log_store.type_of_host( dir_name ) then
-          if ! @hosts[ "default-#{type}"] then
-	    STDERR.puts "No default definition for #{type}"
-	    Find.prune 
-	  end
-	  host = @hosts[mach] = @hosts[ "default-#{type}"].dup
-	else
-	  h = @hosts[ "default"]
-	  host = @hosts[mach] = h.dup if h
-	end
-	host.name = mach if host
-      end
-
-      if ! host then
-	STDERR.puts "no default host definition ignoring host #{mach}" 
-	Find.prune  
-	next
-      end
-
-
-      if host.ignore then
-	Find.prune  
-	next
-      end
-      if @processed_hosts[host] then 
-	      @processed_hosts[host] += 1
-      else
-	      @processed_hosts[host] = 1
-      end
-      t = Benchmark.measure(mach){ host.pscan( dir_name, mach )}
-      STDERR.printf  "%-20s: real %5.2f total cpu %5.2f \n", t.label, t.real, t.total if $options['time-hosts'] and t.real > $options['time-hosts']
-      if  t.real/t.total < 0.1    # it is thrashing!
-        raise RunOutMemory
-      end
-      Find.prune  unless $options['one_file']
-
     end
+
+    # if we get here there was no host entry or pattern for this machine
+
+    if !host then
+      Find.prune if $options['ignore_unk_hosts']
+#	puts "#{name} #{dir_name} #{$log_store.type_of_host( dir_name ) }"
+      if type = $log_store.type_of_host(dir_name) then
+        if !@hosts["default-#{type}"] then
+          STDERR.puts "No default definition for #{type}"
+          Find.prune
+        end
+        host = @hosts[mach] = @hosts["default-#{type}"].dup
+      else
+        h = @hosts["default"]
+        host = @hosts[mach] = h.dup if h
+      end
+      host.name = mach if host
+    end
+
+    if !host then
+      STDERR.puts "no default host definition ignoring host #{mach}"
+      Find.prune
+      next
+    end
+
+
+    if host.ignore then
+      Find.prune
+      next
+    end
+    if @processed_hosts[host] then
+      @processed_hosts[host] += 1
+    else
+      @processed_hosts[host] = 1
+    end
+    t = Benchmark.measure(mach) { host.pscan(dir_name, mach) }
+    STDERR.printf "%-20s: real %5.2f total cpu %5.2f \n", t.label, t.real, t.total if $options['time-hosts'] and t.real > $options['time-hosts']
+    Find.prune unless $options['one_file']
+
+    if  t.real/t.total < 0.1 # it is thrashing!
+      STDERR.printf "Run out of memory %-20s: real %5.2f total cpu %5.2f ratio %5.3f\n",
+                    t.label, t.real, t.total, t.real/t.total
+      raise RunOutMemory
+    end
+
+  end
 
 end

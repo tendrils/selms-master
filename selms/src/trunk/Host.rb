@@ -170,7 +170,7 @@ class Host
     @recs['post'] = []
   end
 
-  def log_files(log_dir, logf=nil)
+  def log_files( log_dir, logf=nil )
 
 
     if !logf

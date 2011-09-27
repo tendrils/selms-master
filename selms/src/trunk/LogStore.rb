@@ -37,7 +37,7 @@ class LogStore
               (!$options['one_host'].match(mach))) then
         Find::prune
       end
-	mach.downcase!
+	    mach.downcase!
       rest = $1 if filename =~ %r|^#{@root}/[^/]+/(.*)|o;
       next unless  rest;
       if rest =~ %r|^(\d{4})-(\d\d)$| then
