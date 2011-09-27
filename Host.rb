@@ -245,8 +245,9 @@ class Host
       return nil
     end
 
-    begin
-      log_files(log_dir, @logf) { |lf|
+    log_files(log_dir, @logf) do |lf|
+      begin
+        Timeout.timeout($options['timeout']) do
 
         while @rec = lf.gets
           pp '', "final split", @rec if $options['debug.split']
@@ -259,7 +260,12 @@ class Host
           end
         end
         _post_default() # run any post code
-      }
+	end
+
+      rescue Timeout::Error
+        STDERR.puts "File #{lf.name} for}#{mach} took too long to process!  Terminated"
+	lf.abort
+
 #   rescue IOError
 #     STDERR.puts "IO error accurred while #{$fstate} log file file " +
 #       "for #{hostname}: #{$!}"

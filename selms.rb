@@ -45,7 +45,9 @@ $options = {   # defaults
 	   'outfile' => nil,
 	   'offset' => nil,
 	   'no_write_offset' => nil,
-	   'rt_socket'=> nil,
+           'rt_socket'=> nil,
+           'time-hosts' => nil,
+           'timeout' => 300,  # 5 minutes timeout
 	   'maildomain'=> nil,
 	   'hostdomain'=> nil,
      'max_report_recs'=> 1000,
@@ -87,6 +89,10 @@ OptionParser.new { |opts|
     $options['summ_to'] = val}
   opts.on('-u', '--ignore_unk_hosts', "Ignore hosts that we don't have explicit defs for"){|val|
     $options['ignore_unk_hosts'] = true }
+  opts.on('-t', '--time-hosts=TIME_THRES', Integer, "Print processing times for each host, implies host"){|val|
+    $options['time-hosts'] = val }
+  opts.on('--timeout=TIMEOUT', Integer, "imit of elapsed time to spend on any one file"){|val|
+    $options['timeout'] = val }
   opts.on('-h', '--host=HOSTNAME', "run just for this host"){|val|
     $options['one_host'] = val}
   opts.on('-f', '--file=FILENAME', "run just for this file (daemon, auth, etc)"){|val|
@@ -131,7 +137,7 @@ OptionParser.new { |opts|
 
   if $options['one_host'] && $options['one_host'] =~ %r!^/(.+)/$!
     begin
-      $options['one_host'] = Regexp.new( $1)
+      $options['one_hosts'] = Regexp.new( $1)
     rescue RegexpError
       STDERR.puts "invalid RE supplied for host selection -- will be ignored"
     end
