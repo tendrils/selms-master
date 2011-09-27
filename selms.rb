@@ -28,6 +28,9 @@ OFFSET = 'offset'
 LOG_DIR = '/logs/HOSTS'
 LOG_STORE = 'LogStore'
 
+class RunOutMemory < RuntimeError
+
+end
 # process command line options
 
 $options = {   # defaults
