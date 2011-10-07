@@ -212,6 +212,7 @@ class Host
           c_logf = f.class != Regexp ? f : LogFile.new(f, log_dir + '/' + log)
           @rule_set = '_'+rs
           begin
+puts "rule_set #{@rule_set}"
             self.send @rule_set, nil, nil
           rescue StandardError => ex
             @rule_set = '_default'
@@ -259,7 +260,7 @@ class Host
             break;
           end
         end
-        _post_default() # run any post code
+        self.send '_post'+@rule_set # run any post code
       }
 #   rescue IOError
 #     STDERR.puts "IO error accurred while #{$fstate} log file file " +
