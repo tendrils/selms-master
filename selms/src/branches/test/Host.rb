@@ -215,7 +215,7 @@ class Host
 puts "rule_set #{@rule_set}"
             self.send @rule_set, nil, nil
           rescue StandardError => ex
-            @rule_set = '_default'
+            @rule_set = '_'+$options['sub-type']
           end
         end
 
