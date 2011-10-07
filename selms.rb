@@ -34,6 +34,7 @@ $options = {   # defaults
            'pre' => nil,
            'post' => nil,
            'lock' => nil,
+      'sub-type' => 'default',
 	   'mail_to' => nil,
 	   'mail_server' => nil,
  	   'mail_subject' => 'SELMS Periodic Report',
@@ -85,6 +86,8 @@ OptionParser.new { |opts|
     $options['no_mail'] = val}
   opts.on('-s', '--summary=SUMM_TO', String, "send summary to ARG") {|val|
     $options['summ_to'] = val}
+  opts.on('--sub-type=SUB_TYPE', String, "process this sub type (e.g. gulp)") {|val|
+    $options['sub-type'] = val}
   opts.on('-u', '--ignore_unk_hosts', "Ignore hosts that we don't have explicit defs for"){|val|
     $options['ignore_unk_hosts'] = true }
   opts.on('-h', '--host=HOSTNAME', "run just for this host"){|val|

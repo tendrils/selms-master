@@ -130,7 +130,7 @@ class Host
     @recs['warn'] = []
     @recs['post'] = []
     @merge_files = conf.merge_files
-    @rule_set = '_default'
+    @rule_set = '_' + $options['sub-type']
   end
 
 # substitute for % vars in strings
