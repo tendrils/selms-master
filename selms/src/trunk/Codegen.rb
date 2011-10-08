@@ -107,12 +107,12 @@ module Codegen
       pp "match",  match if $options['debug.match']
       match[1].each{ |e|
 	case e[0]
-	when 'switch':  switches.push( match )
-	when 'drop' :   drops.push( match )
-	when 'alert' :  alerts.push( match )
-	when 'warn' :   warns.push( match )
-	when 'ignore' : ignores.push( match )
-	when 'count', 'incr', 'proc' : others.push( match )
+	when 'switch' then  switches.push( match )
+	when 'drop' then   drops.push( match )
+	when 'alert' then  alerts.push( match )
+	when 'warn' then   warns.push( match )
+	when 'ignore' then ignores.push( match )
+	when 'count', 'incr', 'proc' then  others.push( match )
 	else
 	  print "codegen error unknown action '#{e[0]}'\n"
 	end
@@ -174,7 +174,7 @@ module Codegen
         if event[2] then
           a += 'x = ' + (event[2]=~/%/ ? %Q'expand("#{event[2]}", m_data)\n' : "'#{event[2]}'\n")
           a += '      '
-          y = 'x'
+#          y = 'x'
         end
         if $options["debug.rules-#{event[0]}"] then
           key = "#{event[0]}-#{count}"
@@ -197,7 +197,7 @@ module Codegen
           a += "warn(  rec.orec,  rec.fn, msg )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "    @count[x].incr(rec.count)\n"
+                "      @count[x].incr(rec.count)\n"
         when 'incr'
           a += "@count[x] = Host::TimeCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
                 "      @count[x].incr(time, rec.count)\n" +
@@ -209,7 +209,7 @@ module Codegen
         end
       }
       code << "    ##{count}:\n" 
-      code << "    if #{c} then\n#{a} #{ret}  end\n"
+      code << "    if #{c} then\n#{a} #{ret}    end\n"
 #code << "puts rec if rec =~ /nrpe/\n"
     }
     return [ code, post ]

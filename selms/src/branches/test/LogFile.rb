@@ -36,7 +36,16 @@ The process of parsing the log record has two phases:
     @no_look_ahead = nil
     @recs = @split_failures = 0
     @rc = Record
+    if $options['sub-type'] != 'default'
+      begin
+        @ST = capitalise(self.class.to_s+"::#{$options['sub-type']}")
+        @ST.process( nil )
+      rescue
+        @ST = nil
+      end
+    end
   end
+
 
 
 =begin rdoc 
