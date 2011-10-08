@@ -3,7 +3,7 @@
 
 LOG_BITS = /^([^:]+):\s+(.+)?/
 # token change
-  class LogFile 
+class LogFile
 
 =begin rdoc
 The LogFile class implements a straight forward interface for SELMS to read and parse 
@@ -38,7 +38,6 @@ The process of parsing the log record has two phases:
       @recs = @split_failures = 0
       @rc = Record
     end
-
 
 =begin rdoc 
 gets reads a single logical record 
@@ -167,16 +166,16 @@ gets also will merge records from a number of log files for the same host into t
       puts "final count #{count}" if $options['debug.gets']
       r.count = count
       if count > 1      
-	if ! r.orec  # something broken in the parsing
-	  STDERR.puts "Parsing problems in file #{@fn} for host #{@rec[0].h} parser #{@rc}- aborting this file"
-	  return nil
-	end
+        if ! r.orec  # something broken in the parsing
+          STDERR.puts "Parsing problems in file #{@fn} for host #{@rec[0].h} parser #{@rc}- aborting this file"
+          return nil
+        end
 
          r.orec << " -- repeated #{count} times since #{time}"
       end
       
       puts "return '#{r.data}'" if !initial && $options['debug.gets']
-      
+
       return r unless initial
 
     end

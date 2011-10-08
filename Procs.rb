@@ -18,7 +18,7 @@ module Procs
       end
       return report.size > 1 ? report : []
     when 'test'
-      else
+    else
       upi, ip = what.split(/\s*,\s*/)
       return if ip == '' || ip.match(/^(UXCHANGE10|ECAD)/)
       @pw_count[ip] ||= {}
