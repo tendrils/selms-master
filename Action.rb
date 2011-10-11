@@ -31,6 +31,15 @@ class Action
     public :test
   end
 
+  class Ignore < Action::Base
+    def do_periodic (type, host, file, msg)
+    end
+
+    def do_realtime (type, host, file, msg)
+    end
+
+  end
+
   class Email < Action::Base
 
     def initialize

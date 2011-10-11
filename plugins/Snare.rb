@@ -46,3 +46,4 @@ class Snare < LogFile
   end
 end
 
+
