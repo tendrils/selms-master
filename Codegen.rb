@@ -34,7 +34,13 @@ module Codegen
 
   def action_body( name, actions )
 
-    pre = @run_type == 'realtime' ? 'rt-' : ''
+    if @run_type == 'realtime'
+      pre = 'rt-'
+    elsif $options['sub-type'] != 'default'
+      pre = $options['sub-type']
+    else
+      pre = ''
+    end
 
     pp 'in action_body: ', actions if $options['debug.action']
     code = ''
