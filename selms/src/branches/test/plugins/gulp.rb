@@ -17,6 +17,7 @@ class Gulp
     end
 
     def post_gulp
+    end
 
   end
 end
