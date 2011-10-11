@@ -1,9 +1,12 @@
 class Gulp
   # To change this template use File | Settings | File Templates.
+  class Record  < LogFile::Record
+
+  end
 
 
 
-  class Record::Snare < LogFile::Record
+  class Record::Snare  < Record
     attr_reader :saddr, :upi, :service
     def split
       super
