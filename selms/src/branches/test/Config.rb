@@ -637,8 +637,8 @@ module Config
         end
 
         if tok && @@all_events[token] then
-          rt = expect(/^rt/i, nil, SAME_LINE, Optional)
-          events.push(rt ? "rt-#{tok}" : tok)
+          st = expect(/^(\w+)/i, nil, SAME_LINE, Optional)
+          events.push(st ? "#{st}-#{tok}" : tok)
         else
           error("'#{tok}' is not a valid event type")
           rest_of_line;

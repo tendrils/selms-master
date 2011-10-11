@@ -215,7 +215,7 @@ module Codegen
         end
       }
       code << "    ##{count}:\n" 
-      code << "    if #{c} then\n#{a} #{ret}  end\n"
+      code << "    if #{c} then\n      #{a} #{ret}  end\n"
 #code << "puts rec if rec =~ /nrpe/\n"
     }
     return [ code, post ]
