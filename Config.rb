@@ -863,7 +863,7 @@ module Config
         errs = false
         tok = nextT(SAME_LINE).downcase
         case tok
-          when 'alert', 'warn', 'switch'
+          when 'alert', 'warn', 'report', 'switch'
             message = quoted_string(SAME_LINE, Optional)
             actions.push([tok, message])
           when 'ignore', 'drop'
