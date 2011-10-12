@@ -37,7 +37,7 @@ module Codegen
     if @run_type == 'realtime'
       pre = 'rt-'
     elsif $options['sub-type'] != 'default'
-      pre = "#{$options['sub-type']}"
+      pre = "#{$options['sub-type']}-"
     else
       pre = ''
     end
