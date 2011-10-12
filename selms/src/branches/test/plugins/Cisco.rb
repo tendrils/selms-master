@@ -2,7 +2,7 @@
 
 class Cisco < LogFile
 
-    def initialize(name, fn=nil, split_p=nil, head=nil)
+    def initialize(name=nil, fn=nil, split_p=nil, head=nil)
 
 # Cx-Beta-Wism-controller-A: *spamReceiveTask: Aug 16 07:50:04.616: %OSAPI-5-OSAPI_INVALID_TIMER: timerlib.c:542 Failed to retrive timer.
 

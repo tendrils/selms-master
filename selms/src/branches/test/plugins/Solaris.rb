@@ -15,7 +15,7 @@ class Solaris < LogFile
   }
 
 
-    def initialize( name, fn=nil, split_p=nil, head=nil)
+    def initialize( name=nil, fn=nil, split_p=nil, head=nil)
 
       super(  name, fn, /^([^:]+):\s+\[ID \d+ (\w+)\.(\w+)\]\s*(.+)/ )
 

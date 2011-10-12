@@ -11,7 +11,7 @@ class Wli < LogFile
 
   Levels_ar = ['FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
 
-  def initialize(name, split_p=nil, head=nil)
+  def initialize(name=nil, split_p=nil, head=nil)
 
     #should parse something along the lines of:
     #APP: [LEVEL] [PROGRAM_LOCATION] DATA
