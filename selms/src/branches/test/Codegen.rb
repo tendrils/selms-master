@@ -48,7 +48,8 @@ module Codegen
 
 # generate the action routines ( alert warn report )
 
-    %W( alert warn report ).each { |type|
+#    %W( alert warn report default ).each { |type|
+     Action.events.each_key { |type|
       next unless a = actions.assoc( "#{pre}#{type}" )
       code += "  def #{type}(rec, file = nil, msg=nil)\n"
       this_action = 'ACTION'
@@ -259,6 +260,7 @@ module Codegen
     case type
     when 'periodic'
       host.periodic.each{ |name, matches|
+        next unless $options['sub-type'] == name
 	      sb[name], post_code[name] = scanner_body( matches, 1  )
       }
     when 'realtime'

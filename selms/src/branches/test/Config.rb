@@ -612,7 +612,7 @@ module Config
     include Parser
     attr_reader :items
 
-    @@all_events = {'alert' => 1, 'warn' => 1, 'report' => 1}
+    @@all_events = {'alert' => 1, 'warn' => 1, 'report' => 1, 'default' => 1}
 
     def initialize(head)
       @items = []
@@ -636,7 +636,7 @@ module Config
           @errors = true
         end
 
-        if tok && @@all_events[token] then
+        if tok && Action.events[token] then
           st = expect(/^(\w+)/i, nil, SAME_LINE, Optional)
           events.push(st ? "#{st}-#{tok}" : tok)
         else

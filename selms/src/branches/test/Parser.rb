@@ -309,8 +309,8 @@ module Parser
     return nil unless skip_whitespace(where)
 
     re = case @@line[0]
-           when ?' : @@singleQstring
-           when ?": @@doubleQstring
+           when ?' then @@singleQstring
+           when ?" then @@doubleQstring
            else
              return nil if optional
              error("Expecting a <quoted string>")
