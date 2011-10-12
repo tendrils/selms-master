@@ -24,3 +24,11 @@ class Gulp
 
   end
 end
+
+class Action
+
+  class Gulp < Base
+
+
+  end
+end

@@ -1,6 +1,10 @@
 require 'net/smtp'
 class Action
 
+  def Action.events
+    @@all_events ||= {'alert' => 1, 'warn' => 1, 'report' => 1, 'default' => 1}
+  end
+
   class Base
 
     def test
