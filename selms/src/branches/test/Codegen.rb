@@ -37,7 +37,7 @@ module Codegen
     if @run_type == 'realtime'
       pre = 'rt-'
     elsif $options['sub-type'] != 'default'
-      pre = $options['sub-type']
+      pre = "#{$options['sub-type']}"
     else
       pre = ''
     end
@@ -122,6 +122,8 @@ module Codegen
       alerts.push( match )
     when 'warn'
       warns.push( match )
+    when 'report'
+      report.push( match )
     when 'ignore'
       ignores.push( match )
     when 'count', 'incr', 'proc'
@@ -299,7 +301,7 @@ module Codegen
        code <<  "        return nil\n"
        code <<  "      end\n"
        code <<  "    end\n"
-       code <<  "     report( rec.orec, rec.fn )\n"
+       code <<  "     default( rec.orec, rec.fn )\n"
      else
        code <<  "    end\n"
      end
