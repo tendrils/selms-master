@@ -105,6 +105,7 @@ module Codegen
 #code << "puts rec.data\n"
     alerts = []
     warns = []
+    reports = []
     drops = []
     ignores = []
     others = []
@@ -123,7 +124,7 @@ module Codegen
     when 'warn'
       warns.push( match )
     when 'report'
-      report.push( match )
+      reports.push( match )
     when 'ignore'
       ignores.push( match )
     when 'count', 'incr', 'proc'
@@ -141,6 +142,7 @@ module Codegen
     all.concat( drops )
     all.concat( alerts )
     all.concat( warns )
+    all.concat( reports )
     all.concat( ignores )
     all.concat( others )
     post = ''
