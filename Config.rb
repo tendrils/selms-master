@@ -38,6 +38,16 @@ module Config
   Optional = true
   EmailRE = /^([-a-z0-9+_.]+(?:@[a-z0-9.]+)?)/
 
+  def constantise(camel_cased_word)
+    names = camel_cased_word.split('::')
+    names.shift if names.empty? || names.first.empty?
+
+    constant = Object
+    names.each do |name|
+      constant = constant.const_defined?(name) ? constant.const_get(name) : constant.const_missing(name)
+    end
+    constant
+  end
 
   include Parser
 
@@ -328,6 +338,48 @@ module Config
     end
   end
 
+
+  def parse_file_options
+    errors = false
+    expect('=>')
+    name = expect(/(\w+)/, 'file name')
+    file_options = {}
+    file_options[name] = name
+    if look_ahead('(') then # have options for file
+      expect('(')
+      if (re = expect('re', '', ANYWHERE, OPTIONAL)) then
+        file_options['logtype'] = @re
+      else
+        tok = expect(/(\w+)/, 'file option')
+        if tok == 'ignore'
+          file_options['ignore'] = true
+        elsif tok == 'email'
+          e = expect(/^([^);]+)/, "email addresses", ANYWHERE)
+          file_options['mail'] = e
+          file_options['mail'].strip
+          # must be a plugin name
+        elsif @@logtype_classes[tok]
+          file_options['logtype'] = @@logtype_classes[tok]
+        else
+          test = nil
+          tok = tok.capitalize
+          if ! defined? constantise(tok) # known class ?
+            error("bad paramers or unknown action #{tok}: #{e}")
+            rest_of_line
+            errors = @errors = true
+          else
+#          if test =  then
+            file_options['logtype'] = @@logtype_classes[tok] = constantise(tok).new
+          end
+        end
+      end
+      expect(')')
+    end
+    errors ? nil : file_options
+  end
+
+
+
   class HostService < Section
     include Parser
 
@@ -370,7 +422,6 @@ module Config
 
           case head.kind
             when 'actions'
-#	      ml = ActionList.new( head )
               @actions << ActionList.new(head).items
             when 'periodic'
               ml = MatchList.new(head, @opts, @file)
@@ -396,7 +447,7 @@ module Config
 
     def get_options
 
-      # options should contain a ssemicolon separated list of option=>value
+      # options should contain a semicolon separated list of option=>value
       begin
         if look_ahead('/') or look_ahead('%r') then
           tok = 're'
@@ -441,44 +492,8 @@ module Config
           when 'merge'
             @merge_files = (expect(%w( yes no)) == 'yes')
           when 'file'
-            expect('=>')
-            name = expect(/(\w+)/, 'file name')
-            @file[name] = {} unless  @file[name]
-            if look_ahead('(') then # have options for file
-              expect('(')
-              if (re = expect('re', '', ANYWHERE, OPTIONAL)) then
-                @file[name]['logtype'] = @re
-              else
-                tok = expect(/(\w+)/, 'file option')
-                if tok == 'ignore'
-                  @file[name]['ignore'] = true
-                elsif tok == 'email'
-                  e = expect(/^([^);]+)/, "email addresses", ANYWHERE)
-                  @file[name]['mail'] = e
-                  @file[name]['mail'].strip
-                  # must be a plugin name
-                elsif @logtype_classes[tok]
-                  @file[name]['logtype'] = @logtype_classes[tok]
-                else
-                  test = nil
-                  tok = tok.capitalize
-                  begin
-                    eval "test = #{tok}.new(tok)" # known class ?
-                  rescue SyntaxError, StandardError =>e
-                    error("bad paramers or unknown action #{tok}: #{e}")
-                    rest_of_line
-                    @errors = true
-                  end
-                  if test then
-                    @file[name] = {} unless @file[name]
-                    @file[name]['logtype'] = test
-                    @logtype_classes[tok] = test
-                  end
-                end
-              end
-              expect(')')
-            else
-              @file[name] = true
+            if f = parse_file_options
+              @file[f['name']] = f
             end
           else
             if @kind == 'service' &&
@@ -618,6 +633,19 @@ module Config
       @items = []
       @action_classes = {}
       super(head)
+    end
+
+
+    def get_options
+
+      while tok = expect(/^(\w+)/, 'option name')
+        case tok
+          when 'file'
+
+          else
+
+        end
+      end
     end
 
     def specificItem(first_token)
