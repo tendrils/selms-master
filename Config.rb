@@ -56,6 +56,7 @@ module Config
     $hosts = {};
     $run_type = options
     $global = nil
+    $logtype_classes = {}
 
     $host_patterns = {};
     $errors = 0
@@ -105,11 +106,11 @@ module Config
 
   end
 
-# the configuration file is composed of a series of sections -- 
+# the configuration file is composed of a series of sections --
 # each section has a heading enclosed in [ ] and a body enclosed
 # in { }
 
-# the section head starts with a 'type' and some tyes require that the 
+# the section head starts with a 'type' and some tyes require that the
 # 'type' be followed by a 'name'
 
   class SectionHead
@@ -358,8 +359,8 @@ module Config
           file_options['mail'] = e
           file_options['mail'].strip
           # must be a plugin name
-        elsif @@logtype_classes[tok]
-          file_options['logtype'] = @@logtype_classes[tok]
+        elsif $logtype_classes[tok]
+          file_options['logtype'] = $logtype_classes[tok]
         else
           test = nil
           tok = tok.capitalize
@@ -369,7 +370,7 @@ module Config
             errors = @errors = true
           else
 #          if test =  then
-            file_options['logtype'] = @@logtype_classes[tok] = constantise(tok).new
+            file_options['logtype'] = $logtype_classes[tok] = constantise(tok).new
           end
         end
       end
@@ -406,7 +407,6 @@ module Config
       @def_email = ''
       @opts = []
       @logtype = [] # added to by plugins
-      @logtype_classes = {} # added to by plugins
       @ignore = nil
       @merge_files = $options['merge'] == 'yes'
       @priority = 0
@@ -699,17 +699,22 @@ module Config
             else
               test = nil
               tok = tok.capitalize
-              begin
-                eval "test = Action::#{tok}.new(#{parms})" # known class ?
-              rescue SyntaxError, StandardError =>e
-                error("bad paramers or unknown action #{tok}: #{e}")
-                rest_of_line
-                @errors = true
+              if action = constanise("Action#{tok}")
+                begin
+                  action.new(parms)
+                  actions.push([tok, parms])
+                  @action_classes[tok+parms] = true
+                  no_error = true
+                rescue SyntaxError, StandardError =>e
+                  error("bad paramers for #{tok}(#{params}): #{e}")
+                end
+              else
+                error("unknown action #{tok}")
               end
 
-              if test then
-                actions.push([tok, parms])
-                @action_classes[tok+parms] = true
+              unless defined? no_errors
+                rest_of_line
+                @errors = true
               end
             end
         end
@@ -762,15 +767,10 @@ module Config
 
       lf = nil
 
-
-      if @name != 'default' # if the section is named then it may be the name of a LogFile class
-        begin # in which case we want to know about the tokens
-          eval "lf = #{@name.capitalize}.new"
-          tokens = lf['logtype'].Tokens
-        rescue SyntaxError, StandardError =>e
-#            STDERR.puts "tokens = #{@name.capitalize}.new => #{e}"
-        end
-
+# if the section is named then it may be the name of a LogFile class
+ # in which case we want to know about the tokens
+      if @name != 'default' and defined? (lf = constantise(@name.capitalize))
+        tokens = lf.new['logtype'].Tokens
       end
 
       begin # while at end...

@@ -28,7 +28,7 @@ class Weblogic< LogFile
   }
   Levels_ar = [ 'EMERG', 'ALERT', 'CRITICAL', 'ERROR', 'WARN', 'NOTICE', 'INFO', 'DEBUG' ]
 
-    def initialize( name, fn=nil, split_p=nil, head=nil)
+    def initialize( name=nil, fn=nil, split_p=nil, head=nil)
 
       super(  name, fn=nil, /^(\w+)\s+\[([^\]]+)\]\s*(.+)/ )
 
