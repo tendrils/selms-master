@@ -667,18 +667,6 @@ module Config
     end
 
 
-    def get_options
-
-      while tok = expect(/^(\w+)/, 'option name')
-        case tok
-          when 'file'
-
-          else
-
-        end
-      end
-    end
-
     def specificItem(first_token)
       events = []
       actions = []
@@ -768,6 +756,20 @@ module Config
       @opts = opts
       @file = file
       super(head) unless init
+    end
+
+    def get_options
+
+      while tok = expect(/^(\w+)/, 'option name')
+        case tok
+          when 'file'
+            if f = parse_file_options
+              @file[f['name']] = f
+            end
+          else
+            error("'#{tok}' is not a valid option for #{head.kind}")
+        end
+      end
     end
 
     def specificItem(first_token)
