@@ -57,7 +57,7 @@ module Config
 
     begin
       c = constantise(q_name)
-      if ! params
+      if ! params || params == ''
         c.new
       else
         p = params.sub(/^'(.+)'$/, '\1' ).split(/'?\s*,\s*'?/)
@@ -276,7 +276,7 @@ module Config
                   error("section #{head.kind} must have a name part")
                 end
               when 'optional'
-                head.name = 'default' unless head.name
+                head.name =  unless head.name
             end
 
             if details[5] then
@@ -376,7 +376,7 @@ module Config
     expect('=>')
     name = expect(/(\w+)/, 'file name')
     file_options = {}
-    file_options[name] = name
+    file_options['name'] = name
     if look_ahead('(') then # have options for file
       expect('(')
       if (re = expect('re', '', ANYWHERE, OPTIONAL)) then
@@ -401,7 +401,7 @@ module Config
             errors = @errors = true
           else
 #          if test =  then
-            file_options['logtype'] = $logtype_classes[tok] = constantise(tok).new
+            file_options['logtype'] = $logtype_classes[tok] = constantise(tok).new(tok)
           end
         end
       end
@@ -786,8 +786,11 @@ module Config
 
 # if the section is named then it may be the name of a LogFile class
  # in which case we want to know about the tokens
-      if @name != 'default' and defined? lf = constantise(@name.capitalize)
+
+      begin
+        lf= constantise(@name.capitalize)
         tokens = lf.new['logtype'].Tokens
+      rescue NameError
       end
 
       begin # while at end...
@@ -859,7 +862,6 @@ module Config
             end
             recover(/,|:/, SAME_LINE) unless ok
           else
-
             if t = tokens[tok] # it is a custom attribute
               value = nil
               op = expect(/^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional) || '=='
