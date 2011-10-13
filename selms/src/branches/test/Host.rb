@@ -187,6 +187,7 @@ class Host
         next if $options['file'] != base_name
         next if base_name == 'cron' && @file['cron'] != 'process'
         next if @file[base_name]['ignore']
+        next if @file['all']['ignore'] and ! @file[base_name]
 
         l = @file[base_name] ? base_name : 'all'
 

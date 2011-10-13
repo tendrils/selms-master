@@ -269,6 +269,7 @@ module Codegen
       }
     when 'realtime'
       host.real_time.each{ |name, matches|
+        next unless $options['sub-type'] == name
 	      sb[name], post_code[name] = scanner_body( matches, 1  )
       }
     end    

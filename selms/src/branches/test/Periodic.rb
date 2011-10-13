@@ -40,50 +40,50 @@ include Codegen
     processed_hosts = {}
     
     # walk the log tree 
-    $log_store.traverse { | dir_name, mach|
+    $log_store.traverse do | dir_name, mach|
 
       priority = -1
       unless host = hosts[mach] then
-	puts "host-match debug:#{mach}" if $options['debug.host-match']
-	host_patterns.each { |name, h |
-	  puts "    #{priority} #{h.priority}   #{h.pattern}" if $options['debug.host-match']
-	  if mach.match( h.pattern ) && h.priority > priority then
-	    puts "        match" if $options['debug.host-match']
-	    host = hosts[mach] = h.dup
-	    host.name = mach 
-	    priority = host.priority
-	  end
-	}
+	      puts "host-match debug:#{mach}" if $options['debug.host-match']
+	      host_patterns.each do |name, h |
+          puts "    #{priority} #{h.priority}   #{h.pattern}" if $options['debug.host-match']
+          if mach.match( h.pattern ) && h.priority > priority then
+            puts "        match" if $options['debug.host-match']
+            host = hosts[mach] = h.dup
+            host.name = mach
+            priority = host.priority
+          end
+        end
 #        host = hosts['default'] unless host 
       end
 
        # if we get here there was no host entry or pattern for this machine
 
       if ! host then
-	Find.prune if $options['ignore_unk_hosts']
-#	puts "#{name} #{dir_name} #{$log_store.type_of_host( dir_name ) }"
-	if type = $log_store.type_of_host( dir_name ) then
-          if ! hosts[ "default-#{type}"] then
-	    STDERR.puts "No default definition for #{type}"
-	    Find.prune 
-	  end
-	  host = hosts[mach] = hosts[ "default-#{type}"].dup
-	else
-	  h = hosts[ "default"]
-	  host = hosts[mach] = h.dup if h
-	end
-	host.name = mach if host
+        Find.prune if $options['ignore_unk_hosts']
+      #	puts "#{name} #{dir_name} #{$log_store.type_of_host( dir_name ) }"
+        if type = $log_store.type_of_host( dir_name ) then
+                if ! hosts[ "default-#{type}"] then
+            STDERR.puts "No default definition for #{type}"
+            Find.prune
+          end
+          host = hosts[mach] = hosts[ "default-#{type}"].dup
+        else
+          h = hosts[ "default"]
+          host = hosts[mach] = h.dup if h
+        end
+        host.name = mach if host
       end
 
       if ! host then
-	STDERR.puts "no default host definition ignoring host #{mach}" 
-	Find.prune  
-	next
+      	STDERR.puts "no default host definition ignoring host #{mach}"
+	      Find.prune
+	      next
       end
 
       if host.ignore then
-	Find.prune  
-	next
+	      Find.prune
+	      next
       end
 
       if processed_hosts[host] then 
@@ -95,7 +95,7 @@ include Codegen
       host.pscan( dir_name, mach )
       Find.prune  unless $options['one_file']
 
-    }
+    end
 
     @action_classes.each{ |key, act_cla|
       act_cla.produce_reports(processed_hosts)
