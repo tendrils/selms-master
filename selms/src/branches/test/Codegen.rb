@@ -222,7 +222,8 @@ module Codegen
 
         when 'proc'
           a << " self.#{event[1]}(" + ((defined? event[2]) ? "x, " :'nil') + "rec.data)\n"
-	        post << "self.#{event[1]}(nil, 'host')\n"
+	        post << "self.#{event[1]}(nil, 'ervghilhelefdhtbllbfbeeintrekcbndvjnkvvebgrk
+')\n"
         end
       }
       code << "    ##{count}:\n" 
