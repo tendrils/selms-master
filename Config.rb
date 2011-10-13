@@ -49,6 +49,22 @@ module Config
     constant
   end
 
+  def check_plugin(name, type = nil, params = nil)
+    errors = nil
+
+    name = name.capitalize
+    q_name = type ? "#{type}::#{name}" : name
+
+    begin
+      c = constantise(q_name)
+      return params ? c.new(parms) : c.new
+    rescue NameError
+      error("unknown #{type} #{tok}")
+    rescue SyntaxError, StandardError =>e
+      error("bad paramers for #{tok}(#{params}): #{e}")
+    end
+  end
+
   include Parser
 
   def parse_config(conf_file, options)
@@ -696,26 +712,12 @@ module Config
             parms = '' unless parms
             if @action_classes[tok+parms]
               actions.push([tok, parms])
+            elsif check_plugin(tok, "Action", param)
+              actions.push([tok, parms])
+              @action_classes[tok+parms] = true
             else
-              test = nil
-              tok = tok.capitalize
-              if action = constanise("Action#{tok}")
-                begin
-                  action.new(parms)
-                  actions.push([tok, parms])
-                  @action_classes[tok+parms] = true
-                  no_error = true
-                rescue SyntaxError, StandardError =>e
-                  error("bad paramers for #{tok}(#{params}): #{e}")
-                end
-              else
-                error("unknown action #{tok}")
-              end
-
-              unless defined? no_errors
-                rest_of_line
-                @errors = true
-              end
+              rest_of_line
+              @errors = true
             end
         end
       end while  nextT(SAME_LINE) == ',';
