@@ -276,7 +276,7 @@ module Config
                   error("section #{head.kind} must have a name part")
                 end
               when 'optional'
-                head.name =  unless head.name
+                head.name = 'default' unless head.name
             end
 
             if details[5] then
