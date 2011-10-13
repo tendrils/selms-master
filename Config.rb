@@ -765,7 +765,11 @@ module Config
         case tok
           when 'file'
             if f = parse_file_options
-              @file[f['name']] = f
+              n = f['name']
+              @file[n] = @file['all'] unless @file[n]
+              f.each do |key, val|
+                @file[n][key] = val
+              end
             end
           else
             error("'#{tok}' is not a valid option for #{head.kind}")
