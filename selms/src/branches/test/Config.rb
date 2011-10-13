@@ -57,11 +57,26 @@ module Config
 
     begin
       c = constantise(q_name)
-      return params ? c.new(parms) : c.new
+      if ! params
+        c.new
+      else
+        p = params.sub(/^'(.+)'$/, '\1' ).split(/'?\s*,\s*'?/)
+        case p.size
+          when 0
+            c.new(params)
+          when 2 then  c.new(p[0], p[1], p[2])
+          when 3 then  c.new(p[0], p[1], p[2], p[3])
+          when 4 then  c.new(p[0], p[1], p[2], p[3], p[4])
+          when 5 then  c.new(p[0], p[1], p[2], p[3], p[4], p[5])
+          else
+            error("more than 5 parameters to a plugin")
+            nil
+        end
+      end
     rescue NameError
-      error("unknown #{type} #{tok}")
+      error("unknown #{q_name}")
     rescue SyntaxError, StandardError =>e
-      error("bad paramers for #{tok}(#{params}): #{e}")
+      error("bad paramers for #{q_name}(#{params}): #{e}")
     end
   end
 
@@ -712,7 +727,7 @@ module Config
             parms = '' unless parms
             if @action_classes[tok+parms]
               actions.push([tok, parms])
-            elsif check_plugin(tok, "Action", param)
+            elsif check_plugin(tok, "Action", parms)
               actions.push([tok, parms])
               @action_classes[tok+parms] = true
             else
@@ -771,7 +786,7 @@ module Config
 
 # if the section is named then it may be the name of a LogFile class
  # in which case we want to know about the tokens
-      if @name != 'default' and defined? (lf = constantise(@name.capitalize))
+      if @name != 'default' and defined? lf = constantise(@name.capitalize)
         tokens = lf.new['logtype'].Tokens
       end
 
