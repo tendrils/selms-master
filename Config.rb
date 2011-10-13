@@ -760,7 +760,8 @@ module Config
 
     def get_options
 
-      while tok = expect(/^(\w+)/, 'option name')
+      begin
+        tok = expect(/^(\w+)/, 'option name')
         case tok
           when 'file'
             if f = parse_file_options
@@ -769,6 +770,11 @@ module Config
           else
             error("'#{tok}' is not a valid option for #{head.kind}")
         end
+      end while expect(';', nil, ANYWHERE, OPTIONAL)
+
+      if !expect(']', "';' or ']' at end of section head") then
+        error("Skipping to start of next section")
+        recover(']')
       end
     end
 
