@@ -184,12 +184,11 @@ class Host
       logf.each { |log|
         log =~ /^(.+)\.\d+/
         base_name = $1
-        next if $options['file'] != base_name
-        next if base_name == 'cron' && @file['cron'] != 'process'
-        next if @file[base_name]['ignore']
-        next if @file['all']['ignore'] and ! @file[base_name]
 
         l = @file[base_name] ? base_name : 'all'
+        next if  $options['file'] && $options['file'] != base_name
+        next if base_name == 'cron' && @file['cron'] != 'process'
+        next if @file[l]['ignore']
 
         lf.open_lf(log_dir + '/' + log)
       }
@@ -202,15 +201,15 @@ class Host
         l = @file[base_name] ? base_name : 'all'
         next if  $options['file'] && $options['file'] != base_name
         next if base_name == 'cron' && @file['cron'] != 'process'
-        next if @file[base_name] && @file[base_name]['ignore']
+        next if @file[l]['ignore']
 
-        lf = @file[l]['re'] ? LogFile.new(@file[l]['re'], log_dir + '/' + log) : @file[l]['logtype']
+        lf = @file[l]['re'] ? LogFile::Base.new(@file[l]['re'], log_dir + '/' + log) : @file[l]['logtype']
         count = 0
 #        if f = (@file[base_name] || @file['all']) then
 #          f.to_s =~ /#<(\w+):/
 #          rs = $1.downcase
 ##          @rule_set = @file[base_name].to_s.downcase if @file[base_name] ###########  temp fudge -- fix this
- #         c_logf = f.class != Regexp ? f : LogFile.new(f, log_dir + '/' + log)
+ #         c_logf = f.class != Regexp ? f : LogFile::Base.new(f, log_dir + '/' + log)
  #         @rule_set = '_'+rs
 #          begin
 #puts "rule_set #{@rule_set}"
@@ -222,7 +221,7 @@ class Host
 
         lf.open_lf(log_dir + '/' + log)
 
-        pp "using logformat:", c_logf.to_s if $options['debug.split']
+        pp "using logformat:", lf.to_s if $options['debug.split']
         yield lf
       }
     end

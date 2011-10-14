@@ -400,8 +400,7 @@ module Config
             rest_of_line
             errors = @errors = true
           else
-#          if test =  then
-            file_options['logtype'] = $logtype_classes[tok] = constantise(tok).new(tok)
+            file_options['logtype'] = $logtype_classes[tok] = LogFile.type(tok, tok)
           end
         end
       end
@@ -409,8 +408,6 @@ module Config
     end
     errors ? nil : file_options
   end
-
-
 
   class HostService < Section
     include Parser
@@ -433,7 +430,7 @@ module Config
       @real_time = {}
       @periodic = {}
       @file = {}
-      @file['all'] = {'logtype' => LogFile.new}
+      @file['all'] = {'logtype' => LogFile.type('Base').new}
       @converted = false
       @def_email = ''
       @opts = []
@@ -766,7 +763,7 @@ module Config
           when 'file'
             if f = parse_file_options
               n = f['name']
-              @file[n] = @file['all'] unless @file[n]
+              @file[n] = @file['all'].dup unless @file[n]
               f.each do |key, val|
                 @file[n][key] = val
               end

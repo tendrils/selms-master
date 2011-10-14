@@ -12,90 +12,93 @@
 #............
 
 # We return a record with the first two lines concatenated in data and the rest of the lines in extra_data  
+class LogFile
 
-class Weblogic< LogFile
 
-    Levels = { 
-       'emerg' => 0,       #  system is unusable               */
-       'alert'     => 1,       #  action must be taken immediately */
-       'critical'  => 2,       #  critical conditions              */
-       'error'     => 3,       #  error conditions                 */
-       'warn'      => 4,       #  warning conditions               */
-       'notice'    => 5,       #  normal but significant condition */
-       'info'      => 6,       #  informational                    */
-       'debug'     => 7        # debug-level messages             */
+  class Weblogic < Base
 
-  }
-  Levels_ar = [ 'EMERG', 'ALERT', 'CRITICAL', 'ERROR', 'WARN', 'NOTICE', 'INFO', 'DEBUG' ]
+      Levels = {
+         'emerg' => 0,       #  system is unusable               */
+         'alert'     => 1,       #  action must be taken immediately */
+         'critical'  => 2,       #  critical conditions              */
+         'error'     => 3,       #  error conditions                 */
+         'warn'      => 4,       #  warning conditions               */
+         'notice'    => 5,       #  normal but significant condition */
+         'info'      => 6,       #  informational                    */
+         'debug'     => 7        # debug-level messages             */
 
-    def initialize( name=nil, fn=nil, split_p=nil, head=nil)
+    }
+    Levels_ar = [ 'EMERG', 'ALERT', 'CRITICAL', 'ERROR', 'WARN', 'NOTICE', 'INFO', 'DEBUG' ]
 
-      super(  name, fn=nil, /^(\w+)\s+\[([^\]]+)\]\s*(.+)/ )
+      def initialize( name=nil, fn=nil, split_p=nil, head=nil)
 
-      @Tokens = {
-        'proc' => [ String ],
-        'fac'  => [ String ],
-        'level' => [ Levels ]
-      }
-      @rc = Record
-      @no_look_ahead = true
-      @count = 0
-    end
+        super(  name, fn=nil, /^(\w+)\s+\[([^\]]+)\]\s*(.+)/ )
 
-# weblogic logs are (or can be) multiline -- first line consisting of the actual log message
-# followed by subsquent lines that have a traceback
-
-    def gets( l = nil, raw = nil )  # set l for initial read
-
-#pp  @rec[0]
-
-      puts "in Weblogic gets l = #{l}, raw=#{raw} "  if $options['debug.gets']
- 
-      while ( r = super( l ) ) && ! r.level   # until start of next record  	
-	l = nil
+        @Tokens = {
+          'proc' => [ String ],
+          'fac'  => [ String ],
+          'level' => [ Levels ]
+        }
+        @rc = Record
+        @no_look_ahead = true
+        @count = 0
       end
-      return nil unless r # not_eof # unless (defined? @rec[0].level or (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data)  # must be end of file
 
-#        r = @rec[0]
-#	if m = r.data.match( /(.+) +(StackTrace: .+)/).to_a 
-#        if ! r.data.match( /^[A-Z]+/)
-#	  r.data += ": #{m[1]}"
-#	  r.extra_data += "#{m[2]}\n"
-#	end
+  # weblogic logs are (or can be) multiline -- first line consisting of the actual log message
+  # followed by subsquent lines that have a traceback
 
-# pp r unless r.level
+      def gets( l = nil, raw = nil )  # set l for initial read
 
-      r.orec = "#{r.time} #{r.h}: #{Levels_ar[r.level]} [#{r.proc}] '#{r.data}'"
-#      r.orec = "#{r.time} #{r.h}:  '#{r.data}'"
-      pp r if $options['debug.split']
-      return r
+  #pp  @rec[0]
 
-    end
+        puts "in Weblogic gets l = #{l}, raw=#{raw} "  if $options['debug.gets']
 
+        while ( r = super( l ) ) && ! r.level   # until start of next record
+    l = nil
+        end
+        return nil unless r # not_eof # unless (defined? @rec[0].level or (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data)  # must be end of file
 
-    class Record < LogFile::Record
+  #        r = @rec[0]
+  #	if m = r.data.match( /(.+) +(StackTrace: .+)/).to_a
+  #        if ! r.data.match( /^[A-Z]+/)
+  #	  r.data += ": #{m[1]}"
+  #	  r.extra_data += "#{m[2]}\n"
+  #	end
 
-      attr_reader :time, :utime, :h, :fac, :level, :data, :record, :proc, :orec, :extra_data
-      attr_writer  :extra_data, :data, :orec
+  # pp r unless r.level
 
-#      def initialize(raw=nil, pat=nil, split_p=nil)
-#        super(raw, pat, split_p)
-#        @extra_data = ''
-#        return unless raw
-#        all, @utime, @time, @h, @data =  raw.match(pat).to_a
-#      end
+        r.orec = "#{r.time} #{r.h}: #{Levels_ar[r.level]} [#{r.proc}] '#{r.data}'"
+  #      r.orec = "#{r.time} #{r.h}:  '#{r.data}'"
+        pp r if $options['debug.split']
+        return r
 
-      def split
-
-        all,  @level, @proc, d = @data.match(@split_p ).to_a
-
-	if @level and @level = Levels[@level.downcase]
-	  @data = d
-	end
-#STDERR.puts @data unless @level
-#STDERR.puts Levels_ar[@level]
-
-#	@orec = "#{@time} #{@h}: #{Levels_ar[@level]} '#{@data}'"
       end
+
+
+      class Record < Base::Record
+
+        attr_reader :time, :utime, :h, :fac, :level, :data, :record, :proc, :orec, :extra_data
+        attr_writer  :extra_data, :data, :orec
+
+  #      def initialize(raw=nil, pat=nil, split_p=nil)
+  #        super(raw, pat, split_p)
+  #        @extra_data = ''
+  #        return unless raw
+  #        all, @utime, @time, @h, @data =  raw.match(pat).to_a
+  #      end
+
+        def split
+
+          all,  @level, @proc, d = @data.match(@split_p ).to_a
+
+    if @level and @level = Levels[@level.downcase]
+      @data = d
     end
+  #STDERR.puts @data unless @level
+  #STDERR.puts Levels_ar[@level]
+
+  #	@orec = "#{@time} #{@h}: #{Levels_ar[@level]} '#{@data}'"
+        end
+      end
+  end
 end
