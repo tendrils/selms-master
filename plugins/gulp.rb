@@ -1,35 +1,20 @@
-class Gulp
-  # To change this template use File | Settings | File Templates.
-  class Record  < LogFile::Record
+class LogFile
+
+  class Snare::Gulp < Snare
 
   end
 
-
-
-  class Record::Snare  < Record
-    attr_reader :saddr, :upi, :service
-    def split
-      super
-      case @eventiid
-        when 580
-
-        else
-
-      end
-
-    end
-
-    def post_gulp
-    end
+  class Base::Gulp < Base
 
   end
+
 end
 
 class Action
 
   class Gulp < Base
     def produce_reports(processed_hosts)
-  pp processed_hosts
+      pp processed_hosts
     end
 
   end

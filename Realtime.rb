@@ -51,7 +51,7 @@ class Realtime
   def run_it
 #    @thread = Thread.new { 
     files = {}
-    def_logf = LogFile.new('default', nil)
+    def_logf = LogFile::Base.new('default', nil)
     File.open($options['rt_socket'], 'r') { |logs|
       begin
 #puts "getting data\n";
@@ -80,7 +80,7 @@ class Realtime
 
           unless files[hn]
             if f = (host.file['all']) then
-              files[hn] = f.class != Regexp ? f : LogFile.new(@file['all'])
+              files[hn] = f.class != Regexp ? f : LogFile::Base.new(@file['all'])
             end
           end
 
