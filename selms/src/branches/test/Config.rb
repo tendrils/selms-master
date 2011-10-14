@@ -399,7 +399,8 @@ module Config
              file_options['logtype'] = $logtype_classes[tok]
           else
             begin
-              file_options['logtype'] = $logtype_classes[tok] = constantise("FileType::#{tok}").new(tok)
+              file_options['logtype'] = $logtype_classes[tok] = LogFile.type(tok, tok)
+                  #constantise("LogFile::#{tok}").new(tok)
             rescue NameError
               error("bad paramers or unknown action #{tok}: #{e}")
               rest_of_line
@@ -434,7 +435,7 @@ module Config
       @real_time = {}
       @periodic = {}
       @file = {}
-      @file['all'] = {'logtype' => LogFile::Base.new}
+      @file['all'] = {'logtype' => LogFile.type('Base')}
       @converted = false
       @def_email = ''
       @opts = []

@@ -5,16 +5,18 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 
 class LogFile
 
-#  def LogFile.type(base, name = 'default')
-#
-#    constantise(base).new(name)
-#    if $options['sub-type'] != 'default'
-#      begin
-#        constantise("#{base}::#{$options['sub-type']}").new(name)
-#      rescue NameError
-#      end
-#    end
-#  end
+  def LogFile.type(base, name = 'default')
+
+    base = "LogFile::#{base}" unless base.match(/^LogFile::/)
+    lf = constantise(base).new(name)
+    if $options['sub-type'] != 'default'
+      begin
+        constantise("#{base}::#{$options['sub-type']}").new(name)
+      rescue NameError
+        lf
+      end
+    end
+  end
 
 
 
