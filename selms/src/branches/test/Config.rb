@@ -395,12 +395,16 @@ module Config
         else
           test = nil
           tok = tok.capitalize
-          if ! defined? constantise(tok) # known class ?
-            error("bad paramers or unknown action #{tok}: #{e}")
-            rest_of_line
-            errors = @errors = true
+          if $logtype_classes[tok]
+             file_options['logtype'] = $logtype_classes[tok]
           else
-            file_options['logtype'] = $logtype_classes[tok] = LogFile.type(tok, tok)
+            begin
+              file_options['logtype'] = $logtype_classes[tok] = constantise("FileType::#{tok}").new(tok)
+            rescue NameError
+              error("bad paramers or unknown action #{tok}: #{e}")
+              rest_of_line
+              errors = @errors = true
+            end
           end
         end
       end
@@ -430,7 +434,7 @@ module Config
       @real_time = {}
       @periodic = {}
       @file = {}
-      @file['all'] = {'logtype' => LogFile.type('Base').new}
+      @file['all'] = {'logtype' => LogFile::Base.new}
       @converted = false
       @def_email = ''
       @opts = []

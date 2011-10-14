@@ -2,18 +2,19 @@
 
 LOG_BITS = /^([^:]+):\s+(.+)?/
 # token change
+
 class LogFile
 
-  def LogFile.type(base, name = 'default')
-
-    constantise(base).new(name)
-    if $options['sub-type'] != 'default'
-      begin
-        constantise("#{base}::#{$options['sub-type']}").new(name)
-      rescue NameError
-      end
-    end
-  end
+#  def LogFile.type(base, name = 'default')
+#
+#    constantise(base).new(name)
+#    if $options['sub-type'] != 'default'
+#      begin
+#        constantise("#{base}::#{$options['sub-type']}").new(name)
+#      rescue NameError
+#      end
+#    end
+#  end
 
 
 
@@ -31,6 +32,7 @@ The process of parsing the log record has two phases:
      by default we use LOG_BITS 
 
 =end
+
   class Base
 
     attr_reader :Tokens, :name, :rec, :file
@@ -62,17 +64,16 @@ The process of parsing the log record has two phases:
     end
 
 
-
-  =begin rdoc
+=begin rdoc
   gets reads a single logical record
 
   gets collapses multiple identical records and appends a -- repeated n times to the record
     much of the complexity of gets is due to the necessary read ahead to handle this functionality
   gets also will merge records from a number of log files for the same host into time order so that
     records come out interleaved in periodic reports the read ahead is also necessary to support merging
-  =end
+=end
     def gets(l = nil, raw = nil) # set l for initial read
-  =begin rdoc
+=begin rdoc
     _l_ is the index of the file to read (0 unless merging is taking place)  It indicates that this is
     the initial call for a file to do a read ahead for subsquent comparsions.  (But see no_look_ahead)
 
@@ -80,7 +81,7 @@ The process of parsing the log record has two phases:
 
    _no_look_ahead_  tells gets not to read ahead and collaspe mutiple identical records
       used by classes that read multiple physical records for each logical record
-  =end
+=end
 
       puts "Gets:" if  $options['debug.gets']
 
