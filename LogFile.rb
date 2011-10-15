@@ -11,7 +11,7 @@ class LogFile
     lf = constantise(base).new(name)
     if $options['sub-type'] != 'default'
       begin
-        constantise("#{base}::#{$options['sub-type']}").new(name)
+        constantise("#{base}::#{$options['sub-type'].capitalize}").new(name)
       rescue NameError
         lf
       end
