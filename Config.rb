@@ -400,7 +400,6 @@ module Config
           else
             begin
               file_options['logtype'] = $logtype_classes[tok] = LogFile.type(tok, tok)
-                  #constantise("LogFile::#{tok}").new(tok)
             rescue NameError
               error("bad paramers or unknown action #{tok}: #{e}")
               rest_of_line
@@ -774,7 +773,7 @@ module Config
               end
             end
           else
-            error("'#{tok}' is not a valid option for #{head.kind}")
+            error("'#{tok}' is not a valid option for #{@kind}")
         end
       end while expect(';', nil, ANYWHERE, OPTIONAL)
 
@@ -893,7 +892,11 @@ module Config
                   end
                 else
                   value = expect(op_class == 're' ? 're' : t[0])
-                  value = "'#{value}'" if (t[0].to_s == 'String') && (op != '=~') && (op != '!~')
+		  if  value 
+		    value = "'#{value}'" if (t[0].to_s == 'String') && (op != '=~') && (op != '!~')
+		  else
+		    op = 'defined'
+		  end
                 end
                 if op_class == 'string' && t[0] == 'Integer'
                   error("#{op} is valid only with Strings")

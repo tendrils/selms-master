@@ -6,16 +6,15 @@ LOG_BITS = /^([^:]+):\s+(.+)?/
 class LogFile
 
   def LogFile.type(base, name = 'default')
-
     base = "LogFile::#{base}" unless base.match(/^LogFile::/)
-    lf = constantise(base).new(name)
+    lf = constantise(base)
     if $options['sub-type'] != 'default'
       begin
-        constantise("#{base}::#{$options['sub-type'].capitalize}").new(name)
-      rescue NameError
-        lf
+        lf = constantise("#{base}::#{$options['sub-type'].capitalize}")
+      rescue NameError => e
       end
     end
+    lf.new(name)
   end
 
 
@@ -55,14 +54,6 @@ The process of parsing the log record has two phases:
       @no_look_ahead = nil
       @recs = @split_failures = 0
       @rc = Record
-      if $options['sub-type'] != 'default'
-        begin
-          @ST = capitalise(self.class.to_s+"::#{$options['sub-type']}")
-          @ST.process( nil )
-        rescue
-          @ST = nil
-        end
-      end
     end
 
 
@@ -132,9 +123,9 @@ The process of parsing the log record has two phases:
               end
               begin # corrupt offset or eof ??
                 @rec[l] = @rc.new(raw, @head, @split_p)
-              rescue NoMethodError
-                warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
-                next
+#              rescue NoMethodError
+#                warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
+#                next
               end
 
 
