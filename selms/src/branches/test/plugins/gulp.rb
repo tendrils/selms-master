@@ -9,7 +9,11 @@ class LogFile
       'extra' => [String],
       'tag'  => [String],
   }
-
+  
+  class Template
+    class Record
+    end
+  end
   class Template::Gulp < Snare
     def initialize(name=nil, fn=nil )
       super(name, fn)
@@ -31,7 +35,7 @@ class LogFile
   class Snare::Gulp < Snare
     def initialize(name=nil, fn=nil )
       super(name, fn)
-      @tokens.merg!(Tokens)
+      @Tokens.merge!(GulpTokens)
       @rc = Record
       @@strings ||= {
           "Success Audit" => "Success",
@@ -72,8 +76,14 @@ class LogFile
 # Service Information:   Service Name:  FULCRUM$   Service ID:  S-.......
 # Network Information:   Client Address:  ::ffff:130.216.249.41   Client Port:  4648
 #Additional Information:   Ticket Options:  0x40810000   Ticket Encryption Type: 0x17   Failure Code:  0x0   Transited Services: -
+
+
             @type = @eventid == 4770 ? "Renew" : "Auth"
-            @user, @extra, @saddr, @tag = @data.match(/Account Name:\s+ ([^@ ]+)\S*\s+Account Domain:\s+(\S+)\s+(?:Logon ID:\s+(0x9\S+))?/)
+	    if( m =  @data.match(/Account Name:\s+ ([^@ ]+)\S*\s+Account Domain:\s+(\S+)\s+(?:Logon ID:\s+(0x9\S+))?/) ) 
+	      @user, @extra, @saddr, @tag = m.captures if m
+	    else
+	      return
+	    end
           when 4648
 # A logon was attempted using explicit credentials.
 #Additional Information: localhost    Process Information:   Process ID:  0x200   Process Name:  C:\Windows\System32\lsass.exe
@@ -88,7 +98,7 @@ class LogFile
           else
             return
         end
-        @source = "AD-#{@host}"
+        @source = "AD-#{@h}"
       end
     end
 
@@ -97,7 +107,7 @@ class LogFile
   class Base::Gulp < Base
     def initialize(name=nil, fn=nil )
       super(name, fn)
-      @tokens.merg!(Tokens)
+      @Tokens.merge!(GulpTokens)
       @rc = Record
     end
 
