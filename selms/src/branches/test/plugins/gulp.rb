@@ -107,7 +107,7 @@ class LogFile
     end
 
     class Record < Base::Record
-      attr_reader :user, :saddr, :source, :service, :extra, :tag
+      attr_reader :user, :saddr, :shost, :service, :extra, :tag
 
       def split
         super
@@ -128,6 +128,13 @@ end
 class Action
 
   class Gulp < Base
+
+    def do_periodic (type, host, rec, msg)
+      r = host.recs[type] ||= []
+      r << [orec.guser, orec.saddr, orec.shost, orec.service, orec.extra, orec.tag].join("\t")
+    end
+
+
     def produce_reports(processed_hosts)
       pp processed_hosts
     end

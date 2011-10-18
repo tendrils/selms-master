@@ -18,11 +18,11 @@ class Action
 
     def do_periodic (type, host, rec, msg)
       r = host.recs[type] ||= []
-      r << rec.orec + msg ? " - #{msg}" : ''
+      r << rec.orec + (msg ? " - #{msg}" : '' )
     end
 
     def do_realtime (type, host, rec, msg)
-      host.recs[type] << rec.orec + msg ? " - #{msg}" : ''
+      host.recs[type] << rec.orec + (msg ? " - #{msg}" : '')
     end
 
     def async_send(host, type, rec, data)
@@ -57,7 +57,7 @@ class Action
         em = "-#{host.file[rec.fn]['email']}"
       end
       r = host.recs[type+em] = [] unless r = host.recs[type+em]
-      r << rec.orec + msg ? " - #{msg}" : ''
+      r << rec.orec + (msg ? " - #{msg}" : '')
     end
 
     def do_realtime (type, host, rec, msg = nil)
