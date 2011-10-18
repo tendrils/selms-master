@@ -203,16 +203,14 @@ module Codegen
         case event[0]
         when 'drop', 'ignore'
           ret += "return true\n"
-        when 'alert', 'warn'
-#        a += "alert( #{y}, rec.fn, rec.orec )\n"
+        when 'alert', 'warn', 'report'
           msg = event[1] ? "'#{event[1]}'" : 'nil';
-          a += "#{event[0]}(  rec.orec,  rec.fn, #{msg} )\n"
+          a += "#{event[0]}(  rec, #{msg} )\n"
         when 'switch' 
-	        a += "@rule_set = \"_#{event[1]}\"\n"
-	        a += "default(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
-        when 'warn'
-#          a += "warn( #{y}, rec.fn, rec.orec )\n"
-          a += "warn(  rec.orec,  rec.fn, msg )\n"
+	        a += %Q|@rule_set = "_#{event[1]}"\n|
+	        a += %Q|default(nil, "  ********** switching rule sets to #{event[1]} ******* ")\n|
+        when 'default'
+          a += "default( rec, msg )\n"
         when 'count'
           a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
                 "    @count[x].incr(rec.count)\n"
@@ -300,13 +298,13 @@ module Codegen
      code <<  "    #{scanner}\n"
      if $run_type == 'periodic' then
        code <<  "    rescue NoMethodError=>e\n"
-       code <<  "      default( e )\n"
+       code <<  "      default(nil, e )\n"
        code <<  "      if ( errors += 1 ) > 10 then\n"
-       code <<  "        default( \"Too many errors -- giving up!\"  )\n"
+       code <<  "        default(nil, \"Too many errors -- giving up!\"  )\n"
        code <<  "        return nil\n"
        code <<  "      end\n"
        code <<  "    end\n"
-       code <<  "     default( rec.orec, rec.fn )\n"
+       code <<  "     default( rec )\n"
      else
        code <<  "    end\n"
      end
