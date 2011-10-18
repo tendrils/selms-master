@@ -16,16 +16,16 @@ class Action
 
 # default alert/warning routines...
 
-    def do_periodic (type, host, file, msg)
+    def do_periodic (type, host, rec, msg)
       r = host.recs[type] ||= []
-      r << msg
+      r << rec.orec + msg ? " - #{msg}" : ''
     end
 
-    def do_realtime (type, host, file, msg)
-      host.recs[type] << msg
+    def do_realtime (type, host, rec, msg)
+      host.recs[type] << rec.orec + msg ? " - #{msg}" : ''
     end
 
-    def async_send(host, type, file, data)
+    def async_send(host, type, rec, data)
     end
 
     def produce_reports(processed_hosts)
@@ -36,10 +36,10 @@ class Action
   end
 
   class Ignore < Action::Base
-    def do_periodic (type, host, file, msg)
+    def do_periodic (type, host, rec, msg)
     end
 
-    def do_realtime (type, host, file, msg)
+    def do_realtime (type, host, rec, msg)
     end
 
   end
@@ -50,16 +50,17 @@ class Action
       super
     end
 
-    def do_periodic (type, host, file, msg)
+    def do_periodic (type, host, rec, msg)
       em = ''
+
       if host.file[file] && host.file[file]['email']
-        em = "-#{host.file[file]['email']}"
+        em = "-#{host.file[rec.fn]['email']}"
       end
       r = host.recs[type+em] = [] unless r = host.recs[type+em]
-      r << msg
+      r << rec.orec + msg ? " - #{msg}" : ''
     end
 
-    def do_realtime (type, host, msg, file, rec = nil)
+    def do_realtime (type, host, rec, msg = nil)
       if $bucket[type] then
         data = $bucket[type]
       else
