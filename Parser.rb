@@ -208,7 +208,7 @@ module Parser
           @@token = what
         end
       when 'Regexp' then
-        @@token = ((defined? $1) ? $1 : true) if @@line.sub!(what, '')
+        @@token = ((defined? $1) ? $1 : nil) if @@line.sub!(what, '')
       when 'Proc'
         r = what.call
       when 'Array'
