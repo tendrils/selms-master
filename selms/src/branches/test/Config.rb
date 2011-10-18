@@ -878,8 +878,12 @@ module Config
             if t = tokens[tok] # it is a custom attribute
               value = nil
               op = expect(/^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional) || '=='
+
+              if ! op
+                # must be a boolean test
+
 #              puts "tok #{tok} op #{op}" unless op == '=='
-              if op_class = OPS[op] then
+              elsif op_class = OPS[op] then
                 if expect('(', '(', SAME_LINE, Optional) then # it is a range
                   (v1 = expect(t[0])) && expect('..') && (v2 = expect(t[0]))
                   if defined? v2 then
@@ -892,11 +896,7 @@ module Config
                   end
                 else
                   value = expect(op_class == 're' ? 're' : t[0])
-		  if  value 
-		    value = "'#{value}'" if (t[0].to_s == 'String') && (op != '=~') && (op != '!~')
-		  else
-		    op = 'defined'
-		  end
+                  value = "'#{value}'" if (t[0].to_s == 'String') && (op != '=~') && (op != '!~')
                 end
                 if op_class == 'string' && t[0] == 'Integer'
                   error("#{op} is valid only with Strings")
