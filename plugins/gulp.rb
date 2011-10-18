@@ -131,7 +131,7 @@ class Action
 
     def do_periodic (type, host, rec, msg)
       r = host.recs[type] ||= []
-      r << [orec.guser, orec.saddr, orec.shost, orec.service, orec.extra, orec.tag].join("\t")
+      r << [rec.guser, rec.saddr, rec.shost, rec.service, rec.extra, rec.tag].join("\t")
     end
 
 
