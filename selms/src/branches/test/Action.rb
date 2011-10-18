@@ -17,7 +17,7 @@ class Action
 # default alert/warning routines...
 
     def do_periodic (type, host, file, msg)
-      r = host.recs[type] = [] unless r = host.recs[type]
+      r = host.recs[type] ||= []
       r << msg
     end
 

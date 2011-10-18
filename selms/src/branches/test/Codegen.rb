@@ -51,7 +51,7 @@ module Codegen
 #    %W( alert warn report default ).each { |type|
      Action.events.each_key { |type|
       next unless a = actions.assoc( "#{pre}#{type}" )
-      code += "  def #{type}(rec, file = nil, msg=nil)\n"
+      code += "  def #{type}(rec, msg=nil)\n"
       this_action = 'ACTION'
       acc_code = ''
 #code << "puts \"#{type}  \#{rec}\"\n"
@@ -70,18 +70,19 @@ module Codegen
             warn( "useless use of accumulate outside realtime processing for host #{name}")
 	  end
 	else  # it is an action class
-          if ! @action_classes[action[0]] then
-	          eval "$run.add_action_class('#{action[0]}', Action::#{action[0].capitalize}.new(#{action[1]})) "
-          end
-	  this_action = "$run.action_class('#{action[0]}')"  
+    if ! @action_classes[action[0]] then
+      eval "$run.add_action_class('#{action[0]}', Action::#{action[0].capitalize}.new(#{action[1]})) "
+    end
+	  this_action = "$run.action_class('#{action[0]}')"
+
+
 	  if @run_type == 'realtime'
-            code << "     if  $bucket[self.name+'-#{type}'] then\n"
+      code << "     if  $bucket[self.name+'-#{type}'] then\n"
 #	    code << "       $bucket[self.name+'-#{type}'] << (msg || rec)\n"
-	    code << "       $bucket[self.name+'-#{type}'] << ( rec)\n"
+	    code << "       $bucket[self.name+'-#{type}'] << ( rec )\n"
 	    code << "     else\n"
 	  end
-          code << '       rec << " - #{msg}"  if msg ' +"\n"
-	  code << "       $run.action_class('#{action[0]}').do_#{@run_type}('#{type}', self, file, rec )\n"
+	  code << "       $run.action_class('#{action[0]}').do_#{@run_type}('#{type}', self, rec, msg )\n"
 	  code << "     end\n" if @run_type == 'realtime'
         end
       }
@@ -208,7 +209,7 @@ module Codegen
           a += "#{event[0]}(  rec.orec,  rec.fn, #{msg} )\n"
         when 'switch' 
 	        a += "@rule_set = \"_#{event[1]}\"\n"
-	        a += "report(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
+	        a += "default(\"  ********** switching rule sets to #{event[1]} ******* \")\n"
         when 'warn'
 #          a += "warn( #{y}, rec.fn, rec.orec )\n"
           a += "warn(  rec.orec,  rec.fn, msg )\n"
@@ -299,9 +300,9 @@ module Codegen
      code <<  "    #{scanner}\n"
      if $run_type == 'periodic' then
        code <<  "    rescue NoMethodError=>e\n"
-       code <<  "      report( e )\n"
+       code <<  "      default( e )\n"
        code <<  "      if ( errors += 1 ) > 10 then\n"
-       code <<  "        report( \"Too many errors -- giving up!\"  )\n"
+       code <<  "        default( \"Too many errors -- giving up!\"  )\n"
        code <<  "        return nil\n"
        code <<  "      end\n"
        code <<  "    end\n"

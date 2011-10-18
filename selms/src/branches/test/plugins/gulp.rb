@@ -1,10 +1,10 @@
 class LogFile
 
   GulpTokens = {
-      'user' =>  [String],
+      'guser' =>  [String],
       'type' => [String],
       'saddr' => [String],
-      'source'  => [String],
+      'shost'  => [String],
       'service' => [String],
       'extra' => [String],
       'tag'  => [String],
@@ -22,7 +22,7 @@ class LogFile
     end
 
     class Record < Template::Record
-      attr_reader :user, :saddr, :source, :service, :extra, :tag
+      attr_reader :guser, :saddr, :shost, :service, :extra, :tag
 
       def split
         super
@@ -41,16 +41,11 @@ class LogFile
           "Success Audit" => "Success",
           "Failure Audit" => "Failure",
           "" => "",
-          "" => "",
-          "" => "",
-          "" => "",
-          "" => "",
-          "" => "",
       }
     end
 
     class Record < Snare::Record
-      attr_reader :type, :user, :status, :saddr, :source, :service, :extra, :tag
+      attr_reader :type, :guser, :status, :saddr, :shost, :service, :extra, :tag
 
       def split
         super
@@ -68,7 +63,7 @@ class LogFile
 # Service Ticket Request:     User Name: rbal055@AD.EC.AUCKLAND.AC.NZ    User Domain: AD.EC.AUCKLAND.AC.NZ
 # Service Name: rbal055     Service ID: -     Ticket Options: 0x800000  Ticket Encryption Type: -
 # Client Address: 130.216.100.53     Failure Code: 0x1B     Logon GUID: - Transited Services: -        1850366
-            @user, @extra, $saddr =
+            @guser, @extra, $saddr =
               $data.match(/User Name:\s+(\S+)@(\S).*\s+Client Address:\s*(\S+)/).captures
           when 4768, 4769, 4770, 6424, 6425  # kerberos
 # A Kerberos authentication ticket (TGT) was requested.
@@ -79,17 +74,17 @@ class LogFile
 
 
             @type = @eventid == 4770 ? "Renew" : "Auth"
-	    if( m =  @data.match(/Account Name:\s+ ([^@ ]+)\S*\s+Account Domain:\s+(\S+)\s+(?:Logon ID:\s+(0x9\S+))?/) ) 
-	      @user, @extra, @saddr, @tag = m.captures if m
-	    else
-	      return
-	    end
+            if( m =  @data.match(/Account Name:\s+ ([^@ ]+)\S*\s+Account Domain:\s+(\S+)\s+(?:Logon ID:\s+(0x9\S+))?/) )
+              @guser, @extra, @saddr, @tag = m.captures if m
+            else
+              return
+            end
           when 4648
 # A logon was attempted using explicit credentials.
 #Additional Information: localhost    Process Information:   Process ID:  0x200   Process Name:  C:\Windows\System32\lsass.exe
 #Network Information:   Network Address: 130.216.12.42   Port:   22380
             @type = 'Log on'
-            @user, @extra, @saddr = @data.match(/Network Address: (\S+)/).captures
+            @guser, @extra, @saddr = @data.match(/Network Address: (\S+)/).captures
           when 4634
 #An account was logged off.
 #Subject:   Security ID:  S-1-5-21-614565923-1027956908-3001582966-27992   Account Name:  SCCMGRPRD03$   Account Domain:  UOA   Logon ID:  0x520bc4b1    Logon Type:   3
@@ -98,7 +93,7 @@ class LogFile
           else
             return
         end
-        @source = "AD-#{@h}"
+        @shost = "AD-#{@h}"
       end
     end
 
