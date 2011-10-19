@@ -74,7 +74,7 @@ module Config
         end
       end
     rescue NameError
-      error("unknown #{q_name}")
+      error("unknown plugin #{q_name}")
     rescue SyntaxError, StandardError =>e
       error("bad paramers for #{q_name}(#{params}): #{e}")
     end
@@ -875,14 +875,14 @@ module Config
             end
             recover(/,|:/, SAME_LINE) unless ok
           else
+
             if t = tokens[tok] # it is a custom attribute
               value = nil
-              op = expect(/^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional) || '=='
+              op = expect(/^([!?=<>~]{1,2})/, 'operator', SAME_LINE, Optional) || '=='
 
-              if ! op
+              if op == '?'
                 # must be a boolean test
-
-#              puts "tok #{tok} op #{op}" unless op == '=='
+                conditions << [tok]
               elsif op_class = OPS[op] then
                 if expect('(', '(', SAME_LINE, Optional) then # it is a range
                   (v1 = expect(t[0])) && expect('..') && (v2 = expect(t[0]))
@@ -913,6 +913,7 @@ module Config
               rest_of_line
             end
         end
+
       end while (tok = nextT(SAME_LINE)) && (tok == '&')
 
       if tok && tok != ':' then

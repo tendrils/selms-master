@@ -175,7 +175,9 @@ module Codegen
 	            c += "m_data[#{cond[1]}] #{cond[2]}  '#{cond[3]}' "
             end
           else
-            if cond[2] == '=~' || cond[2] == '!~'
+            if ! cond[2]
+              c <<  "rec.#{cond[0]} "
+            elsif cond[2] == '=~' || cond[2] == '!~'
               c << "! " if cond[2] == '!~'
               c += "m_data = rec.#{cond[0]}.match(#{cond[1]})"
             else

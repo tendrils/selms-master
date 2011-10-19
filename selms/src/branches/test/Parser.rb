@@ -208,7 +208,7 @@ module Parser
           @@token = what
         end
       when 'Regexp' then
-        @@token = ((defined? $1) ? $1 : true) if @@line.sub!(what, '')
+        @@token = ((defined? $1) ? $1 : true ) if @@line.sub!(what, '')
       when 'Proc'
         r = what.call
       when 'Array'
@@ -241,7 +241,7 @@ module Parser
 
     # have fallen though -- must not have found what we were looking for
     error("Expecting #{descr}") unless optional
-
+    nil
   end
 
 #

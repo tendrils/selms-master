@@ -147,11 +147,20 @@ OptionParser.new { |opts|
 
   plugins_dir = Dir.new(d) 
 
+  deferred = []
   if plugins_dir then
     files = plugins_dir.entries.grep(/.+\.rb$/)
-    files.each { |file| 
+    files.each do |file|
+      begin
+        require "#{d}/#{file}"
+      rescue NameError
+        deferred << file
+      end
+    end
+
+    deferred.each do |file|
       require "#{d}/#{file}"
-    }
+    end
   end
 }
 
