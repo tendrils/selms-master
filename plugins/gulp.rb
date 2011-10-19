@@ -17,7 +17,7 @@ class LogFile
   class Template::Gulp < Snare
     def initialize(name=nil, fn=nil )
       super(name, fn)
-      @tokens.merg!(Tokens)
+      @Tokens.merge!(GulpTokens)
       @rc = Record
     end
 
