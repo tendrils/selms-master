@@ -82,10 +82,12 @@ class LogFile
 
         def split
 
-          @level, @proc, d = @data.match(@split_p ).captures
+          if m =@data.match(@split_p )
+            @level, @proc, d = m.captures
 
-          if @level and @level = Levels[@level.downcase]
-            @data = d
+            if @level and @level = Levels[@level.downcase]
+              @data = d
+            end
           end
         end
       end
