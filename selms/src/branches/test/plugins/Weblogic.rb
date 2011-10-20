@@ -54,7 +54,7 @@ class LogFile
         puts "in Weblogic gets l = #{l}, raw=#{raw} "  if $options['debug.gets']
 
         while ( r = super( l ) ) && ! r.level   # until start of next record
-    l = nil
+          l = nil
         end
         return nil unless r # not_eof # unless (defined? @rec[0].level or (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data)  # must be end of file
 
@@ -80,24 +80,13 @@ class LogFile
         attr_reader :time, :utime, :h, :fac, :level, :data, :record, :proc, :orec, :extra_data
         attr_writer  :extra_data, :data, :orec
 
-  #      def initialize(raw=nil, pat=nil, split_p=nil)
-  #        super(raw, pat, split_p)
-  #        @extra_data = ''
-  #        return unless raw
-  #        all, @utime, @time, @h, @data =  raw.match(pat).to_a
-  #      end
-
         def split
 
-          all,  @level, @proc, d = @data.match(@split_p ).to_a
+          @level, @proc, d = @data.match(@split_p ).captures
 
-    if @level and @level = Levels[@level.downcase]
-      @data = d
-    end
-  #STDERR.puts @data unless @level
-  #STDERR.puts Levels_ar[@level]
-
-  #	@orec = "#{@time} #{@h}: #{Levels_ar[@level]} '#{@data}'"
+          if @level and @level = Levels[@level.downcase]
+            @data = d
+          end
         end
       end
   end
