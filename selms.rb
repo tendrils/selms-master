@@ -147,18 +147,9 @@ OptionParser.new { |opts|
 
   plugins_dir = Dir.new(d) 
 
-  deferred = []
   if plugins_dir then
-    files = plugins_dir.entries.grep(/.+\.rb$/)
+    files = plugins_dir.entries.grep(/.+\.rb$/).sort
     files.each do |file|
-      begin
-        require "#{d}/#{file}"
-      rescue NameError
-        deferred << file
-      end
-    end
-
-    deferred.each do |file|
       require "#{d}/#{file}"
     end
   end
@@ -258,7 +249,7 @@ put "watch_it exited"
       #        .close
       $logs = LogRecs.new( log_source )
     end
-    new_rt = Realtime.new( new_conf )
+    new_rt = Realtime.new() # new_conf )
     
     if new_rt.report.code != rt.report_code or
 	new_rt.scan.code != rt.scan_code then  # changes affect RT
