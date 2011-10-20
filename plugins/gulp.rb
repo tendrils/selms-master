@@ -130,13 +130,13 @@ class LogFile
       def split
         super
         # do stuff with data
-        @service, @guser, @saddr = @data.match(/^(\d+) .+ Relying party request: ([^,]+), User: ([^,]+), IP Address: ([0-9.]+)/).captures
-        if @saddr
+        if m =  @data.match(/^(\d+) .+ Relying party request: ([^,]+), User: ([^,]+), IP Address: ([0-9.]+)/)
+          @service, @guser, @saddr = m.captures
           @service = nil if @service == "The University of Auckland"
           @status = 'Success'
           @type = 'auth';
-        else
-          @guser =  @data.match( /User authentication for (\S+) failed$/).captures
+        elsif m = @data.match( /User authentication for (\S+) failed$/).to_a
+          @guser = m[1]
           @status = 'Failure'
           @type = 'auth';
         end

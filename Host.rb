@@ -233,6 +233,8 @@ class Host
 
     puts "in Host::pscan #{hostname}" if $options['debug.hosts']
 
+    return if self.methods.grep(@rule_set).size == 0
+
     @logf = []
 
     if File.directory?(log_dir)
