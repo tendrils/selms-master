@@ -4,6 +4,7 @@ class LogFile
       'guser' =>  [String],
       'type' => [String],
       'saddr' => [String],
+      'status' => [String],
       'shost'  => [String],
       'service' => [String],
       'extra' => [String],
@@ -14,7 +15,7 @@ class LogFile
     class Record
     end
   end
-  class Template::Gulp < Snare
+  class Template::Gulp < Base
     def initialize(name=nil, fn=nil )
       super(name, fn)
       @Tokens.merge!(GulpTokens)
@@ -22,7 +23,7 @@ class LogFile
     end
 
     class Record < Template::Record
-      attr_reader :guser, :saddr, :shost, :service, :extra, :tag
+      attr_reader :type, :guser, :status, :saddr, :shost, :service, :extra, :tag
 
       def split
         super
@@ -107,7 +108,7 @@ class LogFile
     end
 
     class Record < Base::Record
-      attr_reader :user, :saddr, :shost, :service, :extra, :tag
+      attr_reader :type, :guser, :status, :saddr, :shost, :service, :extra, :tag
 
       def split
         super
@@ -117,6 +118,21 @@ class LogFile
             else
 
           end
+        elsif @proc == 'cosignd'
+          @shost =  'COSIGN'
+          @guser, @extra, @saddr, @servic = rest.match( / REGISTER (\S+) \S+ ([.0-9]+) (\S+)/).captures
+          @status = 'Success'
+          @type = 'Renew'
+        elsif @proc = 'cgi.c'
+          @shost =  'COSIGN'
+          @saddr, rest = @data.match( /\[([.0-9]+)\] (.+)/ ).captures
+          if (@guser = rest.match( /^Successfully loaded a remember-me session for (\S+)\// ).captures)
+            @status = 'Success'
+            @type = 'Authenticate'
+          elsif rest.match(/^Username and\/or password incorrect/ )
+            @status = 'Failure'
+            @type = 'Authenticate'
+          end
         end
         # do stuff with data
       end
@@ -124,6 +140,35 @@ class LogFile
   end
 
 end
+
+class Weblogic::Gulp < Weblogic
+  def initialize(name=nil, fn=nil )
+    super(name, fn)
+    @Tokens.merge!(GulpTokens)
+    @rc = Record
+  end
+
+  class Record < Weblogic::Record
+    attr_reader :type, :guser, :status, :saddr, :shost, :service, :extra, :tag
+
+    def split
+      super
+      # do stuff with data
+      @service, @guser, @saddr = @data.match(/^(\d+) .+ Relying party request: ([^,]+), User: ([^,]+), IP Address: ([0-9.]+)/).captures
+      if @saddr
+        @service = nil if @service == "The University of Auckland"
+        @status = 'Success'
+        @type = 'auth';
+      else
+        @guser =  @data.match( /User authentication for (\S+) failed$/).captures
+        @status = 'Failure'
+        @type = 'auth';
+      end
+    end
+  end
+
+end
+
 
 class Action
 
@@ -141,3 +186,4 @@ class Action
 
   end
 end
+
