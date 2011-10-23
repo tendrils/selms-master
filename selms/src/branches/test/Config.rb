@@ -428,7 +428,7 @@ module Config
       @kind = 'host' if @kind == 'app'
 
 #        @services = {}
-      @actions = MyList.new
+      @actions = $global.actions || MyList.new
       real_time = MyList.new
       periodic = MyList.new
       @real_time = {}
