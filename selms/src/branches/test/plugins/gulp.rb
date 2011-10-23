@@ -96,14 +96,14 @@ class LogFile
             else
 
           end
-        elsif @proc == 'cosignd'
+        elsif @proc == 'cosignd' and ( m = @data.match( / REGISTER (\S+) \S+ ([.0-9]+) (\S+)/))
           @shost =  'COSIGN'
-          @guser, @extra, @saddr, @servic = @data.match( / REGISTER (\S+) \S+ ([.0-9]+) (\S+)/).captures
+          @guser, @extra, @saddr, @service = m.captures
           @status = 'Success'
           @type = 'Renew'
-        elsif @proc == 'cgi.c'
+        elsif @proc == 'cgi.c' and (m = @data.match( /\[([.0-9]+)\] (.+)/ ))
           @shost =  'COSIGN'
-          @saddr, rest = @data.match( /\[([.0-9]+)\] (.+)/ ).captures
+          @saddr, rest = m.captures
           if (@guser = rest.match( /^Successfully loaded a remember-me session for (\S+)\// ).captures)
             @status = 'Success'
             @type = 'Authenticate'
