@@ -231,9 +231,9 @@ class Host
 
   def pscan(log_dir, hostname)
 
-    puts "in Host::pscan #{hostname}" if $options['debug.hosts']
-
     return if self.methods.grep(@rule_set).size == 0
+
+    puts "in Host::pscan #{hostname}" if $options['debug.hosts']
 
     @logf = []
 

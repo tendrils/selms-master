@@ -98,7 +98,7 @@ class LogFile
           end
         elsif @proc == 'cosignd'
           @shost =  'COSIGN'
-          @guser, @extra, @saddr, @servic = rest.match( / REGISTER (\S+) \S+ ([.0-9]+) (\S+)/).captures
+          @guser, @extra, @saddr, @servic = @data.match( / REGISTER (\S+) \S+ ([.0-9]+) (\S+)/).captures
           @status = 'Success'
           @type = 'Renew'
         elsif @proc == 'cgi.c'
