@@ -120,6 +120,7 @@ class Host
     @name = conf.name.dup
     @ignore = conf.ignore
     @priority = conf.priority
+    @process_time_limit = conf.process_time_limit
     @count = {}
     @email = conf.def_email
 #    @action_classes = {}

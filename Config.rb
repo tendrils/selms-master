@@ -333,7 +333,7 @@ module Config
 
     attr_reader :services, :converted, :actions, :patterns, :real_time, :merge_files,
                 :periodic, :file, :def_email, :sms, :page, :ignore, :pattern, :logtype,
-                :priority
+                :priority, :process_time_limit
     attr_writer :converted, :actions, :patterns, :real_time,
                 :periodic, :file, :logtype
 
