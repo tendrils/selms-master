@@ -482,7 +482,10 @@ module Config
               @file[name] = true
             end
           when 'limit'
-            @process_time_limit = expect('Integer', "max seconds processing", SAME_LINE)
+            if expect('=>', nil, ANYWHERE, OPTIONAL)
+              @process_time_limit = expect('Integer', "max seconds processing", SAME_LINE)
+            end
+
           else
             if @kind == 'service' &&
                 (t = @file['all']['logtype'].Tokens[tok])[1] == 'options' then
