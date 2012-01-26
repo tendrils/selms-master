@@ -359,6 +359,7 @@ module Config
       @merge_files = $options['merge'] == 'yes'
       @priority = 0
       @feeds = [] # tell syslog-ng to add filter for this host to these output feeds
+      @process_time_limit = nil
 
       super(head, false) # tell Section that we will handle subsections
 
@@ -480,6 +481,8 @@ module Config
             else
               @file[name] = true
             end
+          when 'limit'
+            @process_time_limit = expect('Integer', "max seconds processing", SAME_LINE)
           else
             if @kind == 'service' &&
                 (t = @file['all']['logtype'].Tokens[tok])[1] == 'options' then
