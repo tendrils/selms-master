@@ -247,7 +247,7 @@ class Host
 
     log_files(log_dir, @logf) do |lf|
       begin
-        Timeout.timeout($options['timeout']) do
+        Timeout.timeout(@process_time_limit || $options['timeout']) do
 
           while @rec = lf.gets
             pp '', "final split", @rec if $options['debug.split']
