@@ -246,9 +246,10 @@ class Host
       return nil
     end
 
+    limit = @process_time_limit || $options['timeout']
     log_files(log_dir, @logf) do |lf|
       begin
-        Timeout.timeout(@process_time_limit || $options['timeout']) do
+        Timeout.timeout(limit) do
 
           while @rec = lf.gets
             pp '', "final split", @rec if $options['debug.split']
@@ -264,7 +265,7 @@ class Host
         end
 
       rescue Timeout::Error
-        STDERR.puts "A file for #{hostname} took too long to process!  Terminated"
+        STDERR.puts "A file for #{hostname} took too more than #{limit} seconds to process!  Terminated"
         lf.abort
         _post_default() # run any post code
       end
