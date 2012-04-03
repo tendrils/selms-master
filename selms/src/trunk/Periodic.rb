@@ -43,12 +43,14 @@ include Codegen
     # walk the log tree 
       $log_store.traverse do | dir_name, mach|
         begin
-	        process_host( dir_name, mach )
+	  process_host( dir_name, mach )
         rescue RunOutMemory
           @action_classes.each{ |key, act_cla|
             act_cla.produce_reports(@processed_hosts)
           }
           @processed_hosts.keys.each{|host| @processed_hosts.delete(host) }
+	rescue =>e
+	  STDERR.puts "something failed for #{dir_name}/#{mach}: #{e} \n" 
         end
 
       end
