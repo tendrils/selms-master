@@ -62,7 +62,7 @@ class Action
 
     def async_mail(host, type, data)
       $threads.push Thread.new {
-        smtp = Mail.new($options['mail_server'], "SELMS <security-alert@auckland.ac.nz>")
+        smtp = Mail.new($options['mail_server'], "SELMS <#{$options['mail_from']}>")
 
         begin
 #	smtp.send( host.email, "SELMS #{type} from #{host.name}", data )
@@ -292,7 +292,7 @@ From: #{@from}
 HDRS
 
     send_message(hdrs + data.join("\n") + ".\n", @from, *to_array)
-  rescue Net::SMTPFatalError, Net::SMTPSyntaxError
+  rescue Net::SMTPFatalError, Net::SMTPSyntaxError, Timeout::Error
     if $! =~ /virtual alias table/ then
       retries += 1
       STDERR.puts "mail failed #{retries} for #{to}:#{$!}"

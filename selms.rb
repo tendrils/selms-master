@@ -38,6 +38,7 @@ $options = {   # defaults
            'post' => nil,
            'lock' => nil,
 	   'mail_to' => nil,
+	   'mail_from' => "security-alert@auckland.ac.nz",
 	   'mail_server' => nil,
  	   'mail_subject' => 'SELMS Periodic Report',
 	   'no_mail' => nil,
@@ -80,6 +81,8 @@ OptionParser.new { |opts|
     $options['no_write_offset'] = val  }
   opts.on('-m', '--mail_to=MAIL_TO', String, "send all mail to ARG") {|val|
     $options['mail_to'] = val}
+  opts.on('-f', '--mail_from=MAIL_FROM', String, "address to use as from for email") {|val|
+    $options['mail_from'] = val}
   opts.on('-L', '--lock=LOCK_FILE', String, "name of lock file") {|val|
     $options['lock'] = val}
   opts.on('--mail_server=MAIL_SERVER', String, "send mail via ARG") {|val|
