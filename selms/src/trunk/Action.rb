@@ -273,7 +273,15 @@ class Mail < Net::SMTP
         finish
       end
     else
-      start(server, *args)
+      begin
+	start(server, *args)
+      rescue Timeout::Error
+	retries += 1
+	STDERR.puts "mail failed #{retries} for #{to}:#{$!}"
+	sleep(10)
+	reset
+	retry if retries <= 2
+      end
     end
   end
 
@@ -296,7 +304,7 @@ HDRS
     if $! =~ /virtual alias table/ then
       retries += 1
       STDERR.puts "mail failed #{retries} for #{to}:#{$!}"
-      spleep(10)
+      sleep(10)
       reset
       retry if retries <= 2
     end
