@@ -27,7 +27,7 @@ class Wli < LogFile
     @Tokens = {
         'app' => [String],
         'level' => [Levels],
-        'proglocation' => [String]
+        'location' => [String]
     }
     @rc = Record
     @no_look_ahead = true

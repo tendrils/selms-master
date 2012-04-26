@@ -36,6 +36,7 @@ include Codegen
   
     start_code( 'periodic', @hosts, @host_patterns )
 
+
     return if syntax  # dont run stuff if it is just a syntax check...
 
     @processed_hosts = {}
@@ -63,6 +64,7 @@ include Codegen
 
   def process_host (dir_name, mach)
     priority = -1
+
     unless host = @hosts[mach] then
       puts "host-match debug:#{mach}" if $options['debug.host-match']
       @host_patterns.each { |name, h|

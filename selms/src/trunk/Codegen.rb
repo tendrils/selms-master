@@ -13,9 +13,12 @@ module Codegen
     # define a new class for each host.  The class inheirits from Host and 
     # defines host specific scanning and alerting methods
 
+#    puts "start_code -- one host: #{$options['one_host']}" if $options['one_host'] 
+
     $hosts.each { |name, h| 
+#      puts "start_code -- name: #{name} -- #{$options['one_host'] == name}" if $options['one_host'] 
       if name =~ /^default/ || ! $options['one_host'] ||
-           ($options['one_host'].class == Regexp ||$options['one_host'].match(name)) || $options['one_host'] == name then
+           ($options['one_host'].class == Regexp || $options['one_host'].match(name)) || $options['one_host'] == name then
 	      make_host_class( h, hosts, @run_type )
       end
    }
