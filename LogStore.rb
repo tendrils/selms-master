@@ -26,18 +26,18 @@ class LogStore
     return nil if defined? @done
 
     Find.find(@root) { |filename|
-
       mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
       next if !mach
-
       mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
+
+      mach.downcase!
 
       if $options['one_host'] &&
           (($options['one_host'].class == String && $options['one_host'] != mach) ||
               (!$options['one_host'].match(mach))) then
         Find::prune
       end
-	    mach.downcase!
+
       rest = $1 if filename =~ %r|^#{@root}/[^/]+/(.*)|o;
       next unless  rest;
       if rest =~ %r|^(\d{4})-(\d\d)$| then
