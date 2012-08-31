@@ -68,6 +68,7 @@ module Config
             tmp = Global.new(head)
           else
             $global = Global.new(head)
+	    $services = $global.services if $global.services.size > 0
           end
         when 'service'
           if $services[head.name] then
@@ -208,7 +209,7 @@ module Config
       @name = head.name
       @sectionstart = head.sectionstart
       @errors = 0
-
+# puts "Section #{self.class}: #{head.kind} #{head.name}"
       get_options if head.options
 
       if !expect('{') then
@@ -293,15 +294,15 @@ module Config
 
     def initialize(head)
       @vars = {}
-#	@services = {};
+      @services = {};
       @actions = MyList.new
       return super(head)
     end
 
-
     def sub_sections(kind)
       {'actions' => ['name', ActionList, @actions],
-       #	  'service'     => ['name', HostService, @services]
+	'service'     => ['name', HostService, ($global ? @services : $services) ]
+#	'service'     => ['name', HostService, $services ]
       }[kind]
     end
 
@@ -881,7 +882,7 @@ module Config
           when 'proc'
             params = nil
             if p = expect(/^(\w+)/) then
-              params = expect(/\(([^)]+)\)/)
+              params = expect(/\(([^)]+)\)/, 'parameters', SAME_LINE, Optional)
               if Procs.method_defined?( p.to_s )
                 actions.push(['proc', p, params])
               else
