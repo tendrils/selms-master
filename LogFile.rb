@@ -167,7 +167,7 @@ gets also will merge records from a number of log files for the same host into t
       r.count = count
       if count > 1      
         if ! r.orec  # something broken in the parsing
-          STDERR.puts "Parsing problems in file #{@fn} for host #{@rec[0].h} parser #{@rc}- aborting this file"
+          STDERR.puts "Parsing problems in file #{@fn[l]} for host #{@rec[0].h} parser #{@rc}- aborting this file"
           return nil
         end
 
