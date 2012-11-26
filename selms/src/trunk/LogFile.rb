@@ -132,6 +132,7 @@ gets also will merge records from a number of log files for the same host into t
 
 	    if @no_look_ahead   # we have the record just return
 	      puts "gets: no_look_ahead return '#{@rec[l].data}'" if (defined? @rec[l].data) &&  $options['debug.gets']
+	      rec[l].count = count
 	      return @rec[l] 
 	    end
 
@@ -182,6 +183,7 @@ gets also will merge records from a number of log files for the same host into t
 
     def open_lf( fn )
 
+
       if $run_type != 'realtime'  
         off_name = fn + '-' + $options['offset'] 
         all, n = fn.match(/.+\/(\w+)\.\d+/).to_a
@@ -203,7 +205,11 @@ gets also will merge records from a number of log files for the same host into t
 	      }
       end
 
-      f = File.open( fn )
+      if fn.match(/\.gz$/) 
+	f = IO.popen("zcat #{fn}")
+      else
+	f = File.open( fn )
+      end
       if f then
 	      puts "opened file #{fn} log type #{self}" if $options['debug.split'] || $options['debug.gets'] ||$options['debug.files']
       else
@@ -235,7 +241,7 @@ gets also will merge records from a number of log files for the same host into t
 # have to drop the look a head!!
     def close_lf( lf = nil )
 
-	offset = @file[lf].tell
+	offset = @file[lf].tell unless $options['no_write_offset'] ||  $options['no_offset']
 	@file[lf].close
 	off_n = @off_name[lf]
         

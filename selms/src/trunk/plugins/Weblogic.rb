@@ -52,6 +52,7 @@ class Weblogic< LogFile
       puts "in Weblogic gets l = #{l}, raw=#{raw} "  if $options['debug.gets']
  
       while ( r = super( l ) ) && ! r.level   # until start of next record  	
+
 	l = nil
       end
       return nil unless r # not_eof # unless (defined? @rec[0].level or (defined? @rec[0]) &&  (defined? @rec[0].data ) && @rec[0].data)  # must be end of file
