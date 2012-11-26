@@ -173,11 +173,9 @@ class Host
 
   def log_files( log_dir, logf=nil )
 
-
     if !logf
       lf = @file[$options['log_type']]['logtype']
       lf.open_lf(log_dir)
-
       yield lf if lf.file
     elsif @merge_files then
 
@@ -188,20 +186,26 @@ class Host
         next if base_name == 'cron' && @file['cron'] != 'process'
         next if @file[base_name]['ignore']
 
-        l = @file[base_name] ? base_name : 'all'
-
         lf.open_lf(log_dir + '/' + log)
       }
       yield lf if lf.file
     else # process files indivdually
+
       logf.each { |log|
         log =~ /^(.+)\.\d+/
         base_name = $1
 
-        l = @file[base_name] ? base_name : 'all'
+#	puts "basename #{base_name}:"
+
+	if  @file[base_name]
+	  l = base_name
+	else 
+          l = @file['default'] ? 'default' : 'all'
+	end
+#        l = @file[base_name] ? base_name : 'all'
         next if  $options['file'] && $options['file'] != base_name
         next if base_name == 'cron' && @file['cron'] != 'process'
-        next if @file[base_name] && @file[base_name]['ignore']
+        next if @file[l] && @file[l]['ignore']
 
         lf = @file[l]['re'] ? LogFile.new(@file[l]['re'], log_dir + '/' + log) : @file[l]['logtype']
         count = 0
@@ -237,7 +241,8 @@ class Host
     if File.directory?(log_dir)
       logs = Dir.new(log_dir);
       logs.each { |filename|
-        next unless filename =~ /(.+)\.\d{8}$/
+        next unless filename =~ /(.+)\.\d{8}(\.gz)?$/
+#        next unless filename =~ /(.+)\.\d{8}$/
         @logf.push(filename)
       }
     elsif File.exists?(log_dir)

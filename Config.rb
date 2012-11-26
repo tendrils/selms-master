@@ -488,7 +488,9 @@ module Config
             end
 
           else
-            if @kind == 'service' &&
+	    if ! @file['all']['logtype'].Tokens[tok]
+              error("something screwy here, did you name the section?")
+            elsif @kind == 'service' &&
                 (t = @file['all']['logtype'].Tokens[tok])[1] == 'options' then
               if expect('=>', nil, ANYWHERE, OPTIONAL) then
                 v = nil
@@ -751,23 +753,28 @@ module Config
         end
 
       end
-
       begin # while at end...
         if first_token then
           tok = first_token.dup
           if tok == '/' || tok == '%'
             back_up
             tok = 're'
+	  elsif tok == "'" or tok == '"'
+	    tok = 'string'
+            back_up
           end
           first_token = nil
-        else
+       else
           if look_ahead('/') or look_ahead('%r') then
             tok = 're'
+          elsif look_ahead('"') or look_ahead("'") 
+	    tok = 'string'
           elsif ! (tok = expect(/^(\w+)/, 'condition name')) then
             rest_of_line
             return
           end
         end
+
         ok = false
 
         @opts.each { |value|
@@ -778,6 +785,7 @@ module Config
           when 'file'
             tok = expect('String')
             tokens = @file[tok]['logtype'].Tokens if @file[tok] && @file[tok]['logtype']
+#pp tokens
             conditions.push(['fn', "'#{tok}'", '=='])
           when 're', 'rec'
 
@@ -791,6 +799,12 @@ module Config
             else
               conditions.push(['re', re])
             end
+	  when 'string'
+	    if tok = expect( String )
+	      conditions.push(['data', "'#{tok}'", '=='])
+	    else
+	      err = true
+	    end
           when 'incr'
             # incr  <report threshold> <time int> <string>
             if  (count = expect(/^(\d+)/, "interger Threshold", SAME_LINE)) && (
@@ -822,6 +836,7 @@ module Config
             recover(/,|:/, SAME_LINE) unless ok
           else
 
+#puts "attrib: #{tok}"
             if t = tokens[tok] # it is a custom attribute
               value = nil
               op = expect(/^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional) || '=='

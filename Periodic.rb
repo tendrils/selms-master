@@ -50,8 +50,8 @@ include Codegen
             act_cla.produce_reports(@processed_hosts)
           }
           @processed_hosts.keys.each{|host| @processed_hosts.delete(host) }
-	rescue =>e
-	  STDERR.puts "something failed for #{dir_name}/#{mach}: #{e} \n" 
+#	rescue =>e
+#	  STDERR.puts "something failed for #{dir_name}: #{e} \n" 
         end
 
       end

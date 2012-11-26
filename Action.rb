@@ -95,6 +95,8 @@ class Action
         name = host.name
         host.recs['warn'].size
 
+pp host.count
+
         # merge warnings and alters so we can put these all at the top of the report
         if host.count.size > 0 then # more than the default counts
           summ = []

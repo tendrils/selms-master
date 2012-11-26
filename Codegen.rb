@@ -141,6 +141,9 @@ module Codegen
       print "\nMatch #{count}: " if $options['debug.match']
       pp match if $options['debug.match']
       c = ""
+
+#code << "puts rec.proc, rec.level"
+#db = ''
       match[0].each{|cond|
         c += ' && ' unless  c == ''
         case cond[0]
@@ -149,6 +152,7 @@ module Codegen
 	          c+= "(msg = incr_check(  mdata,  #{cond[1]}, #{cond[2]}, '#{cond[3]}', rec.utime, rec.count ))"
           when 're'
             c += "( m_data = #{cond[1]}.match(rec.data))"
+#db = "pp mdata\n"
           when 't_var'
             c += cond[1] =~ /%/ ?
               %Q'count[expand("#{cond[1]}",m_data)].var #{cond[2]}  #{cond[3]} ' :
@@ -177,7 +181,7 @@ module Codegen
         if event[2] then
           a += 'x = ' + (event[2]=~/%/ ? %Q'expand("#{event[2]}", m_data)\n' : "'#{event[2]}'\n")
           a += '      '
-#          y = 'x'
+#          y = "'x'
         end
         if $options["debug.rules-#{event[0]}"] then
           key = "#{event[0]}-#{count}"
@@ -199,12 +203,11 @@ module Codegen
 #          a += "warn( #{y}, rec.fn, rec.orec )\n"
           a += "warn(  rec.orec,  rec.fn, msg )\n"
         when 'count'
-          a += "@count[x] = Host::SimpleCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "      @count[x].incr(rec.count)\n"
+          a += "@count[x] ||= Host::SimpleCounter.new( #{event[1]}, x )\n" +
+                "      @count[x].incr(rec.count)\n" 
         when 'incr'
-          a += "@count[x] = Host::TimeCounter.new( #{event[1]}, #{y}) unless @count[x]\n" +
-                "      @count[x].incr(time, rec.count)\n" +
-                " puts 'incr count'\n"
+          a += "@count[x] ||= Host::TimeCounter.new( #{event[1]}, x)\n" +
+                "      @count[x].incr(time, rec.count)\n"
 
         when 'proc'
           a << " self.#{event[1]}(" + ((defined? event[2]) ? "x, " :'nil') + "rec.data)\n"
@@ -213,6 +216,8 @@ module Codegen
       }
       code << "    ##{count}:\n" 
       code << "    if #{c} then\n#{a} #{ret}    end\n"
+#      code << "    if #{c} then\n#{db+a} #{ret}    end\n"
+#code << db
 #code << "puts rec if rec =~ /nrpe/\n"
     }
     return [ code, post ]
