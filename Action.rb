@@ -95,7 +95,7 @@ class Action
         name = host.name
         host.recs['warn'].size
 
-pp host.count
+#pp host.count
 
         # merge warnings and alters so we can put these all at the top of the report
         if host.count.size > 0 then # more than the default counts
@@ -227,7 +227,9 @@ pp host.count
       report << "             #{'='* label.length}"
 
       list.each { |host, list|
-        next unless list.size > 0
+puts "null list for #{host}" unless list
+next unless list
+        next unless ! list or list.size > 0
         sep = list[0].size > 200 ? "\n\n" : "\n" if list #  sep long records with a blank line
         report << "\n    #{'+'* host.to_s.length}"
         report << "    #{host.to_s}"
