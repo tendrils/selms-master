@@ -227,6 +227,7 @@ class Action
       report << "             #{'='* label.length}"
 
       list.each { |host, list|
+puts host
 puts "null list for #{host}" unless list
 next unless list
         next unless ! list or list.size > 0
