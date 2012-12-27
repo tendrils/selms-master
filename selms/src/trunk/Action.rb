@@ -227,9 +227,8 @@ class Action
       report << "             #{'='* label.length}"
 
       list.each { |host, list|
-puts host
-puts "null list for #{host}" unless list
-next unless list
+#puts "null list for #{host}" unless list[0]
+next unless list[0]
         next unless ! list or list.size > 0
         sep = list[0].size > 200 ? "\n\n" : "\n" if list #  sep long records with a blank line
         report << "\n    #{'+'* host.to_s.length}"
