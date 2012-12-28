@@ -293,7 +293,8 @@ gets also will merge records from a number of log files for the same host into t
 	all, p, data = @data.match( @split_p ).to_a
 
         if ! all  # split failed
-	  @orec = nil
+	  @orec = @raw
+	  @proc = 'none'
 	else
 	  @data = data if data
 	  if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )
