@@ -22,15 +22,16 @@ class LogStore
       @done = true
       yield $options['one_file'], $options['one_host']
     end
-
+#puts @root
     return nil if defined? @done
-
     Find.find(@root) { |filename|
+#puts filename
       mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
       next if !mach
       mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
       mach.downcase!
+#puts mach
 
       if $options['one_host'] &&
           (($options['one_host'].class == String && $options['one_host'] != mach) ||
@@ -39,17 +40,21 @@ class LogStore
       end
 
       rest = $1 if filename =~ %r|^#{@root}/[^/]+/(.*)|o;
+#puts "rest #{rest}"
       next unless  rest;
       if rest =~ %r|^(\d{4})-(\d\d)$| then
+#puts "prune month"
         Find.prune if  ($1 != @year or $2 != @month)
         next
       elsif  rest =~ %r|^\d{4}-\d\d/(\d\d)$| then
         if  $1 != @day then
           Find.prune
+#puts "prune day"
           next;
         end
       end
 
+#puts " yield #{filename}, #{mach}"
       yield filename, mach
     }
   end
