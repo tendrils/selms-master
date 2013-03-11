@@ -36,6 +36,7 @@ include Codegen
   
     start_code( 'periodic', @hosts, @host_patterns )
 
+#pp @hosts
 
     return if syntax  # dont run stuff if it is just a syntax check...
 

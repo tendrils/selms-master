@@ -30,7 +30,7 @@ class Weblogic< LogFile
 
     def initialize( name, fn=nil, split_p=nil, head=nil)
 
-      super(  name, fn=nil, /^(\w+)\s+\[([^\]]+)\]\s*(.+)/ )
+      super(  name, fn=nil, /^(\w+):\s+\[([^\]]+)\]\s*(.+)/ )
 
       @Tokens = {
         'proc' => [ String ],
@@ -87,9 +87,9 @@ class Weblogic< LogFile
 #      end
 
       def split
-
+pp @split_p
         all,  @level, @proc, d = @data.match(@split_p ).to_a
-
+puts @data
 	if @level and @level = Levels[@level.downcase]
 	  @data = d
 	end
