@@ -22,16 +22,17 @@ class LogStore
       @done = true
       yield $options['one_file'], $options['one_host']
     end
-#puts @root
+# puts "root #{@root}"
+# puts  %r|^#{@root}/([^/]+)|o
     return nil if defined? @done
     Find.find(@root) { |filename|
-#puts filename
+# puts "filename #{filename}"
       mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
       next if !mach
       mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
       mach.downcase!
-#puts mach
+#puts "mach #{mach}"
 
       if $options['one_host'] &&
           (($options['one_host'].class == String && $options['one_host'] != mach) ||

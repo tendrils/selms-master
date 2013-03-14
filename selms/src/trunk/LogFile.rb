@@ -37,6 +37,7 @@ The process of parsing the log record has two phases:
       @no_look_ahead = nil
       @recs = @split_failures = 0
       @rc = Record
+      @count = 0
     end
 
 =begin rdoc 
@@ -57,6 +58,7 @@ gets also will merge records from a number of log files for the same host into t
  _no_look_ahead_  tells gets not to read ahead and collaspe mutiple identical records
     used by classes that read multiple physical records for each logical record
 =end
+      recovering = false
 
       puts "Gets:" if  $options['debug.gets'] 
 
@@ -84,6 +86,7 @@ gets also will merge records from a number of log files for the same host into t
           if ! initial then # select next file with earliest log record  
             l = 0
             for i in 1 .. @file.size - 1
+pp @file unless  @rec[l]  && @rec[i]
               l = i if @rec[l].utime > @rec[i].utime
             end
           end
@@ -91,7 +94,6 @@ gets also will merge records from a number of log files for the same host into t
           puts "gets: index :#{l} count = #{count}" if $options['debug.gets']
 # _l_ now contains the index of the next file to read from
           r = initial ? @rc.new : @rec[l].dup unless @no_look_ahead 
-          
           closed = false
           begin   # loop to collaspe repeated records
             if raw = @file[l].gets then
@@ -103,21 +105,21 @@ gets also will merge records from a number of log files for the same host into t
                 puts "gets: not initial #{count}" if $options['debug.gets']
                 previous_rec = @rec[l].dup if count == 1 && ! @no_look_ahead
               end
-	            begin  # corrupt offset or eof ??
-      		      @rec[l] = @rc.new( raw, @head, @split_p)
-	            rescue NoMethodError
-		            warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
-		            next
-	            end
+              begin  # corrupt offset or eof ??
+                @rec[l] = @rc.new( raw, @head, @split_p)
+              rescue NoMethodError
+                warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
+                recovering = true
+                return @rc.new()
+              end
 
 
               @rec[l].fn = @fn[l]
               time = @rec[l].time if count == 1  # first time
             else # end of file 
-	            puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets']
+	            puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets'] || $options['debug.files']
               if !initial || @closing[l] || count != 1 # don't loose last record!
                 close_lf( l ) 
-   #              puts "closing file #{l}"
               else
                 @closing[l] = true
               end
@@ -150,18 +152,19 @@ gets also will merge records from a number of log files for the same host into t
             end
           end until (closed || (@rec[l] && @rec[l].data))
 
-          if $options['debug.gets'] && !repeat
-            puts "comparing"
+          if $options['debug.gets'] && !repeat && previous_rec
+            puts "comparing "
             puts @rec[l].data unless closed
             puts previous_rec.data unless closed
           end
-        end while (!closed && !repeat && @rec[l].data == previous_rec.data)
+        end while (!closed && !repeat && previous_rec &&@rec[l].data == previous_rec.data)
       end
 
       begin
         r.method(:data)    # corrupt offset or eof ??
     	rescue NameError
-        return false
+        return false unless recovering
+        @data = 'corrupt record'
       end
 
       puts "final count #{count}" if $options['debug.gets']
@@ -224,6 +227,7 @@ gets also will merge records from a number of log files for the same host into t
       l = @file.size
       r = nil
       @file[l] = f
+      puts "@file[#{l}] file #{fn} log type #{self}" if $options['debug.files']
       @closing[l] = false
       @fn[l] = n
       @off_name[l] = off_name
@@ -241,6 +245,7 @@ gets also will merge records from a number of log files for the same host into t
 # have to drop the look a head!!
     def close_lf( lf = nil )
 
+      puts "closing file  #{lf} #{fn} log type #{self}" if $options['debug.files']
 	offset = @file[lf].tell unless $options['no_write_offset'] ||  $options['no_offset']
 	@file[lf].close
 	off_n = @off_name[lf]
@@ -276,7 +281,7 @@ gets also will merge records from a number of log files for the same host into t
         @proc = nil
         @orec = nil
         @fn = ''
-        @data = ''
+        @data = raw ? '' : 'empty/corrupt'
         @extra_data = ''
 	@count = 0
         return unless raw
