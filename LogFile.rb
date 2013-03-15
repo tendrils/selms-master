@@ -246,7 +246,7 @@ gets also will merge records from a number of log files for the same host into t
       @line[file_index] = 0
       @off_name[file_index] = off_name
 
-      gets(file_index, nil, false) unless @no_look_ahead    # to prime the look ahead buffer for finding duplicate records
+      gets(file_index, nil) unless @no_look_ahead    # to prime the look ahead buffer for finding duplicate records
     end 
     
     def abort
