@@ -82,7 +82,7 @@ include Codegen
 
     # if we get here there was no host entry or pattern for this machine
 
-    if !host then
+    if !host 
       Find.prune if $options['ignore_unk_hosts']
 #	puts "#{name} #{dir_name} #{$log_store.type_of_host( dir_name ) }"
       if type = $log_store.type_of_host(dir_name) then

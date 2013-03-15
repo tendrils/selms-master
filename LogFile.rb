@@ -18,10 +18,12 @@ The process of parsing the log record has two phases:
   2/ the message portion is then split up into components that can then be tested by the matching process --
      by default we use LOG_BITS 
 
+NOTE!!!  At this time selms does not handle multi line records
+  it will throw away any record that fails the initial parse
 =end
     attr_reader  :Tokens, :name, :rec, :file 
 
-    def initialize( name=nil, fn=nil, split_p=nil, head=nil)
+    def initialize( name=nil, fn=nil, split_p=nil, head=nil, continuation=nil)
 
       @Tokens = {
 	'proc' => [ String, 'options' ],
@@ -37,7 +39,8 @@ The process of parsing the log record has two phases:
       @no_look_ahead = nil
       @recs = @split_failures = 0
       @rc = Record
-      @count = 0
+      @line = 0
+      @continuation = Regexp.new(continuation) if continuation; 
     end
 
 =begin rdoc 
@@ -48,7 +51,7 @@ gets collapses multiple identical records and appends a -- repeated n times to t
 gets also will merge records from a number of log files for the same host into time order so that
   records come out interleaved in periodic reports the read ahead is also necessary to support merging
 =end
-    def gets( l = nil, raw = nil )  # set l for initial read
+    def gets( file_index = nil, raw = nil )  # set l for initial read
 =begin rdoc
   _l_ is the index of the file to read (0 unless merging is taking place)  It indicates that this is 
   the initial call for a file to do a read ahead for subsquent comparsions.  (But see no_look_ahead)
@@ -58,9 +61,8 @@ gets also will merge records from a number of log files for the same host into t
  _no_look_ahead_  tells gets not to read ahead and collaspe mutiple identical records
     used by classes that read multiple physical records for each logical record
 =end
-      recovering = false
 
-      puts "Gets:" if  $options['debug.gets'] 
+#      puts "Gets: #{l} #{raw} #{continuation}" if  $options['debug.gets'] 
 
       if $run_type == 'realtime'
         r =  @rc.new( raw, @head, @split_p)
@@ -71,93 +73,103 @@ gets also will merge records from a number of log files for the same host into t
 
       @recs += 1
       return nil if $options['max_read_recs'] && @recs > $options['max_read_recs']
-      initial = l
+      initial = file_index
       previous_rec = nil
       count = 0  # number of duplicates  
       r = nil   # what we return -- define out side loop
       time = 0  # time of first dupicate
-      
-      puts "Gets: initial #{l}" if initial && $options['debug.gets']
+      cont = nil  # last rec was a continuation
+
+      puts "Gets: initial '#{initial}', index #{file_index}" if $options['debug.gets'] 
       
       catch :new_file do
         begin  # loop while records are the same
-          save = l
+          save_index = file_index
 # merge multiple input files - If _l_ is given the read that file
           if ! initial then # select next file with earliest log record  
-            l = 0
+            file_index = 0
             for i in 1 .. @file.size - 1
-pp @file unless  @rec[l]  && @rec[i]
-              l = i if @rec[l].utime > @rec[i].utime
+              file_index = i if @rec[file_index].utime > @rec[i].utime
             end
           end
-          throw :new_file if save && save != l && count > 0
-          puts "gets: index :#{l} count = #{count}" if $options['debug.gets']
-# _l_ now contains the index of the next file to read from
-          r = initial ? @rc.new : @rec[l].dup unless @no_look_ahead 
+          throw :new_file if save_index && save_index != file_index && count > 0
+          puts "gets: index :#{file_index} count = #{count}" if $options['debug.gets']
+# file_index now contains the index of the next file to read from
+          r = initial ? @rc.new : @rec[file_index].dup unless @no_look_ahead  
           closed = false
-          begin   # loop to collaspe repeated records
-            if raw = @file[l].gets then
+          begin   # loop to collaspe repeated records and handle records with newlines...
+            if raw = @file[file_index].gets then
+              @line[file_index] += 1 
               count += 1
-              puts "gets: raw #{count} #{raw}"  if $options['debug.gets']
+              puts "gets: raw initial #{initial}, count = #{count} #{raw}"  if $options['debug.gets']
+#while ignore && 
               if initial
                 previous_rec = @rc.new  # null entry
               else
-                puts "gets: not initial #{count}" if $options['debug.gets']
-                previous_rec = @rec[l].dup if count == 1 && ! @no_look_ahead
+                previous_rec = @rec[file_index].dup if count == 1 && ! @no_look_ahead
               end
               begin  # corrupt offset or eof ??
-                @rec[l] = @rc.new( raw, @head, @split_p)
+                @rec[file_index] = @rc.new( raw, @head, @split_p)
+              rescue RuntimeError
+                redo
               rescue NoMethodError
-                warn "NoMethodError file #{@fn[l]} type #{@name} #{$!} "
-                recovering = true
-                return @rc.new()
+                warn "NoMethodError file #{@fn[file_index]} type #{@name} #{$!} "
+                redo
               end
+              next if @rec[file_index].continuation && ! previous_rec # continuation record as first in file -- ignore
 
+              @rec[file_index].fn = @fn[file_index]
+              time = @rec[file_index].time if count == 1  # first time
 
-              @rec[l].fn = @fn[l]
-              time = @rec[l].time if count == 1  # first time
+              #  if this record is a continuation record then append the data to previous_rec
+              if @rec[file_index].continuation
+                r.orec += @rec[file_index].continuation
+                puts "gets: continuation:  #{@rec[file_index].continuation}"  if $options['debug.gets']
+                redo;  # there may be more than one continuations
+              end
+              
             else # end of file 
-	            puts "gets: end of file #{l} count  #{count}"  if $options['debug.gets'] || $options['debug.files']
-              if !initial || @closing[l] || count != 1 # don't loose last record!
-                close_lf( l ) 
+	            puts "gets: end of file #{file_index} count  #{count}"  if $options['debug.gets'] || $options['debug.files']
+              if !initial || @closing[file_index] || count != 1 # don't loose last record!
+                close_lf( file_index ) 
               else
-                @closing[l] = true
+                @closing[file_index] = true
               end
               closed = true
             end  # gets
 
-            if initial && ! (defined? @rec[l].data) then  # corrupt offset value?
+            if initial && ! (defined? @rec[file_index].data) then  # corrupt offset value?
               count = 0
 	      puts "gets: corrupt record" if $options['debug.gets']
               next
             end
 
 	    if @no_look_ahead   # we have the record just return
-	      puts "gets: no_look_ahead return '#{@rec[l].data}'" if (defined? @rec[l].data) &&  $options['debug.gets']
-	      @rec[l].count = count if @rec[l]
-	      return @rec[l] 
+	      puts "gets: no_look_ahead return '#{@rec[file_index].data}'" if (defined? @rec[file_index].data) &&  $options['debug.gets']
+	      @rec[file_index].count = count if @rec[file_index]
+	      return @rec[file_index] 
 	    end
 
-	    repeat = ( @rec[l].data =~ /^last message repeated (\d+) times/ ||
-		      @rec[l].data =~ /^Previous message occurred (\d+) times./ )
+	    repeat = ( @rec[file_index].data =~ /^last message repeated (\d+) times/ ||
+		      @rec[file_index].data =~ /^Previous message occurred (\d+) times./ )
             if ! closed && repeat
               if initial
-                @rec[l] = nil
+                @rec[file_index] = nil
                 count = 0
               else
                 puts "repeated #{$1}" if $options['debug.gets']
                 count += $1.to_i
-                @rec[l] = previous_rec
+                @rec[file_index] = previous_rec
               end
             end
-          end until (closed || (@rec[l] && @rec[l].data))
+          end until (closed || (@rec[file_index] && @rec[file_index].data))
 
           if $options['debug.gets'] && !repeat && previous_rec
             puts "comparing "
-            puts @rec[l].data unless closed
+            puts @rec[file_index].data unless closed
             puts previous_rec.data unless closed
           end
-        end while (!closed && !repeat && previous_rec &&@rec[l].data == previous_rec.data)
+        end while (!closed && !repeat && previous_rec &&@rec[file_index].data == previous_rec.data)
       end
 
       begin
@@ -171,7 +183,7 @@ pp @file unless  @rec[l]  && @rec[i]
       r.count = count
       if count > 1      
         if ! r.orec  # something broken in the parsing
-          STDERR.puts "Parsing problems in file #{@fn[l]} for host #{@rec[0].h} parser #{@rc}- aborting this file"
+          STDERR.puts "Parsing problems in line #{@line[file_index]} file #{@fn[file_index]} for host #{@rec[0].h} parser #{@rc}- aborting this file"
           return nil
         end
 
@@ -194,11 +206,12 @@ pp @file unless  @rec[l]  && @rec[i]
       end
       if !@file then
         @file = []
-	      @rec = []
+        @rec = []
         @cache = []
-	      @off_name = []
+        @off_name = []
         @closing = []
         @fn = []
+        @line = []
       end
       
       $fstate = 'opening'
@@ -224,15 +237,16 @@ pp @file unless  @rec[l]  && @rec[i]
       $fstate = 'reading'
  
       closed = false
-      l = @file.size
+      file_index = @file.size
       r = nil
-      @file[l] = f
-      puts "@file[#{l}] file #{fn} log type #{self}" if $options['debug.files']
-      @closing[l] = false
-      @fn[l] = n
-      @off_name[l] = off_name
+      @file[file_index] = f
+      puts "@file[#{file_index}] file #{fn} log type #{self}" if $options['debug.files']
+      @closing[file_index] = false
+      @fn[file_index] = n
+      @line[file_index] = 0
+      @off_name[file_index] = off_name
 
-      gets(l) unless @no_look_ahead    # to prime the look ahead buffer for finding duplicate records
+      gets(file_index, nil, false) unless @no_look_ahead    # to prime the look ahead buffer for finding duplicate records
     end 
     
     def abort
@@ -245,7 +259,7 @@ pp @file unless  @rec[l]  && @rec[i]
 # have to drop the look a head!!
     def close_lf( lf = nil )
 
-      puts "closing file  #{lf} #{fn} log type #{self}" if $options['debug.files']
+      puts "closing file  #{lf} log type #{self}" if $options['debug.files']
 	offset = @file[lf].tell unless $options['no_write_offset'] ||  $options['no_offset']
 	@file[lf].close
 	off_n = @off_name[lf]
@@ -267,14 +281,14 @@ pp @file unless  @rec[l]  && @rec[i]
 
 # default log splitter                                                                                                 
     class Record
-    attr_reader :count, :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data, :raw
+    attr_reader :count, :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data, :raw, :continuation
     attr_writer :fn, :count
 
-      def initialize(raw=nil, pat=nil, split_p=nil)
+      def initialize(raw=nil, head=nil, split_p=nil, cont=nil)
 
         @raw = raw
         @split_p = split_p
-	@pat = pat
+	@head = head
         @time = nil
         @utime = nil
         @h = nil
@@ -284,11 +298,18 @@ pp @file unless  @rec[l]  && @rec[i]
         @data = raw ? '' : 'empty/corrupt'
         @extra_data = ''
 	@count = 0
+        @continuation = nil
         return unless raw
-        all, @utime, @time, @h,  @data =  raw.match(pat).to_a 
-#puts "#{@h}-#{@data}"
-	@utime = @utime.to_i
-	split
+
+        if m = raw.match(head) 
+          @utime, @time, @h,  @data = m.captures 
+          #puts "#{@h}-#{@data}"
+          @utime = @utime.to_i
+          split
+        else
+          raise "Invalid record"
+        end
+
       end
 
 # default log splitter
