@@ -100,7 +100,7 @@ OptionParser.new { |opts|
   opts.on('--timeout=TIMEOUT', Integer, "imit of elapsed time to spend on any one file"){|val|
     $options['timeout'] = val }
   opts.on('-h', '--host=HOSTNAME', "run just for this host"){|val|
-    $options['one_host'] = val}
+    $options['one_host'] = val.downcase}
   opts.on('-f', '--file=FILENAME', "run just for this file (daemon, auth, etc)"){|val|
     $options['file'] = val}
   opts.on('--one_file=FILENAME', "run just for this file"){|val|

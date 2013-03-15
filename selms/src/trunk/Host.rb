@@ -173,8 +173,9 @@ class Host
 
   def log_files( log_dir, logf=nil )
 
+
     if !logf
-      lf = @file[$options['log_type']]['logtype']
+      lf = @file[$options['log_type'] || 'all' ]['logtype']
       lf.open_lf(log_dir)
       yield lf if lf.file
     elsif @merge_files then
