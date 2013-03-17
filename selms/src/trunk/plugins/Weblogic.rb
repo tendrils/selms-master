@@ -87,9 +87,9 @@ class Weblogic< LogFile
 #      end
 
       def split
-pp @split_p
+#pp @split_p
         all,  @level, @proc, d = @data.match(@split_p ).to_a
-puts @data
+#puts @data
 	if @level and @level = Levels[@level.downcase]
 	  @data = d
 	end
