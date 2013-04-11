@@ -2,6 +2,7 @@ class LogStore
   LOG_HEAD = /^(\d+) (\d{4} \w{3}\s+\d+ [:0-9]+ (?:\+|-)\d\d:\d\d) ([^:]+):\s*(.+)/
 
   attr_reader :log_head
+  attr_writer :root
 
   def initialize(root, time = Time.now)
     @root = root
