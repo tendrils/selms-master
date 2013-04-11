@@ -44,7 +44,7 @@ $options = {   # defaults
 	   'no_mail' => nil,
 	   'summ_to' => nil,
 	   'one_host' => nil,
-	   'log_dir' => LOG_DIR,
+	   'log_dir' => nil,
 	   'print_code' => nil,
 	   'outfile' => nil,
 	   'offset' => nil,
@@ -189,7 +189,7 @@ $options['run_type'] =  RUN_TYPE  if $options['run_type'] == 'empty'
   end
   
   begin
-    eval "$log_store  = #{$options['log_store']}.new( \"#{$options['log_dir']}\", time )"
+    eval "$log_store  = #{$options['log_store']}.new( '', time )"  # specify root after we have read the config...
   rescue ScriptError=>e
     STDERR.puts "Failed find LogStore class: #{e}"
     exit 10
@@ -215,6 +215,17 @@ if  $global
     $options[opt] ||= val
   }
 end
+
+
+
+log_root = LOG_DIR
+if $options['log_dir'] 
+  log_root = $options['log_dir']
+else 
+  log_root = $global.vars['log_dir'] if $global.vars['log_dir']
+end
+
+$log_store.root = log_root
 
 $options.default = nil  # return to default behaviour
 
