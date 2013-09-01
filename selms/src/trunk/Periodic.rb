@@ -115,16 +115,14 @@ include Codegen
       @processed_hosts[host] = 1
     end
     t = Benchmark.measure(mach) { host.pscan(dir_name, mach) }
-    STDERR.printf "%-30s: real %5.2f total cpu %5.2f ratio %5.3f\n",
-                  t.label, t.real, t.total, t.total/t.real if $options['time-hosts'] and t.real > $options['time-hosts']
-    Find.prune unless $options['one_file']
-
+    STDERR.printf "%-30s: real %5.2f total cpu %5.2f ratio %5.3f threshold %d\n",
+                  t.label, t.real, t.total, t.total/t.real, $options['time-hosts'] if $options['time-hosts'] and t.real > $options['time-hosts']
     if  t.real/t.total < 0.1 # it is thrashing!
       STDERR.printf "Run out of memory %-20s: real %5.2f total cpu %5.2f ratio %5.3f\n",
                     t.label, t.real, t.total, t.real/t.total
       raise RunOutMemory
     end
-
+    Find.prune unless $options['one_file']
   end
 
 end
