@@ -68,7 +68,7 @@ $options = {   # defaults
 $options.default = 'empty'  # returned for unknown keys 
 
 debug_opts = %w( match hosts host-match gets files code rules-drops rules-ignore rules-alert\
-                 rules-warn rules-count rules-incr proc regexp split match-code )
+                 rules-warn rules-count rules-incr proc regexp split match-code action)
 
 OptionParser.new { |opts|
   opts.on( '--debug=DEBUG', debug_opts , String) {|val| $options['debug.'+val] = true } 

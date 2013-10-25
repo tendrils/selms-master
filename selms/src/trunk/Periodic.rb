@@ -33,7 +33,7 @@ include Codegen
 
     @hosts = {}
     @host_patterns = {}
-  
+
     start_code( 'periodic', @hosts, @host_patterns )
 
 #pp @hosts
@@ -41,7 +41,7 @@ include Codegen
     return if syntax  # dont run stuff if it is just a syntax check...
 
     @processed_hosts = {}
-    
+
     # walk the log tree 
       $log_store.traverse do | dir_name, mach|
         begin
