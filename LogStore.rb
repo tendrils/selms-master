@@ -27,7 +27,7 @@ class LogStore
 # puts  %r|^#{@root}/([^/]+)|o
     return nil if defined? @done
     Find.find(@root) { |filename|
-# puts "filename #{filename}"
+#puts "filename #{filename} #{}%r|^#{@root}/([^/]+)|"
       mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
       next if !mach
       mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
@@ -45,7 +45,7 @@ class LogStore
 #puts "rest #{rest}"
       next unless  rest;
       if rest =~ %r|^(\d{4})-(\d\d)$| then
-#puts "prune month"
+#puts "prune month #{$1} #{$2}" if  ($1 != @year or $2 != @month)
         Find.prune if  ($1 != @year or $2 != @month)
         next
       elsif  rest =~ %r|^\d{4}-\d\d/(\d\d)$| then

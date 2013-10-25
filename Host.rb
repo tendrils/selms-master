@@ -226,6 +226,7 @@ class Host
         lf.open_lf(log_dir + '/' + log)
 
         pp "using logformat:", c_logf.to_s if $options['debug.split']
+#        lf.gets(1)
         yield lf
       }
     end
