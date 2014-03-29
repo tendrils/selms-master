@@ -23,6 +23,7 @@ class LogStore
       @done = true
       yield $options['one_file'], $options['one_host']
     end
+
 # puts "root #{@root}"
 # puts  %r|^#{@root}/([^/]+)|o
     return nil if defined? @done

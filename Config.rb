@@ -358,7 +358,7 @@ module Config
       @logtype_classes = {} # added to by plugins
       @ignore = nil
       @merge_files = $options['merge'] == 'yes'
-      @priority = 0
+      @priority = 1  # allow 0 for 'default' patterns
       @feeds = [] # tell syslog-ng to add filter for this host to these output feeds
       @process_time_limit = nil
 
@@ -837,6 +837,7 @@ module Config
           else
 
 #puts "attrib: #{tok}"
+#pp tokens
             if t = tokens[tok] # it is a custom attribute
               value = nil
               op = expect(/^([!=<>~]{1,2})/, 'operator', SAME_LINE, Optional) || '=='
@@ -867,7 +868,7 @@ module Config
                 rest_of_line
               end
             else
-              error("'#{tok}' not valid here - expecting a condition")
+              error("'#{tok}' not valid here - expecting a attribute name")
               rest_of_line
             end
         end
