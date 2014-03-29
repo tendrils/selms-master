@@ -43,6 +43,7 @@ include Codegen
     @processed_hosts = {}
 
     # walk the log tree 
+
       $log_store.traverse do | dir_name, mach|
         begin
 	  process_host( dir_name, mach )
