@@ -172,7 +172,8 @@ module Parser
     what = what.to_s if what.class.to_s == 'Class'
 
     # expecting an RE terminated by a <tab> ?
-    if what == 're' then
+    case what 
+      when 're'
       if look_ahead('/') then # its a real re
         @@line.sub!(%r'^/(.+)/\s*(?:\t|$)', '')
       elsif t = look_ahead(/^%r(.)/) then
@@ -193,21 +194,24 @@ module Parser
         error("Expecting a regular expression followed by a *tab*") if !optional
         return nil
       end
-    elsif what == 'String' then
+    when 'String'
       if !quoted_string(SAME_LINE, Optional) then
         expect(/^([^ \t\]}&|]+)/)
       end
-    elsif what == 'Integer' then
+    when 'Integer'
       @@token = @@token.to_i if expect(/^(\d+)/)
-    end
-
-    case (what.class).to_s
-      when 'String' then
+    when 'time'
+      if @@line.sub!(/^(\d\d):?(\d\d)?/, '')
+        @@token = $1.to_i * 3600 
+        @@token += $2.to_i * 60 if defined $2
+    else
+      case (what.class).to_s
+      when 'String'
         if @@line.index(what) == 0 then
           @@line.slice!(0, what.length)
           @@token = what
         end
-      when 'Regexp' then
+      when 'Regexp'
         @@token = ((defined? $1) ? $1 : true) if @@line.sub!(what, '')
       when 'Proc'
         r = what.call
@@ -231,6 +235,7 @@ module Parser
         end
       else
         error("Parser does not know what to do with '#{what.class.to_s}' in Parser::expect")
+      end
     end
 
     STDOUT.puts "Expect: #{@@token}" if @@debug

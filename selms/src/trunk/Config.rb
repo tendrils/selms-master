@@ -782,6 +782,15 @@ module Config
         }
         tok.downcase!
         case tok
+          when 'between'
+            start = expect('Time')
+            if ! expect('and')
+              error("Error parsing date '#{d}': #{e.to_s}")
+              @errors = true
+              rest_of_line
+            end
+            finish = expect('Time')
+            conditions.push([tok, start, finish])
           when 'file'
             tok = expect('String')
             tokens = @file[tok]['logtype'].Tokens if @file[tok] && @file[tok]['logtype']
