@@ -167,6 +167,7 @@ module Parser
 
   def expect (what, descr=nil, where=ANYWHERE, optional=false)
     @@token = nil
+
     return nil unless skip_whitespace(where)
 
     what = what.to_s if what.class.to_s == 'Class'
@@ -200,10 +201,11 @@ module Parser
       end
     when 'Integer'
       @@token = @@token.to_i if expect(/^(\d+)/)
-    when 'time'
+    when 'Time'
       if @@line.sub!(/^(\d\d):?(\d\d)?/, '')
         @@token = $1.to_i * 3600 
-        @@token += $2.to_i * 60 if defined $2
+        @@token += $2.to_i * 60 if defined? $2
+      end
     else
       case (what.class).to_s
       when 'String'

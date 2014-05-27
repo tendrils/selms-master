@@ -1,4 +1,4 @@
-class Wli < LogFile
+class Esb < LogFile
   # log4j levels
   Levels = {
       'FATAL' => 0,
@@ -16,12 +16,8 @@ class Wli < LogFile
     #should parse something along the lines of:
     #APP: [LEVEL] [PROGRAM_LOCATION] DATA
     #e.g.:
-    #WLI_EPRFinanceIntegration: [INFO] [nz.ac.auckland.process.EPRFinancePersonTypeProcess.processFinancePerson] (UoAID:2337651) Person has been sent to Finance successfully
-#WLI [INFO] [nz.ac.auckland.timetable.classMeetingPatternPublisher.processes.PublishCombinedSectionMsgProcess.subscription] Start timer based combined section message publishing at 2011/05/30 23:59:00
-# continuation lines start with white space
+    #ESB_StudentAdminSubscribers: [INFO ] [nz.ac.auckland.integration.messaging.subscription.filtering.FilteredMessageSubscriber.UOAJMSServer_2@nz.ac.auckland.jms.identity.person.StudentAdminPerson] The Identity Person message for 4051614 has been sent for the subscriber: StudentAdminPerson, target context: StudentAdminPerson
 
-#      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\(([^)]+)\)\s*(.+)/)
-# 1363284085
     super(name,fn, /^(\w+):*\s+\[\s*(\w+)\s*\]\s+\[([^\]]+)\]\s+(.+)?/, nil, /^13[^0-9]{8}/ )
 
     @Tokens = {
@@ -30,7 +26,6 @@ class Wli < LogFile
         'location' => [String]
     }
     @rc = Record
-#    @no_look_ahead = true
     @count = 0
   end
 
@@ -40,8 +35,6 @@ class Wli < LogFile
       l = nil
     end
     return nil unless r
-
-    r.orec = "#{r.time} #{r.h}: #{r.application}: [#{Levels_ar[r.level]}] [#{r.location}] '#{r.data}'"
 
     return r
 
@@ -54,10 +47,10 @@ class Wli < LogFile
 
     def split
 
-      all, @application, @level, @location, d = @data.match(@split_p).to_a
+      all, @application, @level, @location, d = @log_rec.match(@split_p).to_a
       
       if !all # split failed
-        STDERR.puts "failed to split record #{@data} for  #{@fn}"
+        STDERR.puts "failed to split record #{@log_rec} for  #{@fn}"
       end
       @h = @application
       if @level && Levels[@level]

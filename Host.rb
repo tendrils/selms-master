@@ -106,6 +106,15 @@ class Host
 
   end
 
+  def between?( time, start, finish )
+    t = Time.at(time.to_i).to_a
+    tt = t[1]*60 + t[2]*3600
+    return (( start<=tt ) and ( tt<=finish )) if start > finish  # interval not across midnight
+    return true if tt >= start
+    return true if tt <= finish
+    false
+  end
+
   def incr_check( mdata, threshold, interval, label, time, count)
     label = expand(label, m_data) if label =~/%/ && (defined? mdata)
     @count[label] = TimeCounter.new(threshold, interval , label ) unless @count[label]

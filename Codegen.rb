@@ -48,6 +48,8 @@ module Codegen
     %W( alert warn report ).each { |type|
       next unless a = actions.assoc( "#{pre}#{type}" )
       code += "  def #{type}(rec, file = nil, msg=nil)\n"
+#code += "puts 'Alert'\n"
+
       this_action = 'ACTION'
       acc_code = ''
 #code << "puts \"#{type}  \#{rec}\"\n"
@@ -103,6 +105,7 @@ module Codegen
     warns = []
     drops = []
     ignores = []
+    reports = []
     others = []
     switches = []
 
@@ -114,6 +117,7 @@ module Codegen
 	when 'drop' then   drops.push( match )
 	when 'alert' then  alerts.push( match )
 	when 'warn' then   warns.push( match )
+	when 'report' then  reports.push( match )
 	when 'ignore' then ignores.push( match )
 	when 'count', 'incr', 'proc' then  others.push( match )
 	else
@@ -129,6 +133,7 @@ module Codegen
     all.concat( drops )
     all.concat( alerts )
     all.concat( warns )
+    all.concat( reports )
     all.concat( ignores )
     all.concat( others )
     post = ''
@@ -147,9 +152,11 @@ module Codegen
       match[0].each{|cond|
         c += ' && ' unless  c == ''
         case cond[0]
-	        when 'incr'
+        when 'between'
+          c += " between?(rec.utime, #{cond[1]}, #{cond[2]}) "
+        when 'incr'
 #	  c+= "( incr_check( defined? mdata ? mdata:nil,  #{cond[1]}, #{cond[2]}, '#{cond[3]}' ))"
-	          c+= "(msg = incr_check(  mdata,  #{cond[1]}, #{cond[2]}, '#{cond[3]}', rec.utime, rec.count ))"
+          c+= "(msg = incr_check(  mdata,  #{cond[1]}, #{cond[2]}, '#{cond[3]}', rec.utime, rec.count ))"
           when 're'
             c += "( m_data = #{cond[1]}.match(rec.data))"
 #db = "pp mdata\n"
@@ -192,7 +199,7 @@ module Codegen
         case event[0]
         when 'drop', 'ignore'
           ret += "return true\n"
-        when 'alert', 'warn'
+        when 'alert', 'warn', 'report'
 #        a += "alert( #{y}, rec.fn, rec.orec )\n"
           msg = event[1] ? "'#{event[1]}'" : 'nil';
           a += "#{event[0]}(  rec.orec,  rec.fn, #{msg} )\n"
