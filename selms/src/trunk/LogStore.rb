@@ -27,14 +27,15 @@ class LogStore
 # puts "root #{@root}"
 # puts  %r|^#{@root}/([^/]+)|o
     return nil if defined? @done
-    Find.find(@root) { |filename|
-#puts "filename #{filename} #{}%r|^#{@root}/([^/]+)|"
-      mach = $1 if filename =~ %r|^#{@root}/([^/]+)|o;
+
+    Find.find("#{@root}/") { |filename|
+#      puts "filename '#{filename}' %r|^#{@root}/([^/]+)|o"
+      all, mach = filename.match(%r|^#{@root}/([^/]+)|o).to_a
+#puts "mach #{mach}"
       next if !mach
       mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
       mach.downcase!
-#puts "mach #{mach}"
 
       if $options['one_host'] &&
           (($options['one_host'].class == String && $options['one_host'] != mach) ||

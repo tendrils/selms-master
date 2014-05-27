@@ -134,7 +134,7 @@ OptionParser.new { |opts|
 
   begin
     opts.parse!(ARGV)
-  rescue OptionParser::InvalidArgument, OptionParser::MissingArgument
+  rescue  OptionParser::InvalidArgument, OptionParser::MissingArgument,OptionParser::InvalidOption =>e
     puts $!
     puts opts.to_s
     exit 1
@@ -145,9 +145,17 @@ OptionParser.new { |opts|
     begin
       $options['one_host'] = Regexp.new( $1)
     rescue RegexpError
-      STDERR.puts "invalid RE supplied for host selection -- will be ignored"
+      STDERR.puts "invalid RE supplied for host selection"
+      exit 1;
     end
   end  
+
+  if $options['one_file'] && ! $options['one_host']
+    STDERR.puts "If you use one_file option you must also use -h (one_host) to give the host name so selms knows which patterns to use"
+    exit 1;
+  end
+
+
 # load plugins
 
 

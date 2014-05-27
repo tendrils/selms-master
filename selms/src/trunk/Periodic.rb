@@ -83,6 +83,10 @@ include Codegen
 
     # if we get here there was no host entry or pattern for this machine
 
+    if !host and $options['one_file'] 
+      STDERR.puts "Could not find a host matching '#{mach}"
+      exit 1;
+    end
     if !host 
       Find.prune if $options['ignore_unk_hosts']
 #	puts "#{name} #{dir_name} #{$log_store.type_of_host( dir_name ) }"

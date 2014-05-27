@@ -166,10 +166,10 @@ gets also will merge records from a number of log files for the same host into t
 
           if $options['debug.gets'] && !repeat && previous_rec
             puts "comparing "
-            puts @rec[file_index].data unless closed
-            puts previous_rec.data unless closed
+            puts @rec[file_index].log_rec unless closed
+            puts previous_rec.log_rec unless closed
           end
-        end while (!closed && !repeat && previous_rec &&@rec[file_index].data == previous_rec.data)
+        end while (!closed && !repeat && previous_rec &&@rec[file_index].log_rec == previous_rec.log_rec)
       end
 
       begin
@@ -281,7 +281,7 @@ gets also will merge records from a number of log files for the same host into t
 
 # default log splitter                                                                                                 
     class Record
-    attr_reader :count, :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data, :raw, :continuation
+    attr_reader :count, :time, :utime, :h, :record, :proc, :orec, :data, :int, :fn, :extra_data, :raw, :continuation, :data, :log_rec
     attr_writer :fn, :count
 
       def initialize(raw=nil, head=nil, split_p=nil, cont=nil)
@@ -294,6 +294,7 @@ gets also will merge records from a number of log files for the same host into t
         @h = nil
         @proc = nil
         @orec = nil
+        @log_rec = nil
         @fn = ''
         @data = raw ? '' : 'empty/corrupt'
         @extra_data = ''
@@ -302,9 +303,10 @@ gets also will merge records from a number of log files for the same host into t
         return unless raw
 
         if m = raw.match(head) 
-          @utime, @time, @h,  @data = m.captures 
+          @utime, @time, @h,  @log_rec = m.captures 
           #puts "#{@h}-#{@data}"
           @utime = @utime.to_i
+          @data = @log_rec
           split
         else
           raise "Invalid record"
@@ -315,14 +317,14 @@ gets also will merge records from a number of log files for the same host into t
 # default log splitter
 
       def split
-        return nil unless @data
-	all, p, data = @data.match( @split_p ).to_a
+        return nil unless @log_rec
+	all, p, data = @log_rec.match( @split_p ).to_a
 
         if ! all  # split failed
 	  @orec = @raw
 	  @proc = 'none'
 	else
-	  @data = data if data
+	  @data = data ? data : @log_rec
 	  if data && ( @data.sub!(/^(pam_\w+\[\d+\]):/, p) || @data.sub!(/^\((pam_\w+)\)/, p) )
 	    p=$1
 	  end

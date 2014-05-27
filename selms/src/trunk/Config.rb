@@ -719,7 +719,7 @@ module Config
     attr_writer :items
 
     @@conditions = %w( re prog file test accumulate )
-    @@actions = %w( alert warn count ignore drop proc incr switch )
+    @@actions = %w( alert warn report count ignore drop proc incr switch )
     @@varNameRE = /^(\w+(?:\{[^}]+\})?)/
 
     def initialize(head, opts, file, init = false)
@@ -783,14 +783,14 @@ module Config
         tok.downcase!
         case tok
           when 'between'
-            start = expect('Time')
-            if ! expect('and')
-              error("Error parsing date '#{d}': #{e.to_s}")
-              @errors = true
-              rest_of_line
+            start = finish = nil
+            if( start = expect('Time', "start of interval",  SAME_LINE) )
+              if ! expect('and') or !(finish = expect('Time') )
+                err = true
+              end
             end
-            finish = expect('Time')
-            conditions.push([tok, start, finish])
+            
+            conditions.push([tok, start, finish]) unless err
           when 'file'
             tok = expect('String')
             tokens = @file[tok]['logtype'].Tokens if @file[tok] && @file[tok]['logtype']
@@ -895,7 +895,7 @@ module Config
         errs = false
         tok = nextT(SAME_LINE).downcase
         case tok
-          when 'alert', 'warn', 'switch'
+          when 'alert', 'warn', 'report', 'switch'
             message = quoted_string(SAME_LINE, Optional)
             actions.push([tok, message])
           when 'ignore', 'drop'
