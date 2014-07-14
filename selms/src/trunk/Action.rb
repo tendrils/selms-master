@@ -107,8 +107,10 @@ class Action
                 summ << "    #{v.label} = #{v.val}" if v.val > v.thresh
             end
           }
-          host.recs['post'].each do |rec|
-           summ << "    #{rec}"
+          if host.recs['post']
+            host.recs['post'].each do |rec|
+              summ << "    #{rec}"
+            end
           end
           host.recs.delete('post')
 

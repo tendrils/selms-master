@@ -65,9 +65,13 @@ class LogStore
 
   def type_of_host(dir)
     type = nil
+    logs = 0
     Dir.new(dir).each { |f|
       next if f =~ /^\./;
-      if f =~ /^local0/ and !type
+      logs += 1
+      if f =~ /^local7/ and !type
+        type = 'juniper'
+      elsif f =~ /^local0/ and !type
         type = 'cisco'
       elsif f =~ /^user/ and !type;
         type = 'windows'
@@ -75,6 +79,7 @@ class LogStore
         type='unix'
       end
     }
+    type = 'unix' if ( type == 'cisco' or type == 'juniper' ) and logs > 1 
     return type
   end
 end

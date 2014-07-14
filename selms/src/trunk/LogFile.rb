@@ -45,7 +45,6 @@ NOTE!!!  At this time selms does not handle multi line records
 
 =begin rdoc 
 gets reads a single logical record 
-
 gets collapses multiple identical records and appends a -- repeated n times to the record
   much of the complexity of gets is due to the necessary read ahead to handle this functionality
 gets also will merge records from a number of log files for the same host into time order so that
@@ -72,7 +71,6 @@ gets also will merge records from a number of log files for the same host into t
       return nil if ! @file || @file.size == 0
 
       @recs += 1
-      return nil if $options['max_read_recs'] && @recs > $options['max_read_recs']
       initial = file_index
       previous_rec = nil
       count = 0  # number of duplicates  
@@ -99,6 +97,11 @@ gets also will merge records from a number of log files for the same host into t
           closed = false
           begin   # loop to collaspe repeated records and handle records with newlines...
             if raw = @file[file_index].gets then
+      if $options['max_read_recs'] && @recs > $options['max_read_recs']
+        close_lf( file_index )
+        return nil 
+      end
+
               @line[file_index] += 1 
               count += 1
               puts "gets: raw initial #{initial}, count = #{count} #{raw}"  if $options['debug.gets']
