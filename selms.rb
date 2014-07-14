@@ -123,7 +123,7 @@ OptionParser.new { |opts|
   opts.on( '--max_report_recs', String, "give up listing records after this many (default 1000)") {
    |val| $options['max_report_recs'] = val
  }
-  opts.on( '--max_read_recs', String, "just check the syntax of the configuration file") {
+  opts.on( '--max_read_recs=Max_recs', Integer, "read just this many rececord from each file") {
    |val| $options['max_read_recs'] = val
  }
  opts.on( '--date=DAY', String, "Run for this day") { |val|
