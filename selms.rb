@@ -179,11 +179,6 @@ if $options['lock'] and File.exists? $options['lock']
   exit
 end
 
-if $options['lock']
-  lock = File.open($options['lock'], 'w')
-  lock.close
-end
-
 hosts = {}
 $options['run_type'] =  RUN_TYPE  if $options['run_type'] == 'empty'
 
@@ -251,57 +246,63 @@ end
 
 begin
 
-case $options['run_type']
-when 'periodic' 
+  if $options['lock']
+    lock = File.open($options['lock'], 'w')
+    lock.close
+  end
 
-  Periodic.new(  $options['syntax'] )
-  exit( $errors ) if $options['syntax'] 
 
-when 'realtime'  
-  rt =  Realtime.new( )  # generate object to do realtime scanning
+  case $options['run_type']
+  when 'periodic' 
 
-  exit conf.errors ? 1 : 0 if $options['syntax'] 
+    Periodic.new(  $options['syntax'] )
+    exit( $errors ) if $options['syntax'] 
 
-  rt.run_it                    # start it running
-  while rt.watch_it do
+  when 'realtime'  
+    rt =  Realtime.new( )  # generate object to do realtime scanning
+    
+    exit conf.errors ? 1 : 0 if $options['syntax'] 
 
-    exit unless rt.re_read_conf
-    re_read_conf = false
-put "watch_it exited" 
-
+    rt.run_it                    # start it running
+    while rt.watch_it do
+      
+      exit unless rt.re_read_conf
+      re_read_conf = false
+      put "watch_it exited" 
+      
     new_conf = Selms::Config.new(conf_file, run_type )
     
    # cope with change of log socket
     
-    if $options['rt_socket']  !=  new_conf.vars['rt_socket'] then
-      $options['rt_socket'] =  new_conf.vars['rt_socket'] 
-      #        .close
-      $logs = LogRecs.new( log_source )
-    end
-    new_rt = Realtime.new( new_conf )
-    
-    if new_rt.report.code != rt.report_code or
-	new_rt.scan.code != rt.scan_code then  # changes affect RT
-      old_rt = rt
-      rt = new_rt
-    end
+      if $options['rt_socket']  !=  new_conf.vars['rt_socket'] then
+        $options['rt_socket'] =  new_conf.vars['rt_socket'] 
+        #        .close
+        $logs = LogRecs.new( log_source )
+      end
+      new_rt = Realtime.new( new_conf )
+      
+      if new_rt.report.code != rt.report_code or
+          new_rt.scan.code != rt.scan_code then  # changes affect RT
+        old_rt = rt
+        rt = new_rt
+      end
     #      end
-    if ! rt.thread or ! rt.thread.alive? then
-      rt.run_it
+      if ! rt.thread or ! rt.thread.alive? then
+        rt.run_it
+      end
+      if old_rt && old_rt.thread.alive? then
+        old_rt.kill_it    # kill old thread
+      end
     end
-    if old_rt && old_rt.thread.alive? then
-      old_rt.kill_it    # kill old thread
-    end
+    
+  when 'daily'
+    Daily.new
+  when 'weekly'
+    Weekly.new
+  when 'monthly'
+    Monthly.new
   end
-
-when 'daily'
-  Daily.new
-when 'weekly'
-  Weekly.new
-when 'monthly'
-  Monthly.new
-end
-
+  
 rescue 
   File.unlink $options['lock'] if $options['lock']
   raise
