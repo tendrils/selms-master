@@ -798,15 +798,16 @@ module Config
             conditions.push(['fn', "'#{tok}'", '=='])
           when 're', 'rec'
 
-            re = expect('re') # a
-            re += 'i' unless tok == 'rec' # default is to ignore case
+            if re = expect('re') # a
+              re += 'i' unless tok == 'rec' # default is to ignore case
 
-            if re.class != String then
-              error("parser failed to extract re -- don't use delimters that mean things to REs")
-              @errors = true
-              rest_of_line
-            else
-              conditions.push(['re', re])
+              if re.class != String then
+                error("parser failed to extract re -- don't use delimters that mean things to REs")
+                @errors = true
+                rest_of_line
+              else
+                conditions.push(['re', re])
+              end
             end
 	  when 'string'
 	    if tok = expect( String )
