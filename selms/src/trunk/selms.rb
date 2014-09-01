@@ -304,6 +304,7 @@ begin
   end
   
 rescue 
+  puts "unlink #{ $options['lock']}"
   File.unlink $options['lock'] if $options['lock']
   raise
 end

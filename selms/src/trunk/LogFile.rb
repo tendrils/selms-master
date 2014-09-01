@@ -97,10 +97,10 @@ gets also will merge records from a number of log files for the same host into t
           closed = false
           begin   # loop to collaspe repeated records and handle records with newlines...
             if raw = @file[file_index].gets then
-      if $options['max_read_recs'] && @recs > $options['max_read_recs']
-        close_lf( file_index )
-        return nil 
-      end
+              if $options['max_read_recs'] && @recs > $options['max_read_recs']
+                close_lf( file_index )
+                return nil 
+              end
 
               @line[file_index] += 1 
               count += 1
