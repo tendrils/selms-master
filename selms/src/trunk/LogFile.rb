@@ -103,8 +103,7 @@ gets also will merge records from a number of log files for the same host into t
               end
 
               @line[file_index] += 1 
-              count += 1
-              puts "gets: raw initial #{initial}, count = #{count} #{raw}"  if $options['debug.gets']
+              puts "gets: raw initial '#{initial}', count = #{count} #{raw}"  if $options['debug.gets']
 #while ignore && 
               if initial
                 previous_rec = @rc.new  # null entry
@@ -120,7 +119,7 @@ gets also will merge records from a number of log files for the same host into t
                 redo
               end
               next if @rec[file_index].continuation && ! previous_rec # continuation record as first in file -- ignore
-
+              count += 1
               @rec[file_index].fn = @fn[file_index]
               time = @rec[file_index].time if count == 1  # first time
 
