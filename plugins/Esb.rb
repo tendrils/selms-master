@@ -33,6 +33,7 @@ class Esb < LogFile
 
     while (r = super(l)) && !r.level
       l = nil
+      r.count = 0
     end
     return nil unless r
 
