@@ -16,21 +16,21 @@ module Parser
       'day' => 3600 * 24
   }
 
-# define accessor methods to get at module state
+  # define accessor methods to get at module state
 
-  def line()
+  def line
     @@line
   end
 
-  def lineno()
+  def lineno
     @@f.lineno
   end
 
-  def originalLine()
+  def originalLine
     @@originalLine
   end
 
-  def token()
+  def token
     @@token
   end
 
@@ -38,7 +38,7 @@ module Parser
     @@debug=debug
   end
 
-  def errors()
+  def errors
     @@errors
   end
 
@@ -57,7 +57,7 @@ module Parser
   def read_next_line
     begin
       @@line = (@@f.gets)
-      if !@@line && @@included_from.size > 0 then # in included file
+      if !@@line && @@included_from.size > 0 # in included file
         @@f, @@file_name, @@macros = @@included_from.pop
         read_next_line
       end
@@ -72,10 +72,10 @@ module Parser
       @@line.lstrip!
     end
 
-    if @@line =~ /^include (\S+)/ then # open included file
+    if @@line =~ /^include (\S+)/ # open included file
       include = $1
-      if include =~ /^\+/ then # relative file name
-        if ENV['SELMS_ETC'] then
+      if include =~ /^\+/ # relative file name
+        if ENV['SELMS_ETC']
           loc = ENV['SELMS_ETC']+'/'
         else
           @@file_name =~ %r!(.+/)[^/]+$!
@@ -86,7 +86,7 @@ module Parser
       if !@@included_files[include]
         @@included_from << [@@f.dup, @@file_name.dup, @@macros.dup]
         @@f = File.new(include)
-        if @@f then
+        if @@f
           @@included_files[include] = include
           @@file_name = include
           read_next_line
@@ -95,22 +95,22 @@ module Parser
           error("failed to open include file '#{$0}'")
           read_next_line
         end
-      else # have already included this file 
+      else # have already included this file
         read_next_line
       end
     end
 
-# macro definition
+    # macro definition
 
-    if @@line =~ /^(\$[A-Z_]+)\s*=\s*(.+)/ then
+    if @@line =~ /^(\$[A-Z_]+)\s*=\s*(.+)/
       @@macros[$1] = $2
       read_next_line
     end
 
-# macro substution
+    # macro substution
     while @@line =~ /(?!`)(\$[A-Z_]+)/ do
       macro = $1
-      if val = macro_value(macro) then
+      if val = macro_value(macro)
         macro = '\\' + macro
         @@line.sub!(/#{macro}/, val)
       else
@@ -133,7 +133,7 @@ module Parser
 
   def skip_whitespace (where=ANYWHERE)
     @@line.lstrip!
-    if (@@line == '' || @@line =~ /^#/) and where == SAME_LINE then
+    if (@@line == '' || @@line =~ /^#/) and where == SAME_LINE
       return nil
     end
 
@@ -144,13 +144,13 @@ module Parser
   end
 
 
-# returns number of second in the given interval
+  # returns number of second in the given interval
 
   def timeInterval(optional=nil)
 
-    if num = expect(/(\d+)/, "integer", ANYWHERE, optional) then
+    if num == expect(/(\d+)/, 'integer', ANYWHERE, optional)
       n = num.to_i
-      if mult = expect(@@TimeUnits, "Time Units", SAME_LINE, true) then
+      if mult == expect(@@TimeUnits, 'Time Units', SAME_LINE, true)
         num.to_i * mult
       else
         nil
@@ -160,10 +160,10 @@ module Parser
     end
   end
 
-# expect takes an RE, a string or a hash of keywords and extracts
-# an appropriate token from the stat of the current buffer.
-# if it does not find any suitable token is prints an error unless 
-# optional is passed 
+  # expect takes an RE, a string or a hash of keywords and extracts
+  # an appropriate token from the stat of the current buffer.
+  # if it does not find any suitable token is prints an error unless
+  # optional is passed
 
   def expect (what, descr=nil, where=ANYWHERE, optional=false)
     @@token = nil
@@ -173,71 +173,71 @@ module Parser
     what = what.to_s if what.class.to_s == 'Class'
 
     # expecting an RE terminated by a <tab> ?
-    case what 
+    case what
       when 're'
-      if look_ahead('/') then # its a real re
-        @@line.sub!(%r'^/(.+)/\s*(?:\t|$)', '')
-      elsif t = look_ahead(/^%r(.)/) then
-        @@line.sub!(%r<^%r#{t}(.+)#{t}\s*(?:\t|$)>, '')
-      end
-      if re = $1 then
-        begin
-          @re = Regexp.new(re)
-          re = t ? "%r#{t}#{re}#{t}" : "/#{re}/"
-        rescue RegexpError
-          error("RE error: " + $!)
-          @errors = true
-          rest_of_line
+        if look_ahead('/') # its a real re
+          @@line.sub!(%r'^/(.+)/\s*(?:\t|$)', '')
+        elsif t == look_ahead(/^%r(.)/) then
+          @@line.sub!(%r<^%r#{t}(.+)#{t}\s*(?:\t|$)>, '')
+        end
+        if re == $1
+          begin
+            @re = Regexp.new(re)
+            re = t ? "%r#{t}#{re}#{t}" : "/#{re}/"
+          rescue RegexpError
+            error('RE error: ' + $!)
+            @errors = true
+            rest_of_line
+            return nil
+          end
+          return true
+        else
+          error('Expecting a regular expression followed by a *tab*') unless optional
           return nil
         end
-        return re || true
-      else
-        error("Expecting a regular expression followed by a *tab*") if !optional
-        return nil
-      end
-    when 'String'
-      if !quoted_string(SAME_LINE, Optional) then
-        expect(/^([^ \t\]}&|]+)/)
-      end
-    when 'Integer'
-      @@token = @@token.to_i if expect(/^(\d+)/)
-    when 'Time'
-      if @@line.sub!(/^(\d\d):?(\d\d)?/, '')
-        @@token = $1.to_i * 3600 
-        @@token += $2.to_i * 60 if defined? $2
-      end
-    else
-      case (what.class).to_s
       when 'String'
-        if @@line.index(what) == 0 then
-          @@line.slice!(0, what.length)
-          @@token = what
+        unless quoted_string(SAME_LINE, Optional)
+          expect(/^([^ \t\]}&|]+)/)
         end
-      when 'Regexp'
-        @@token = ((defined? $1) ? $1 : true) if @@line.sub!(what, '')
-      when 'Proc'
-        r = what.call
-      when 'Array'
-        if @@line =~ /^(\w+)/
-          what.each { |t|
-            if t == $1
-              ret = @@token = t
-              @@line.sub!(/^(\w+)/, '')
-              break
-            end
-          }
-        end
-      when 'Hash'
-        if @@line =~ /^(\w+)/
-          if defined? what[$1] then
-            @@token = $1
-            ret = what[$1]
-            @@line.sub!(/^(\w+)/, '')
-          end
+      when 'Integer'
+        @@token = @@token.to_i if expect(/^(\d+)/)
+      when 'Time'
+        if @@line.sub!(/^(\d\d):?(\d\d)?/, '')
+          @@token = $1.to_i * 3600
+          @@token += $2.to_i * 60 if defined? $2
         end
       else
-        error("Parser does not know what to do with '#{what.class.to_s}' in Parser::expect")
-      end
+        case (what.class).to_s
+          when 'String'
+            if @@line.index(what) == 0
+              @@line.slice!(0, what.length)
+              @@token = what
+            end
+          when 'Regexp'
+            @@token = ((defined? $1) ? $1 : true) if @@line.sub!(what, '')
+          when 'Proc'
+            r = what.call
+          when 'Array'
+            if @@line =~ /^(\w+)/
+              what.each { |t|
+                if t == $1
+                  ret = @@token = t
+                  @@line.sub!(/^(\w+)/, '')
+                  break
+                end
+              }
+            end
+          when 'Hash'
+            if @@line =~ /^(\w+)/
+              if defined? what[$1]
+                @@token = $1
+                ret = what[$1]
+                @@line.sub!(/^(\w+)/, '')
+              end
+            end
+          else
+            error("Parser does not know what to do with '#{what.class.to_s}' in Parser::expect")
+        end
     end
 
     STDOUT.puts "Expect: #{@@token}" if @@debug
@@ -251,11 +251,11 @@ module Parser
 
   end
 
-#
-#  nextT returns the next token - a special character
-#                              - alphanumeric token (starts with alpha)
-#                              - integer
-#
+  #
+  #  nextT returns the next token - a special character
+  #                              - alphanumeric token (starts with alpha)
+  #                              - integer
+  #
   def nextT (where=ANYWHERE)
 
     @@token = nil
@@ -274,21 +274,21 @@ module Parser
         @@line.sub!(/(\d+)/, '')
         @@token = $1
       else
-        error("unxepected character '#{@@line.slice!(0, 1)}'")
+        error("unexpected character '#{@@line.slice!(0, 1)}'")
         nil
     end
     STDOUT.puts "Next: #{@@token}" if @@debug
     @@token
   end
 
-# undo the effect of the last nextT
+  # undo the effect of the last nextT
 
   def back_up
     @@line = @@save_line
   end
 
-# look_ahead returns true if the given RE matches the next thing to be 
-# parsed
+  # look_ahead returns true if the given RE matches the next thing to be
+  # parsed
 
   def look_ahead(what, where=ANYWHERE)
 
@@ -296,7 +296,7 @@ module Parser
 
     case what.class.to_s
       when 'Regexp'
-        if @@line =~ what then
+        if @@line =~ what
           return $1 ? $1 : true
         end
       when 'String'
@@ -322,13 +322,13 @@ module Parser
              @@doubleQstring
            else
              return nil if optional
-             error("Expecting a <quoted string>")
+             error('Expecting a <quoted string>')
          end
 
-    expect(re, "<closing quote>", where, false)
+    expect(re, '<closing quote>', where, false)
   end
 
-# rest_of_line returns the rest of the current line as a string
+  # rest_of_line returns the rest of the current line as a string
 
   def rest_of_line
 
@@ -339,9 +339,9 @@ module Parser
     return l
   end
 
-# parse a list of items separated by commas, each item must either be 
-# delimited by quotes or not contain white space. There is no mechanism 
-# for quoting string delimeters within the string.
+  # parse a list of items separated by commas, each item must either be
+  # delimited by quotes or not contain white space. There is no mechanism
+  # for quoting string delimiters within the string.
 
   def getList
 
@@ -353,8 +353,8 @@ module Parser
     return list
   end
 
-# prints the current line number and the line then the error message and\
-# the current token
+  # prints the current line number and the line then the error message and\
+  # the current token
 
   def error(message, lineno=nil, error = true)
 
@@ -366,7 +366,7 @@ module Parser
 
 
     where = lineno
-    if lineno then
+    if lineno
       STDERR.puts "Section starting at #{@@file_name}:#{lineno}:",
                   " #{message}"
     else
@@ -389,13 +389,13 @@ module Parser
   end
 
   # recover is called after detection of a syntax error to try and find
-  # a know place to start again. If sameLine is true then only look on 
+  # a know place to start again. If sameLine is true then only look on
   # current line. What is a string or RegExpr to search for.
   #
   # Returns what it found or nil
   #
   def recover (what, sameLine=Parser::ANYWHERE, descr=nil)
-    while !(i = @@line.index(what))
+    until i == @@line.index(what)
       return nil if defined? sameLine
       @@line = (@@f.gets).chomp!
     end

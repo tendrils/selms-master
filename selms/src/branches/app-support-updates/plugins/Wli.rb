@@ -10,18 +10,17 @@ class Wli < LogFile
   }
 
   Levels_ar = ['FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
-   
   def initialize(name, fn = nil, split_p=nil, head=nil)
 
     #should parse something along the lines of:
     #APP: [LEVEL] [PROGRAM_LOCATION] DATA
     #e.g.:
     #WLI_EPRFinanceIntegration: [INFO] [nz.ac.auckland.process.EPRFinancePersonTypeProcess.processFinancePerson] (UoAID:2337651) Person has been sent to Finance successfully
-#WLI [INFO] [nz.ac.auckland.timetable.classMeetingPatternPublisher.processes.PublishCombinedSectionMsgProcess.subscription] Start timer based combined section message publishing at 2011/05/30 23:59:00
-# continuation lines start with white space
+    #WLI [INFO] [nz.ac.auckland.timetable.classMeetingPatternPublisher.processes.PublishCombinedSectionMsgProcess.subscription] Start timer based combined section message publishing at 2011/05/30 23:59:00
+    # continuation lines start with white space
 
-#      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\(([^)]+)\)\s*(.+)/)
-# 1363284085
+    #      super(  name, /^(\w+):*\s+\[([^\]]+)\]\s+\[([^\]]+)\]\s+\(([^)]+)\)\s*(.+)/)
+    # 1363284085
     super(name,fn, /^(\w+):*\s+\[\s*(\w+)\s*\]\s+\[([^\]]+)\]\s+(.+)?/, nil, /^13[^0-9]{8}/ )
 
     @Tokens = {
@@ -30,7 +29,7 @@ class Wli < LogFile
         'location' => [String]
     }
     @rc = Record
-#    @no_look_ahead = true
+    #    @no_look_ahead = true
     @count = 0
   end
 
@@ -55,8 +54,7 @@ class Wli < LogFile
     def split
 
       all, @application, @level, @location, d = @data.match(@split_p).to_a
-      
-      if !all # split failed
+      unless all # split failed
         STDERR.puts "failed to split record #{@data} for  #{@fn}"
       end
       @h = @application

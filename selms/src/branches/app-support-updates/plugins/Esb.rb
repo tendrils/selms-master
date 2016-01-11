@@ -10,7 +10,6 @@ class Esb < LogFile
   }
 
   Levels_ar = ['FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE']
-   
   def initialize(name, fn = nil, split_p=nil, head=nil)
 
     #should parse something along the lines of:
@@ -49,8 +48,7 @@ class Esb < LogFile
     def split
 
       all, @application, @level, @location, d = @log_rec.match(@split_p).to_a
-      
-      if !all # split failed
+      unless all # split failed
         STDERR.puts "failed to split record #{@log_rec} for  #{@fn}"
       end
       @h = @application

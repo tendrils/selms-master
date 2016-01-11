@@ -21,7 +21,7 @@ class Action
     end
 
     def do_periodic (type, host, file, rec)
-      if !host.recs[type + '-Nagios'] then
+      if !host.recs[type + '-Nagios']
         host.recs[type + '-Nagios'] = []
       end
       host.recs[type + '-Nagios'] << rec
@@ -30,31 +30,31 @@ class Action
 
     def do_realtime (type, host, file, rec)
       data = []
-      if @bucket[type] then
+      if @bucket[type]
         data = @bucket[type]
       else
         data << rec
       end
-#pp data
+      #pp data
 
       @n = NagiosBase.new(@host, @pass, @debug, @port, @time_out) unless @n
 
       data.each { |line|
-#puts line
+        #puts line
         @n.send(host.name, 'SELMS', @types[type], line)
       }
       @n.close
       @n = nil
-#exit
+      #exit
     end
   end
 
   def produce_reports(processed_hosts)
 
-    # go through the hosts and build reports for each reporting address                                        
+    # go through the hosts and build reports for each reporting address
 
-    processed_hosts.each { |host, count| # each host we have logs to report for                                       
-    # skip unless we have something to report
+    processed_hosts.each { |host, count| # each host we have logs to report for
+      # skip unless we have something to report
 
       next unless host.recs['UNUSUAL-Nagios'].size + host.recs['ALERTL-Nagios'].size +
           host.recs['WARNL-Nagios'].size > 0 || host.count.size > 4;

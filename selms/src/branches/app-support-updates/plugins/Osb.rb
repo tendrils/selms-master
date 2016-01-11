@@ -13,7 +13,6 @@ class Osb < LogFile
   }
 
   Levels_ar = ['Emergency', 'Alert', 'Critical', 'Error', 'Warning', 'Notice', 'Info', 'Debug', 'Trace']
-   
   def initialize(name, fn = nil, split_p=nil, head=nil)
 
     #potential multiline parse of messages like:
@@ -62,15 +61,13 @@ class Osb < LogFile
 
     def split
       all, @server, @date, @level, @subsystem, @machine, @managedServer, @thread, @user, @txId, @diagnosticContextId, @timestamp, @messageId, @osblocation, @osblogger, @data= @log_rec.match(@split_p).to_a
-      
-      if !all # split failed
+      unless all # split failed
         @orec = @log_rec
         @data = ""
         return
       end
 
       @level = Levels[@level]
-      
       @orec = "#{@time} #{@h}: #{@server}: ####<#{@date}> <#{@level}> <#{@subsystem}> <#{@machine}> <#{@managedServer}> <#{@thread}> <<#{@user}>> <#{@txId}> <#{@diagnosticContextId}> <#{@timestamp}> <#{@messageId}> < [#{@osblocation}] #{@osblogger}: #{@data}>"
     end
   end

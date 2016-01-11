@@ -1,5 +1,5 @@
-require "pp"
-require "socket"
+require 'pp'
+require 'socket'
 require 'zlib'
 require 'dl/import'
 
@@ -11,7 +11,7 @@ module Alarm
     so_ext = 'so.6'
   end
   dlload "libc.#{so_ext}"
-  extern "unsigned int alarm(unsigned int)"
+  extern 'unsigned int alarm(unsigned int)'
 end
 
 class NagiosBase
@@ -35,14 +35,14 @@ class NagiosBase
 
   # Open the socket
   def open_socket
-    if !(@socket = TCPSocket.new(@host, @port)) then
-      raise "OpenProblem"
+    unless @socket == TCPSocket.new(@host, @port)
+      raise 'OpenProblem'
     end
 
     # Get 128bit xor key and 4bit timestamp.
-    raise "OpenProblem" unless @iv = @socket.read(128)
-    raise "OpenProblem" unless @timestamp = @socket.read(4)
-    trap("ALRM") {
+    raise 'OpenProblem' unless @iv == @socket.read(128)
+    raise 'OpenProblem' unless @timestamp == @socket.read(4)
+    trap('ALRM') {
       @status = 'stale'
     }
     @d = 0
@@ -52,12 +52,12 @@ class NagiosBase
 
   def debugit(msg)
 
-    if @debug then
+    if @debug
       puts "# DEBUG #{$$}# #{msg}"
     end
   end
 
-# xor the data (the only type of "encryption" we currently use)
+  # xor the data (the only type of "encryption" we currently use)
   def myxor(xor_key, str)
 
     xlen = xor_key.length
@@ -67,7 +67,7 @@ class NagiosBase
 
   def send(hostname, service, return_code, status)
 
-#    puts " send  #{hostname}, #{service}, #{return_code}, #{status} "
+    #    puts " send  #{hostname}, #{service}, #{return_code}, #{status} "
 
     return if hostname == '' || service == '' || return_code == '' || status == ''
 
@@ -80,32 +80,32 @@ class NagiosBase
     crc = 0
     @d += 1
 
-    hostname.sub!(/\.itss$/, '');
+    hostname.sub!(/\.itss$/, '')
 
     debugit("Read input: '" + [hostname, service, return_code, status].join("\t'"))
 
     # Build our packet.
-#puts @packet_version, crc, @timestamp, return_code, hostname, service, status
+    #puts @packet_version, crc, @timestamp, return_code, hostname, service, status
     tobecrced = [@packet_version, crc, @timestamp, return_code, hostname, service, status].
-        pack("nxx N a4 n a64 a128 a512xx")
+        pack('nxx N a4 n a64 a128 a512xx')
     # Get a signature for the packet.
     crc = crc32(tobecrced)
     puts crc
     # Build the final packet with the sig.
     str = [@packet_version, crc, @timestamp, return_code, hostname, service, status].
-        pack("nxx N a4 n a64 a128 a512xx")
+        pack('nxx N a4 n a64 a128 a512xx')
 
     # Xor the sucker.
     myxor(@iv, str)
     myxor(@password, str)
-# puts str
+    # puts str
 
     begin
       @socket.send(str, 0)
 
     rescue Exception => e
       STDERR.puts "Could not send nagios packet #{@d} #{e}"
-      raise "SendError"
+      raise 'SendError'
     end
 
     debugit("Sent #{return_code}, #{hostname}, #{service}, #{status} to #{@host}")
@@ -116,6 +116,6 @@ class NagiosBase
     # Goodbye
     @socket.close
 
-    puts "Sent #{@d} packets to #{@host}\n";
+    puts "Sent #{@d} packets to #{@host}\n"
   end
 end

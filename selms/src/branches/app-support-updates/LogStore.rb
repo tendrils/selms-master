@@ -6,9 +6,9 @@ class LogStore
 
   def initialize(root, time = Time.now)
     @root = root
-    @year = time.strftime("%Y")
-    @month = time.strftime("%m")
-    @day = time.strftime("%d")
+    @year = time.strftime('%Y')
+    @month = time.strftime('%m')
+    @day = time.strftime('%d')
     @log_head = LOG_HEAD
   end
 
@@ -24,41 +24,41 @@ class LogStore
       yield $options['one_file'], $options['one_host']
     end
 
-# puts "root #{@root}"
-# puts  %r|^#{@root}/([^/]+)|o
+    # puts "root #{@root}"
+    # puts  %r|^#{@root}/([^/]+)|o
     return nil if defined? @done
 
     Find.find("#{@root}/") { |filename|
-#      puts "filename '#{filename}' %r|^#{@root}/([^/]+)|o"
+      #      puts "filename '#{filename}' %r|^#{@root}/([^/]+)|o"
       all, mach = filename.match(%r|^#{@root}/([^/]+)|o).to_a
-#puts "mach #{mach}"
-      next if !mach
+      #puts "mach #{mach}"
+      next unless mach
       mach.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
       mach.downcase!
 
       if $options['one_host'] &&
           (($options['one_host'].class == String && $options['one_host'] != mach) ||
-              (!$options['one_host'].match(mach))) then
+              (!$options['one_host'].match(mach)))
         Find::prune
       end
 
-      rest = $1 if filename =~ %r|^#{@root}/[^/]+/(.*)|o;
-#puts "rest #{rest}"
-      next unless  rest;
-      if rest =~ %r|^(\d{4})-(\d\d)$| then
-#puts "prune month #{$1} #{$2}" if  ($1 != @year or $2 != @month)
+      rest = $1 if filename =~ %r|^#{@root}/[^/]+/(.*)|o
+      #puts "rest #{rest}"
+      next unless  rest
+      if rest =~ %r|^(\d{4})-(\d\d)$|
+        #puts "prune month #{$1} #{$2}" if  ($1 != @year or $2 != @month)
         Find.prune if  ($1 != @year or $2 != @month)
         next
       elsif  rest =~ %r|^\d{4}-\d\d/(\d\d)$| then
-        if  $1 != @day then
+        if  $1 != @day
           Find.prune
-#puts "prune day"
-          next;
+          #puts "prune day"
+          next
         end
       end
 
-#puts " yield #{filename}, #{mach}"
+      #puts " yield #{filename}, #{mach}"
       yield filename, mach
     }
   end
@@ -67,7 +67,7 @@ class LogStore
     type = nil
     logs = 0
     Dir.new(dir).each { |f|
-      next if f =~ /^\./;
+      next if f =~ /^\./
       logs += 1
       if f =~ /^local7/ and !type
         type = 'juniper'
@@ -79,7 +79,7 @@ class LogStore
         type='unix'
       end
     }
-    type = 'unix' if ( type == 'cisco' or type == 'juniper' ) and logs > 1 
+    type = 'unix' if ( type == 'cisco' or type == 'juniper' ) and logs > 1
     return type
   end
 end

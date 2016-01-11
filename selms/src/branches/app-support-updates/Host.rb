@@ -1,6 +1,6 @@
 #require "Codegen"
-require "LogFile.rb"
-require "Procs.rb"
+require 'LogFile.rb'
+require 'Procs.rb'
 class Host
 
   include Procs
@@ -14,7 +14,6 @@ class Host
 
   attr_reader :src, :alerts, :warns, :name, :unusual, :conf, :count, :email,
               :ignore, :recs, :pattern, :file, :priority, :rule_set
-             
   attr_writer :name, :rule_set, :recs
 
   class Accumulator
@@ -29,20 +28,20 @@ class Host
 
     def <<(msg)
       @data << msg
-    end 
+    end
 
     def check( time )
 
-      if time > @time then
-	if @data.size then
-	  @action.async_send( @host, @type, @data )
-	  @data = []   # empty the bucket  but keep it
-	  1
-	else
-	  0 # tell caller to delete the bucket
-	end
+      if time > @time
+        if @data.size
+          @action.async_send( @host, @type, @data )
+          @data = []   # empty the bucket  but keep it
+          1
+        else
+          0 # tell caller to delete the bucket
+        end
       else
-	@data.size + 1
+        @data.size + 1
       end
     end
   end
@@ -72,27 +71,25 @@ class Host
 
   class TimeCounter < Counter
     def initialize( count, time, label )
-      
       @items = time ? [] : 0
       @interval = time
       @threshold = count
       super( label )
     end
-    
     def incr( time, inc=1 )
-      if @interval then
+      if @interval
         disc_t = time - @interval  # discard items with time less that this
 
         while @items.size > 0 && @items[0] < disc_t do
-          @items.shift 
+          @items.shift
         end
         @items.push(time)
       else
         @items += inc
       end
-      if @items.size >= @threshold then
-	@items=[]
-	return TRUE
+      if @items.size >= @threshold
+        @items=[]
+        return TRUE
       end
     end
 
@@ -118,12 +115,11 @@ class Host
   def incr_check( mdata, threshold, interval, label, time, count)
     label = expand(label, m_data) if label =~/%/ && (defined? mdata)
     @count[label] = TimeCounter.new(threshold, interval , label ) unless @count[label]
-#    puts "incr counrt #{label} #{@count[label].val}"
+    #    puts "incr counrt #{label} #{@count[label].val}"
     return @count[label].incr(time, count) ? "#{label}: #{threshold} events in #{interval} seconds" : nil
   end
 
   def initialize( conf, src )
-  
     @file = conf.file
     @pattern = conf.pattern
     @name = conf.name.dup
@@ -132,7 +128,7 @@ class Host
     @process_time_limit = conf.process_time_limit
     @count = {}
     @email = conf.def_email
-#    @action_classes = {}
+    #    @action_classes = {}
     $bucket = {}
     @recs = {}
     @recs['report'] = []
@@ -143,34 +139,34 @@ class Host
     @rule_set = '_default'
   end
 
-# substitute for % vars in strings
+  # substitute for % vars in strings
 
   def expand( s, mdata )
     return nil unless s
     begin
-    m = ''
-    string = s.dup
-    1.upto(mdata.size-1) { |i| # substitute %n for nth matched string, handle embedded '\'s
-      if  mdata[i] then
-        m = mdata[i].dup ? mdata[i].dup : ''
-	string.gsub!("%#{i}", m.gsub('\\', '\\\\\\\\') ) 
-      end
-    }
-    string.gsub!(/%H/, @rec.h)
-    string.gsub!(/%F/, @rec.fn);
-    return string
+      m = ''
+      string = s.dup
+      1.upto(mdata.size-1) { |i| # substitute %n for nth matched string, handle embedded '\'s
+        if  mdata[i]
+          m = mdata[i].dup ? mdata[i].dup : ''
+          string.gsub!("%#{i}", m.gsub('\\', '\\\\\\\\') )
+        end
+      }
+      string.gsub!(/%H/, @rec.h)
+      string.gsub!(/%F/, @rec.fn)
+      return string
     rescue
       STDERR.puts "error substituting data '#{m}' into '#{s}':#{$!}"
     end
   end
 
-  def initialize_copy( from ) 
+  def initialize_copy( from )
 
     @count = {}
-    @count['alert'] = SimpleCounter.new(0, "Number of Alerts")
-    @count['warn'] = SimpleCounter.new(0, "Number of Warnings")
-    @count['ignore'] = SimpleCounter.new(0, "Number of Ignore records")
-    @count['drop'] = SimpleCounter.new(0, "Number of dropped records")
+    @count['alert'] = SimpleCounter.new(0, 'Number of Alerts')
+    @count['warn'] = SimpleCounter.new(0, 'Number of Warnings')
+    @count['ignore'] = SimpleCounter.new(0, 'Number of Ignore records')
+    @count['drop'] = SimpleCounter.new(0, 'Number of dropped records')
     @pattern = from.pattern
     $bucket = {}
     @recs = {}
@@ -199,27 +195,27 @@ class Host
         lf.open_lf(log_dir + '/' + log)
       }
       yield lf if lf.file
-    else # process files indivdually
+    else # process files individually
 
       logf.each { |log|
         log =~ /^(.+)\.\d+/
         base_name = $1
 
-#	puts "basename #{base_name}:"
+        #	puts "basename #{base_name}:"
 
-	if  @file[base_name]
-	  l = base_name
-	else 
+        if  @file[base_name]
+          l = base_name
+        else
           l = @file['default'] ? 'default' : 'all'
-	end
-#        l = @file[base_name] ? base_name : 'all'
+        end
+        #        l = @file[base_name] ? base_name : 'all'
         next if  $options['file'] && $options['file'] != base_name
         next if base_name == 'cron' && @file['cron'] != 'process'
         next if @file[l] && @file[l]['ignore']
 
         lf = @file[l]['re'] ? LogFile.new(@file[l]['re'], log_dir + '/' + log) : @file[l]['logtype']
         count = 0
-        if f = (@file[base_name] || @file['all']) then
+        if f == (@file[base_name] || @file['all'])
           f.to_s =~ /#<(\w+):/
           rs = $1.downcase
           @rule_set = @file[base_name].to_s.downcase if @file[base_name] ###########  temp fudge -- fix this
@@ -234,14 +230,14 @@ class Host
 
         lf.open_lf(log_dir + '/' + log)
 
-        pp "using logformat:", c_logf.to_s if $options['debug.split']
-#        lf.gets(1)
+        pp 'using logformat:', c_logf.to_s if $options['debug.split']
+        #        lf.gets(1)
         yield lf
       }
     end
   end
 
-# does a periodic scan of all files associated with self 
+  # does a periodic scan of all files associated with self
 
   def pscan(log_dir, hostname)
 
@@ -250,10 +246,10 @@ class Host
     @logf = []
 
     if File.directory?(log_dir)
-      logs = Dir.new(log_dir);
+      logs = Dir.new(log_dir)
       logs.each { |filename|
         next unless filename =~ /(.+)\.\d{8}(\.gz)?$/
-#        next unless filename =~ /(.+)\.\d{8}$/
+        #        next unless filename =~ /(.+)\.\d{8}$/
         @logf.push(filename)
       }
     elsif File.exists?(log_dir)
@@ -267,23 +263,23 @@ class Host
       begin
         Timeout.timeout(limit) do
 
-          while @rec = lf.gets
-            pp '', "final split", @rec if $options['debug.split']
+          while @rec == lf.gets
+            pp '', 'final split', @rec if $options['debug.split']
             break unless self.send @rule_set, 'TEST', @rec
             if $options['max_log_recs'] &&
-                recs['report'].size + recs['alert'].size + recs['warn'].size >= $options['max_log_recs'] then
+                recs['report'].size + recs['alert'].size + recs['warn'].size >= $options['max_log_recs']
               lf.abort
               alert("more than #{$options['max_log_recs'].to_s} reported records ")
-              break;
+              break
             end
           end
-          _post_default() # run any post code
+          _post_default # run any post code
         end
 
       rescue Timeout::Error
         STDERR.puts "A file for #{hostname} took too more than #{limit} seconds to process!  Terminated"
         lf.abort
-        _post_default() # run any post code
+        _post_default # run any post code
       end
     end
   end

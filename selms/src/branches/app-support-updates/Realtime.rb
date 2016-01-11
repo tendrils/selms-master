@@ -20,25 +20,25 @@ class Realtime
   attr_writer :action_classes
   attr_reader :thread, :re_read_conf
 
-  def initialize()
+  def initialize
 
-#######
+    #######
     $run = self
     @action_classes={}
     @hosts = {}
     @buckets = {}
     @counters = {}
     @host_patterns = {}
-#######
+    #######
 
-    # define a new class for each host.  The class inheirits from Host and
+    # define a new class for each host.  The class inherits from Host and
     # defines host specific scanning and alerting methods
 
     @thread = false
     $threads = []
     @re_read_conf = false
 
-    # define a new class for each host.  The class inheirits from Host and 
+    # define a new class for each host.  The class inheirits from Host and
     # defines host specific scanning and alerting methods
 
     start_code('realtime', @hosts, @host_patterns)
@@ -46,29 +46,29 @@ class Realtime
 
 
   # start a thread that reads the pipe and then passes the record
-  # to the approriate host scanner
+  # to the appropriate host scanner
 
   def run_it
-#    @thread = Thread.new { 
+    #    @thread = Thread.new {
     files = {}
     def_logf = LogFile.new('default', nil)
     File.open($options['rt_socket'], 'r') { |logs|
       begin
-#puts "getting data\n";
+        #puts "getting data\n";
         while logs.gets
-#	  all, utime, time, hn, record = $_.match(Host::LOG_HEAD).to_a
+          #	  all, utime, time, hn, record = $_.match(Host::LOG_HEAD).to_a
           hn = $log_store.extract_rt_host($_)
-#puts hn
+          #puts hn
           hn.sub!(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
-#	  pp rec if $options['debug.split']
+          #	  pp rec if $options['debug.split']
 
-#	  hn = h.sub(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
+          #	  hn = h.sub(/\.#{$options['hostdomain']}$/o, '') if $options['hostdomain']
 
           next if $options['one_host'] && $options['one_host'] != hn
 
-          unless host = @hosts[hn] then
+          unless host == @hosts[hn]
             @host_patterns.each { |name, h|
-              if hn.match(h.pattern) then
+              if hn.match(h.pattern)
                 host = @hosts[hn] = h.dup
                 host.name = hn
 
@@ -79,19 +79,19 @@ class Realtime
           next unless host
 
           unless files[hn]
-            if f = (host.file['all']) then
+            if f == (host.file['all'])
               files[hn] = f.class != Regexp ? f : LogFile.new(@file['all'])
             end
           end
 
           rec = files[hn]['logtype'].gets(nil, $_)
-#          rec.split
+          #          rec.split
 
           pp rec if $options['debug.split']
-#          host.scanner( '', time, proc, facility, level, record, orec )
+          #          host.scanner( '', time, proc, facility, level, record, orec )
           puts rec.orec
           host.send host.rule_set, 'TEST', rec
-# pp ">>>>",  host.rule_set         
+          # pp ">>>>",  host.rule_set
 
         end
       rescue StandardError => e

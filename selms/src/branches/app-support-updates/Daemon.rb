@@ -34,7 +34,7 @@ module Daemon
           stop(daemon)
           start(daemon)
         else
-          puts "Invalid command. Please specify start, stop or restart."
+          puts 'Invalid command. Please specify start, stop or restart.'
           exit
       end
     end
@@ -46,22 +46,22 @@ module Daemon
         PidFile.store(daemon, Process.pid)
         Dir.chdir WorkingDirectory
         File.umask 0000
-        STDIN.reopen "/dev/null"
-        STDOUT.reopen "/dev/null", "a"
+        STDIN.reopen '/dev/null'
+        STDOUT.reopen '/dev/null', 'a'
         STDERR.reopen STDOUT
-        trap("TERM") { daemon.stop; exit }
+        trap('TERM') { daemon.stop; exit }
         daemon.start
       end
     end
 
     def self.stop(daemon)
-      if !File.file?(daemon.pid_fn)
-        puts "Pid file not found. Is the daemon started?"
+      unless File.file?(daemon.pid_fn)
+        puts 'Pid file not found. Is the daemon started?'
         exit
       end
       pid = PidFile.recall(daemon)
       FileUtils.rm(daemon.pid_fn)
-      pid && Process.kill("TERM", pid)
+      pid && Process.kill('TERM', pid)
     end
   end
 end
