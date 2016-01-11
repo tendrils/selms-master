@@ -202,7 +202,7 @@ cf_time = File.mtime(conf_file)
 
 parse_config(conf_file, $options['run_type'] )
 
-# up date the options from the config file -- command line overrides
+# update the options from the config file -- command line overrides
 
 if $global
   $global.vars.each { |opt, val|
@@ -211,7 +211,7 @@ if $global
 end
 
 
-
+# Sets the log root directory equal to the default ('/logs/HOSTS') if none is set at runtime as an argument, otherwise
 log_root = LOG_DIR
 if $options['log_dir']
   log_root = $options['log_dir']
@@ -221,10 +221,10 @@ end
 
 $log_store.root = log_root
 
-$options.default = nil  # return to default behaviour
+#  return to default behaviour
+$options.default = nil
 
 # set default options
-
 $options['offset'] ||= OFFSET
 $options['rt_socket'] ||= RT_SOCKET
 $options['rt_buffer_size'] ||= RT_BUFFER_SIZE

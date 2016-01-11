@@ -4,10 +4,10 @@ module Parser
   SAME_LINE = 1
   ANYWHERE = 2
 
-  @@singleQstring = /^'([^']*)'/
-  @@doubleQstring = /^"([^"]*)"/
+  @@single_qstring = /^'([^']*)'/
+  @@double_qstring = /^"([^"]*)"/
 
-  @@TimeUnits = {
+  @@time_units = {
       'sec' => 1,
       'second' => 1,
       'minute' => 60,
@@ -23,11 +23,11 @@ module Parser
   end
 
   def lineno
-    @@f.lineno
+    @@file.lineno
   end
 
-  def originalLine
-    @@originalLine
+  def original_line
+    @@original_line
   end
 
   def token
@@ -42,9 +42,16 @@ module Parser
     @@errors
   end
 
+  ##
+  # setup - Setups a file for reading, creates the respective variables for use cross class.
+  #
+  # @param filename - The location of the file to be read into memory (config file).
+  #
+  # @return file/nil
+	##
   def setup(filename)
-    @@f = File.new(filename)
-    return nil unless @@f
+    @@file = File.new(filename)
+    return nil unless @@file
     @@file_name = filename
     @@line = ''
     @@errors = 0
@@ -56,9 +63,9 @@ module Parser
 
   def read_next_line
     begin
-      @@line = (@@f.gets)
+      @@line = (@@file.gets)
       if !@@line && @@included_from.size > 0 # in included file
-        @@f, @@file_name, @@macros = @@included_from.pop
+        @@file, @@file_name, @@macros = @@included_from.pop
         read_next_line
       end
       return nil unless @@line
@@ -68,7 +75,7 @@ module Parser
 
     while @@line =~ /\\$/ # line ends in a '\' -- next line is a cont
       line.chop!
-      @@line += ' ' + (@@f.gets).chomp!
+      @@line += ' ' + (@@file.gets).chomp!
       @@line.lstrip!
     end
 
@@ -84,14 +91,14 @@ module Parser
         include.sub!(/^\+/, "#{loc}") if loc
       end
       if !@@included_files[include]
-        @@included_from << [@@f.dup, @@file_name.dup, @@macros.dup]
-        @@f = File.new(include)
-        if @@f
+        @@included_from << [@@file.dup, @@file_name.dup, @@macros.dup]
+        @@file = File.new(include)
+        if @@file
           @@included_files[include] = include
           @@file_name = include
           read_next_line
         else
-          @@f, @@file_name = @@included_from.pop
+          @@file, @@file_name = @@included_from.pop
           error("failed to open include file '#{$0}'")
           read_next_line
         end
@@ -101,7 +108,6 @@ module Parser
     end
 
     # macro definition
-
     if @@line =~ /^(\$[A-Z_]+)\s*=\s*(.+)/
       @@macros[$1] = $2
       read_next_line
@@ -110,7 +116,7 @@ module Parser
     # macro substution
     while @@line =~ /(?!`)(\$[A-Z_]+)/ do
       macro = $1
-      if val = macro_value(macro)
+      if val == macro_value(macro)
         macro = '\\' + macro
         @@line.sub!(/#{macro}/, val)
       else
@@ -118,13 +124,13 @@ module Parser
         break
       end
     end
-    @@originalLine = @@line.dup
+    @@original_line = @@line.dup
 
   end
 
   def macro_value(key)
-    return @@macros[key] if @@macros[key];
-    @@included_from.reverse_each { |file, name, macros|
+    return @@macros[key] if @@macros[key]
+    @@included_from.reverse_each { |_, _, macros|
       return macros[key] if macros[key];
     }
     return nil
@@ -146,11 +152,11 @@ module Parser
 
   # returns number of second in the given interval
 
-  def timeInterval(optional=nil)
+  def time_interval(optional=nil)
 
     if num == expect(/(\d+)/, 'integer', ANYWHERE, optional)
       n = num.to_i
-      if mult == expect(@@TimeUnits, 'Time Units', SAME_LINE, true)
+      if mult == expect(@@time_units, 'Time Units', SAME_LINE, true)
         num.to_i * mult
       else
         nil
@@ -252,11 +258,11 @@ module Parser
   end
 
   #
-  #  nextT returns the next token - a special character
+  #  next_token returns the next token - a special character
   #                              - alphanumeric token (starts with alpha)
   #                              - integer
   #
-  def nextT (where=ANYWHERE)
+  def next_token (where=ANYWHERE)
 
     @@token = nil
 
@@ -281,7 +287,7 @@ module Parser
     @@token
   end
 
-  # undo the effect of the last nextT
+  # undo the effect of the last next_token
 
   def back_up
     @@line = @@save_line
@@ -317,9 +323,9 @@ module Parser
 
     re = case @@line[0]
            when ?'
-             @@singleQstring
+             @@single_qstring
            when ?"
-             @@doubleQstring
+             @@double_qstring
            else
              return nil if optional
              error('Expecting a <quoted string>')
@@ -343,12 +349,12 @@ module Parser
   # delimited by quotes or not contain white space. There is no mechanism
   # for quoting string delimiters within the string.
 
-  def getList
+  def get_list
 
     list = []
     begin
       list.push(quotedString(ANYWHERE))
-    end while nextT == ',' # next is a reseved word!!!
+    end while next_token == ',' # next is a reseved word!!!
 
     return list
   end
@@ -370,7 +376,7 @@ module Parser
       STDERR.puts "Section starting at #{@@file_name}:#{lineno}:",
                   " #{message}"
     else
-      STDERR.puts "#{@@file_name}:#{@@f.lineno}:#{@@originalLine}",
+      STDERR.puts "#{@@file_name}:#{@@file.lineno}:#{@@original_line}",
                   "    #{message} near '#{@@token} #{@@line}'"
     end
     return nil
@@ -389,15 +395,15 @@ module Parser
   end
 
   # recover is called after detection of a syntax error to try and find
-  # a know place to start again. If sameLine is true then only look on
+  # a know place to start again. If same_line is true then only look on
   # current line. What is a string or RegExpr to search for.
   #
   # Returns what it found or nil
   #
-  def recover (what, sameLine=Parser::ANYWHERE, descr=nil)
+  def recover (what, same_line=Parser::ANYWHERE, descr=nil)
     until i == @@line.index(what)
-      return nil if defined? sameLine
-      @@line = (@@f.gets).chomp!
+      return nil if defined? same_line
+      @@line = (@@file.gets).chomp!
     end
     @@line.slice!(0, i-1) unless i == 0; # remove any text before the match
     return what if what.class.to_s == 'String'

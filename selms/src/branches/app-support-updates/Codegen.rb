@@ -7,7 +7,7 @@ module Codegen
     # initialise class vars
     @debug = false
     @run_type = run_type
-    # define a new class for each host.  The class inheirits from Host and
+    # define a new class for each host.  The class inherits from Host and
     # defines host specific scanning and alerting methods
 
     #    puts "start_code -- one host: #{$options['one_host']}" if $options['one_host']
@@ -30,8 +30,6 @@ module Codegen
   end
 
   # action_body generates code for the actions - alert, warn and report
-
-
   def action_body( name, actions )
 
     pre = @run_type == 'realtime' ? 'rt-' : ''
@@ -318,7 +316,7 @@ module Codegen
     code <<  "hosts[host.name] = #{class_name}.new( host, code )\n"
     #       puts host.name
     #       puts  code
-    #puts $options['one_host'], host.name
+    # puts $options['one_host'], host.name
     if $options['debug.code'] || $options['debug.match-code']
       if ! $options['one_host'] ||  $options['one_host'].class == Regexp ||
           $options['one_host'] == host.name ||

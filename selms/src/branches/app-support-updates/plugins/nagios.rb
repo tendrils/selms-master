@@ -21,7 +21,7 @@ class Action
     end
 
     def do_periodic (type, host, file, rec)
-      if !host.recs[type + '-Nagios']
+      unless host.recs[type + '-Nagios']
         host.recs[type + '-Nagios'] = []
       end
       host.recs[type + '-Nagios'] << rec
