@@ -12,7 +12,7 @@ class Action
 
 # default alert/warning routines...
 
-    def do_periodic (type, host, file, msg)
+    def do_periodic (type, host, file, msg, extra = nil )
       r = host.recs[type] = [] unless r = host.recs[type]
       r << msg
     end
@@ -37,9 +37,25 @@ class Action
       super
     end
 
-    def do_periodic (type, host, file, msg)
+    def do_periodic (type, host, file, msg, extra = nil )
       em = ''
-      if host.file[file] && host.file[file]['email']
+      if extra
+      extra.split(/\s*,\s*/).each do |option|
+          case option
+          when /^notify:\s*(.+)/ # email
+            em = "-#{$1}"
+          when/^count:\s*(\d+)\s+(\S+)\s*(.+)/
+            key = "#{type}-count-#{$2}"
+            if ! host.recs[key]
+              host.recs[key] = []
+              host.recs[key][0] = $1
+              host.recs[key][1] = 0
+            end
+            host.recs[key][1] += 1
+            return
+          end 
+        end
+      elsif host.file[file] && host.file[file]['email']
         em = "-#{host.file[file]['email']}"
       end
       r = host.recs[type+em] = [] unless r = host.recs[type+em]
