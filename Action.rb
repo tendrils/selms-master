@@ -8,6 +8,7 @@ class Action
     end
 
     def initialize
+      $tagged = {}
     end
 
 # default alert/warning routines...
@@ -44,15 +45,23 @@ class Action
           case option
           when /^notify:\s*(.+)/ # email
             em = "-#{$1}"
-          when/^count:\s*(\d+)\s+(\S+)\s*(.+)/
-            key = "#{type}-count-#{$2}"
-            if ! host.recs[key]
-              host.recs[key] = []
-              host.recs[key][0] = $1
-              host.recs[key][1] = 0
-            end
-            host.recs[key][1] += 1
-            return
+          when/^count:\s*(\d+)-(\d+)\s+(\S+)\s+(\S+)\s*/
+	    $tagged['count'] ||= {}
+            $tagged['count'][$4] ||= []
+            $tagged['count'][$4][0] ||= {}
+
+	    unless $tagged['count'][$4][0][host.name]
+	      $tagged['count'][$4][0][host.name] = []
+	      $tagged['count'][$4][0][host.name][0] = ""
+	      $tagged['count'][$4][0][host.name][1] = 0
+	      $tagged['count'][$4][0][host.name][2] = $3
+	    end
+ 
+	    $tagged['count'][$4][1] = $2.to_i
+	    $tagged['count'][$4][0][host.name][1] += 1
+	    if $tagged['count'][$4][0][host.name][1] >= $1.to_i
+	    	$tagged['count'][$4][0][host.name][0] = "#{msg},\tCOUNTED:#{$tagged['count'][$4][0][host.name][1]}"
+	    end
           end 
         end
       elsif host.file[file] && host.file[file]['email']
@@ -60,6 +69,17 @@ class Action
       end
       r = host.recs[type+em] = [] unless r = host.recs[type+em]
       r << msg
+
+      # For wli applications do something special
+      if host.name =~ /_wli_/
+	$tagged['UoAID'] ||= {}
+	$tagged['UoAID'][em] ||= {}
+	$tagged['UoAID'][em][host.name] ||= []
+	
+	if msg =~ /UoAId(.*?)(\d+)/i
+	  $tagged['UoAID'][em][host.name] << "#{$2}"
+	end
+      end
     end
 
     def do_realtime (type, host, msg, file, rec = nil)
@@ -142,11 +162,10 @@ class Action
 
         host.recs.each { |t, recs|
           next unless recs and recs.size > 0
-
+	  count = false
           all, type, email = t.match(/(\w+)-?(.+)?/).to_a
           if  email
-            who = email.split(/\s*,\s*\**/).
-                map { |addr| 'email:' + addr }
+	    who = email.split(/\s*,\s*\**/).map { |addr| 'email:' + addr }
           else
             who = def_who
           end
@@ -154,9 +173,8 @@ class Action
             reports[w] ||= {}
             reports[w][type] ||= {}
             reports[w][type][name] ||= []
-
             recs.each { |rec|
-              reports[w][type][name] << rec
+	      reports[w][type][name] << rec
               if reports[w][type][name].size > $options['max_report_recs']
                 reports[w][type][name] << "***** output truncated *****\n"
                 break
@@ -165,9 +183,34 @@ class Action
           }
         }
       }
+      
+      # Do stuff for tagged array.
+      if $tagged.has_key?('count')
+        $tagged['count'].each { |who, val|
+	  if val[0].length >= val[1]
+	    val[0].each { |host, val|
+	      reports["email:#{who}"] ||= {}
+	      reports["email:#{who}"]["tagged-#{val[2]}"] ||= {}
+	      reports["email:#{who}"]["tagged-#{val[2]}"][host] ||= []
+	      reports["email:#{who}"]["tagged-#{val[2]}"][host][0] = val[0]
+	    }
+	  end
+        }
+      end
+      
+      if $tagged.has_key?('UoAID')
+	$tagged['UoAID'].each { |who, app|
+	  app.each { |host, id|
+	     reports["email:#{who}"] ||= {}
+             reports["email:#{who}"]["tagged-UoAID-to-Republish"] ||= {}
+             reports["email:#{who}"]["tagged-UoAID-to-Republish"][host] ||= []
+             reports["email:#{who}"]["tagged-UoAID-to-Republish"][host] << id
+	  }
+	}
+      end      
+
 
       # now send the reports to each address
-
       if $options['no_mail'] && !$options['mail_to'] then
         $options['outfile'] = '-'
       end
@@ -188,6 +231,11 @@ class Action
 
       reports.each { |who, rep|
         report = []
+	rep.keys.select{ |i| 
+	  if i =~ /tagged-(\S*)/ 
+	    list_recs(report, rep["tagged-#{$1}"], $1.capitalize)
+	  end
+	}
         list_recs(report, rep['alert'], "Alerts") if  rep['alert']
         list_recs(report, rep['warn'], "Warnings") if  rep['warn']
         list_recs(report, rep['summ'], "Summary") if  rep['summ']
@@ -335,4 +383,3 @@ HDRS
     false
   end
 end
-
