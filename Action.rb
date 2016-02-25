@@ -71,14 +71,15 @@ class Action
       r << msg
 
       # For wli applications do something special
+      # For wli applications do something special
       if host.name =~ /_wli_/
-	$tagged['UoAID'] ||= {}
-	$tagged['UoAID'][em] ||= {}
-	$tagged['UoAID'][em][host.name] ||= []
-	
-	if msg =~ /UoAId(.*?)(\d+)/i
-	  $tagged['UoAID'][em][host.name] << "#{$2}"
-	end
+        $tagged['UoAID'] ||= {}
+        $tagged['UoAID'][host.email] ||= {}
+        $tagged['UoAID'][host.email][host.name] ||= []
+
+        if msg =~ /UoAId(.*?)(\d+)/i
+          $tagged['UoAID'][host.email][host.name] << "#{$2}"
+        end
       end
     end
 
