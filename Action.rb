@@ -295,8 +295,9 @@ class Action
 
       list.each { |host, list|
 #puts "null list for #{host}" unless list[0]
-next unless list[0]
-        next unless ! list or list.size > 0
+        next unless list and list[0] and list[0].size > 0
+#        next unless list.size> 0 # and list[0].size > 0 
+#        report << "size #{list.size} '#{list[0].size}'"
         sep = list[0].size > 200 ? "\n\n" : "\n" if list #  sep long records with a blank line
         report << "\n    #{'+'* host.to_s.length}"
         report << "    #{host.to_s}"
